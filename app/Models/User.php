@@ -16,22 +16,28 @@ class User extends Authenticatable
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var array<int, string, double>
      */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
+        'FistName',
+        'LastName',
+        'EmployeeNo',
+        'Role',
+        'PhoneNr',
+        'Email',
+        'Salary',
     ];
 
     /**
      * The attributes that should be hidden for serialization.
      *
-     * @var array<int, string>
+     * @var array<int, string, boolean>
      */
     protected $hidden = [
-        'password',
-        'remember_token',
+        'ID',
+        'Password',
+        'RememberToken',
+        'IsVerified',
     ];
 
     /**
@@ -40,6 +46,6 @@ class User extends Authenticatable
      * @var array<string, string>
      */
     protected $casts = [
-        'email_verified_at' => 'datetime',
+        'EmailVerifiedAt' => 'datetime',
     ];
 }
