@@ -1,34 +1,25 @@
 <x-app-layout>
-    <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-        <x-nav-link class="text-2xl" :href="route('profile.edit')">
+
+    <div class="space-x-8 mt-8 flex">
+        <a class ='block w-full pl-3 pr-4 py-2 border-l-4 lg:border-l-8 lg:py-8 lg:text-3xl text-left text-base font-medium text-gray-800 bg-gray-50 border-gray-300 focus:outline-none   transition duration-150 ease-in-out'>
+            {{ __('Profil Użytkownika') }}
+        </a>
+    </div>
+    <div class="grid  justify-evenly bg-[#00B4D8] dark:bg-gray-300 grid-cols-3">
+        @foreach($userData as $span => $data)
+            <div class="col-span-1  p-7 m-8 hover:border-b">
+                <div class="flex flex-col items-center ">
+                        <p class="text-md font-medium lg:text-3xl text-white">{{ $data }}</p>
+                        <span class="text-sm font-medium lg:text-xl text-white"> {{ $span }}</span>
+                </div>
+            </div>
+        @endforeach
+    </div>
+    <div class="mt-10 mx-10 flex justify-center">
+        <x-nav-button :href="route('profile.edit')">
             {{ __('Edytuj Profil') }}
-        </x-nav-link>
+        </x-nav-button>
     </div>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Profile') }}
-        </h2>
-    </x-slot>
-    <div class="py-12">
 
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-profile-information-form')
-                </div>
-            </div>
 
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-password-form')
-                </div>
-            </div>
-
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.delete-user-form')
-                </div>
-            </div>
-        </div>
-    </div>
 </x-app-layout>
