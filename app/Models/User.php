@@ -19,13 +19,15 @@ class User extends Authenticatable
      * @var array<int, string, double>
      */
     protected $fillable = [
-        'FistName',
-        'LastName',
-        'EmployeeNo',
-        'Role',
-        'PhoneNr',
-        'Email',
-        'Salary',
+        'firstName',
+        'lastName',
+        'employeeNo',
+        'role',
+        'phoneNr',
+        'email',
+        'password',
+        'salary',
+        'isVerified',
     ];
 
     /**
@@ -34,10 +36,9 @@ class User extends Authenticatable
      * @var array<int, string, boolean>
      */
     protected $hidden = [
-        'ID',
-        'Password',
-        'RememberToken',
-        'IsVerified',
+        'id',
+        'password',
+        'rememberToken',
     ];
 
     /**
@@ -46,6 +47,6 @@ class User extends Authenticatable
      * @var array<string, string>
      */
     protected $casts = [
-        'EmailVerifiedAt' => 'datetime',
+        'emailVerifiedAt' => 'datetime',
     ];
 }
