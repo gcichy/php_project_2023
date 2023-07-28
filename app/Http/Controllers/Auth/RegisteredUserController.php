@@ -38,7 +38,7 @@ class RegisteredUserController extends Controller
 
 
         $request->validate([
-            'firstName' => ['required', 'string',  'max:30','regex:/^[a-zA-Z ]+$/'],
+            'firstName' => ['required', 'string',  'max:30','regex:/^[a-zA-ZźżćśńółąęŻŹĆŚŃÓŁĄĘ ]+$/'],
             'lastName' => ['required', 'string',  'max:30', 'regex:/^[a-zA-Z ]+$/'],
             'role' => ['required', 'string', 'in:admin,manager,pracownik'],
             'employeeNo' => ['required', 'string',  'max:255', 'unique:'.User::class],
@@ -52,7 +52,7 @@ class RegisteredUserController extends Controller
             [
                 'required' => 'To pole jest wymagane.',
                 'max' => 'Wpisany tekst ma za dużo znaków.',
-                'firstName.regex' => 'Pole Imię nie może zawierać liczb.',
+                'firstName.regex' => 'Pole Imię może zawierać liczb.',
                 'lastName.regex' => 'Pole Nazwisko nie może zawierać liczb.',
                 'role.in' => 'Niepoprawne stanowisko. Musi być jedno z: pracownik, manager, admin.',
                 'employeeNo.unique' => 'Ta nazwa użytkownika jest zajęta.',

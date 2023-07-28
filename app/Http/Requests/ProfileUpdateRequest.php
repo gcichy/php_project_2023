@@ -21,7 +21,7 @@ class ProfileUpdateRequest extends FormRequest
         $user = $this->ensureIsNotNullUser($this->user());
 
         return [
-            'name' => ['string', 'max:255'],
+            'firstName' => ['string', 'max:255'],
             'email' => ['email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
         ];
     }

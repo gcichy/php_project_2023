@@ -17,39 +17,15 @@
     <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6">
         @csrf
         @method('patch')
-
-        <div>
-            <x-input-label for="name" :value="__('Imię')" class="lg:text-xl"/>
-            <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->firstName)"
-                          required autofocus autocomplete="name"/>
-            <x-input-error class="mt-2" :messages="$errors->get('name')"/>
-        </div>
-        <div>
-            <x-input-label for="name" :value="__('Nazwisko')" class="lg:text-xl"/>
-            <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->lastName)"
-                          required autofocus autocomplete="name"/>
-            <x-input-error class="mt-2" :messages="$errors->get('name')"/>
-        </div>
-        <div>
-            <x-input-label for="name" :value="__('Nazwa Użytkownika')" class="lg:text-xl"/>
-            <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->employeeNo)"
-                          required autofocus autocomplete="name"/>
-            <x-input-error class="mt-2" :messages="$errors->get('name')"/>
-        </div>
-        @if( $user->role != 'employee')
+        @foreach($userData as $span => $data)
             <div>
-                <x-input-label for="name" :value="__('Wynagrodzenie')" class="lg:text-xl"/>
-                <x-text-input id="name" name="name" type="text" class="mt-1 block w-full"
-                              :value="old('name', $user->salary)" required autofocus autocomplete="name"/>
-                <x-input-error class="mt-2" :messages="$errors->get('name')"/>
+                <x-input-label for="{{$data}}" :value="$span" class="lg:text-xl"/>
+                <x-text-input id="{{$data}}" name="{{$data}}" type="text" class="mt-1 block w-full"
+                              :value="old($data, $user->$data)" required autocomplete="{{$data}}"/>
+                <x-input-error class="mt-2" :messages="$errors->get($data)"/>
             </div>
-        @endif
-        <div>
-            <x-input-label for="name" :value="__('Numer Telefonu')" class="lg:text-xl"/>
-            <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->phoneNr)"
-                          autofocus autocomplete="name"/>
-            <x-input-error class="mt-2" :messages="$errors->get('name')"/>
-        </div>
+        @endforeach
+
 
         <div>
             <x-input-label for="email" :value="__('Email')" class="lg:text-xl"/>
@@ -85,7 +61,7 @@
                     x-data="{ show: true }"
                     x-show="show"
                     x-transition
-                    x-init="setTimeout(() => show = false, 2000)"
+                    x-init="setTimeout(() => show = false, 15000)"
                     class="text-sm text-gray-600"
                 >{{ __('Zapisano.') }}</p>
             @endif

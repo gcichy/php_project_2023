@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\getUserData;
 use App\Helpers\HasEnsure;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\User;
@@ -10,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
@@ -20,7 +22,7 @@ class ProfileController extends Controller
      */
     public function index(Request $request): View
     {
-        $userData = $this->getUserData($request);
+        $userData = getUserData::getUserData($request->user());
 
         return view('profile.profile', [
             'user' => $request->user(),
@@ -34,7 +36,9 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
-        $userData = $this->getUserData($request);
+
+
+        $userData = getUserData::getEditUserData();
 
         return view('profile.edit', [
             'user' => $request->user(),
@@ -47,15 +51,18 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
+
         $user = $this->ensureIsNotNullUser($request->user());
 
+//        $data = $this->ensureIsArray($request->validated());
 
-        $data = $this->ensureIsArray($request->validated());
+
+        $data = $this->validateUpdate($request, $user);
 
         $user->fill($data);
 
         if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
+            $user->emailVerifiedAt = null;
         }
 
         $user->save();
@@ -114,6 +121,56 @@ class ProfileController extends Controller
         }
 
         return $userData;
+    }
+
+    private function getEditUserData(): array
+    {
+        return [
+            'Imię' => 'firstName',
+            'Nazwisko' => 'lastName',
+            'Stanowisko' => 'role',
+            'Nazwa Użytkownika' => 'employeeNo',
+            'Wynagrodzenie' => 'salary',
+            'Nr Telefonu' => 'phoneNr',
+        ];
+    }
+
+    private function validateUpdate(Request $request, User $user) {
+        $request->validate([
+            'firstName' => ['required', 'string',  'max:30','regex:/^[a-zA-ZźżćśńółąęŻŹĆŚŃÓŁĄĘ ]+$/'],
+            'lastName' => ['required', 'string',  'max:30', 'regex:/^[a-zA-ZźżćśńółąęŻŹĆŚŃÓŁĄĘ ]+$/'],
+            'role' => ['required', 'string', 'in:admin,manager,pracownik'],
+            'employeeNo' => ['required', 'string',  'max:255', Rule::unique(User::class)->ignore($user->id)],
+            'phoneNr' => ['required', 'string',  'max:30', 'digits:9', Rule::unique(User::class)->ignore($user->id)],
+            'email' => ['required', 'string', 'max:255', Rule::unique(User::class)->ignore($user->id)],#Rule::unique('users', 'email')
+            'salary' => ['required', 'numeric', 'min:0']
+        ],
+            [
+                'required' => 'To pole jest wymagane.',
+                'max' => 'Wpisany tekst ma za dużo znaków.',
+                'firstName.regex' => 'Pole Imię może zawierać tylko litery.',
+                'lastName.regex' => 'Pole Nazwisko może zawierać tylko litery.',
+                'role.in' => 'Niepoprawne stanowisko. Musi być jedno z: pracownik, manager, admin.',
+                'employeeNo.unique' => 'Ta nazwa użytkownika jest zajęta.',
+                'phoneNr.digits' => 'Numer telefonu musi zawierać dokładnie 9 cyfr.',
+                'phoneNr.unique' => 'Ten numer telefonu jest już w systemie.',
+                'email.unique' => 'Ten email jest już w systemie.',
+                'email.email' => 'Niepoprawny email. Upewnij się, że wpisujesz poprawny adres.',
+                'salary.numeric' => 'Wynagrodzenie musi być liczbą',
+                'salary.min' => 'Wynagrodzenie musi być liczbą nieujemną.',
+            ]);
+
+        $data = [
+            'firstName' => $request->firstName,
+            'lastName' => $request->lastName,
+            'role' => $request->role,
+            'employeeNo' => $request->employeeNo,
+            'phoneNr' => $request->phoneNr,
+            'email' => $request->email,
+            'salary' => $request->salary,
+        ];
+
+        return $data;
     }
 }
 

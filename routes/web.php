@@ -32,13 +32,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile_edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile_edit', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile_edit', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::get('/pracownicy', [EmployeeController::class, 'index'])->name('employee.index');
 });
 
 
 //emplopyees
 Route::middleware('auth')->group(function () {
     Route::get('/pracownicy', [EmployeeController::class, 'index'])->name('employee.index');
+    Route::get('/pracownicy/{id}/work', [EmployeeController::class, 'workDetails'])->name('employee.details.work');
+    Route::get('/pracownicy/{id}/profile', [EmployeeController::class, 'profileDetails'])->name('employee.details.profile');
 });
 
 //production
