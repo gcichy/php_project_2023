@@ -6,7 +6,7 @@
             </x-nav-button>
         </div>
         <div class="py-5 pr-5 flex justify-center align-middle">
-            <x-nav-button :href="route('employee.details.profile', $user->id)">
+            <x-nav-button :href="route('employee.details.profile', $user->employeeNo)">
                 {{ __('Profil') }}
             </x-nav-button>
         </div>

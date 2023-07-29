@@ -22,7 +22,7 @@
                             {{$emp->firstName}}
                         </a>
                         <div class="py-7 pr-7 flex justify-center align-middle">
-                            <x-nav-button :href="route('employee.details.work', $emp->id)">
+                            <x-nav-button :href="route('employee.details.work', $emp->employeeNo)">
                                 {{ __('Szczegóły pracownika') }}
                             </x-nav-button>
                         </div>

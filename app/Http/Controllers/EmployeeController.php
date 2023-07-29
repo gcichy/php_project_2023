@@ -42,10 +42,10 @@ class EmployeeController extends Controller
 
     }
 
-    public function workDetails(Request $request): View
+    public function workDetails(Request $request, string $employeeNo): View
     {
-        $employeeID = (int) array_slice(explode('/', $request->url()), -2, 1)[0];
-        $employee = User::find($employeeID);
+//        $employeeID = (int) array_slice(explode('/', $request->url()), -2, 1)[0];
+        $employee = User::where('employeeNo',$employeeNo)->get()[0];
 
         return view('employee.employee_details_work', [
             'user' => $employee,
@@ -56,11 +56,10 @@ class EmployeeController extends Controller
 
     }
 
-    public function profileDetails(Request $request): View
+    public function profileDetails(Request $request, string $employeeNo): View
     {
-        $employeeID = (int) array_slice(explode('/', $request->url()), -2, 1)[0];
-        $employee = User::find($employeeID);
-
+//        $employeeID = (int) array_slice(explode('/', $request->url()), -2, 1)[0];
+        $employee = User::where('employeeNo',$employeeNo)->get()[0];
         $userData = getUserData::getUserData($employee);
 
         return view('employee.employee_details_profile', [

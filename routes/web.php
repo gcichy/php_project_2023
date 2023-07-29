@@ -7,6 +7,7 @@ use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StatisticsController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -28,18 +29,22 @@ Route::get('/', function () {
 //profile
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard',[DashboardController::class, 'create'])->name('dashboard');
-    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
-    Route::get('/profile_edit', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile_edit', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile_edit', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/profile/{employeeNo}', [ProfileController::class, 'index'])->name('profile.index');
+//    Route::get('/profile_edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/profile_edit/{employeeNo}', [ProfileController::class, 'edit'])->name('profile.edit');
+//    Route::patch('/profile_edit/{employeeNo}', function (Request $request, string $employeeNo) {
+//        dd($request);
+//    })->name('profile.update');
+    Route::patch('/profile_edit/{employeeNo}', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile_edit/{employeeNo}', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 
-//emplopyees
+//employees
 Route::middleware('auth')->group(function () {
     Route::get('/pracownicy', [EmployeeController::class, 'index'])->name('employee.index');
-    Route::get('/pracownicy/{id}/work', [EmployeeController::class, 'workDetails'])->name('employee.details.work');
-    Route::get('/pracownicy/{id}/profile', [EmployeeController::class, 'profileDetails'])->name('employee.details.profile');
+    Route::get('/pracownicy/work/{employeeNo}', [EmployeeController::class, 'workDetails'])->name('employee.details.work');
+    Route::get('/pracownicy/profile/{employeeNo}', [EmployeeController::class, 'profileDetails'])->name('employee.details.profile');
 });
 
 //production

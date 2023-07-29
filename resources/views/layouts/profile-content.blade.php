@@ -4,7 +4,7 @@
         {{ __('Profil Użytkownika') }}
     </a>
     <div class="py-5 pr-5 flex justify-center align-middle">
-        <x-nav-button :href="route('profile.edit')">
+        <x-nav-button :href="route('profile.edit', $user->employeeNo)">
             {{ __('Edytuj Profil') }}
         </x-nav-button>
     </div>

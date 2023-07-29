@@ -20,9 +20,10 @@ class ProfileController extends Controller
     /**
      * Display the user's profile.
      */
-    public function index(Request $request): View
+    public function index(Request $request, string $employeeNo): View
     {
-        $userData = getUserData::getUserData($request->user());
+        $user = User::where('employeeNo',$employeeNo)->get()[0];
+        $userData = getUserData::getUserData($user);
 
         return view('profile.profile', [
             'user' => $request->user(),
@@ -34,14 +35,13 @@ class ProfileController extends Controller
     /**
      * Display the user's profile form.
      */
-    public function edit(Request $request): View
+    public function edit(Request $request, string $employeeNo): View
     {
-
-
+        $user = User::where('employeeNo',$employeeNo)->get()[0];
         $userData = getUserData::getEditUserData();
 
         return view('profile.edit', [
-            'user' => $request->user(),
+            'user' => $user,
             'userData' => $userData,
         ]);
     }
@@ -49,16 +49,13 @@ class ProfileController extends Controller
     /**
      * Update the user's profile information.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function update(Request $request, string $employeeNo): RedirectResponse
     {
-
-        $user = $this->ensureIsNotNullUser($request->user());
+        $user = $this->ensureIsNotNullUser(User::where('employeeNo',$employeeNo)->get()[0]);
 
 //        $data = $this->ensureIsArray($request->validated());
 
-
         $data = $this->validateUpdate($request, $user);
-
         $user->fill($data);
 
         if ($user->isDirty('email')) {
@@ -67,19 +64,19 @@ class ProfileController extends Controller
 
         $user->save();
 
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+        return Redirect::route('profile.edit', $user->employeeNo )->with('status', 'profile-updated');
     }
 
     /**
      * Delete the user's account.
      */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request, string $employeeNo): RedirectResponse
     {
         $request->validateWithBag('userDeletion', [
             'password' => ['required', 'current-password'],
         ]);
 
-        $user = $this->ensureIsNotNullUser($request->user());
+        $user = $this->ensureIsNotNullUser(User::where('employeeNo',$employeeNo)->get()[0]);
 
         Auth::logout();
 
@@ -91,51 +88,10 @@ class ProfileController extends Controller
         return Redirect::to('/');
     }
 
-    /**
-     * Returns dict with user data.
-     *
-     */
-    private function getUserData(Request $request): array
-    {
-        $userData = [];
-        try {
-            $user = $request->user();
-            if(is_null($user)) {
-                throw new Exception("User is not defined");
-            }
-            $name = (!is_null($user->firstName) ? $user->firstName : '').' '.
-                (!is_null($user->lastName) ? $user->lastName : '');
-            $userData = [
-                'Imię i Nazwisko' => $name,
-                'Stanowisko' => !is_null($user->role) ? $user->role : '-',
-                'Nazwa Użytkownika' => !is_null($user->employeeNo) ? $user->employeeNo : '-',
-                'E-mail' => !is_null($user->email) ? $user->email : '-',
-                'Nr Telefonu' => !is_null($user->phoneNr) ? $user->phoneNr : '-',
-                'Wynagrodzenie' => !is_null($user->salary) ? $user->salary : '-',
-            ];
 
-
-        }
-        catch(Exception $e) {
-            echo 'Message: ' .$e->getMessage();
-        }
-
-        return $userData;
-    }
-
-    private function getEditUserData(): array
-    {
-        return [
-            'Imię' => 'firstName',
-            'Nazwisko' => 'lastName',
-            'Stanowisko' => 'role',
-            'Nazwa Użytkownika' => 'employeeNo',
-            'Wynagrodzenie' => 'salary',
-            'Nr Telefonu' => 'phoneNr',
-        ];
-    }
 
     private function validateUpdate(Request $request, User $user) {
+
         $request->validate([
             'firstName' => ['required', 'string',  'max:30','regex:/^[a-zA-ZźżćśńółąęŻŹĆŚŃÓŁĄĘ ]+$/'],
             'lastName' => ['required', 'string',  'max:30', 'regex:/^[a-zA-ZźżćśńółąęŻŹĆŚŃÓŁĄĘ ]+$/'],
