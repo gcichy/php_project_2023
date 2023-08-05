@@ -51,7 +51,6 @@ Route::middleware('auth')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/produkcja', [ProductionController::class, 'index'])->name('production.index');
 });
-require __DIR__.'/auth.php';
 
 //schedule
 Route::middleware('auth')->group(function () {

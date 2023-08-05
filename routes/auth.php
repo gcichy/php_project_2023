@@ -38,7 +38,7 @@ Route::middleware('auth')->group(function () {
 
     Route::post('register', [RegisteredUserController::class, 'store']);
 
-    Route::get('verify-email', [EmailVerificationPromptController::class, '__invoke'])
+    Route::get('verify-email/{employeeNo}', [EmailVerificationPromptController::class, '__invoke'])
                 ->name('verification.notice');
 
     Route::get('verify-email/{id}/{hash}', [VerifyEmailController::class, '__invoke'])

@@ -58,6 +58,7 @@ class EmployeeController extends Controller
 
     public function profileDetails(Request $request, string $employeeNo): View
     {
+        $currentUser = Auth::user();
 //        $employeeID = (int) array_slice(explode('/', $request->url()), -2, 1)[0];
         $employee = User::where('employeeNo',$employeeNo)->get()[0];
         $userData = getUserData::getUserData($employee);
@@ -65,6 +66,7 @@ class EmployeeController extends Controller
         return view('employee.employee_details_profile', [
             'user' => $employee,
             'userData' => $userData,
+            'currentUser' => $currentUser,
         ]);
 
 
