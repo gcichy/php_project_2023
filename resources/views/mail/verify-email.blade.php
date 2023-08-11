@@ -2,8 +2,8 @@
 
 Witaj {{$name}}. Proszę Zweryfikuj swój adres email.
 
-    @component('mail::button', ['url' => 'https://dipmar-produkcja.pl/dashboard'])
-        Zweryfikuj
-    @endcomponent
+<x-nav-button :href="'https://dipmar-produkcja.pl/dashboard'">
+    {{ __('Zweryfikuj') }}
+</x-nav-button>
 
 @endcomponent

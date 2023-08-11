@@ -21,14 +21,18 @@ class EmailVerificationPromptController extends Controller
      */
     public function __invoke(Request $request,string $employeeNo): RedirectResponse|View
     {
+        $employee = $this->ensureIsNotNullUser(User::where('employeeNo',$employeeNo)->get()[0]);
 
-        $user = $this->ensureIsNotNullUser($request->user());
-        $employee = User::where('employeeNo',$employeeNo)->get()[0];
+//        Mail::to($employee->email)->send(new VerifyEmail($employee));
+        if ($employee->hasVerifiedEmail()) {
+            return redirect()->intended(RouteServiceProvider::HOME);
+        }
 
-        Mail::to($employee->email)->send(new VerifyEmail($employee));
-
-        return $user->hasVerifiedEmail()
+        $employee->sendEmailVerificationNotification();
+        return $employee->hasVerifiedEmail()
             ? redirect()->intended(RouteServiceProvider::HOME)
-            : view('auth.verify-email');
+            : view('auth.verify-email', [
+                'employee' => $employee,
+            ]);
     }
 }

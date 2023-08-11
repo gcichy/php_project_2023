@@ -19,7 +19,7 @@ class UsersSeeder extends Seeder
             'role' => 'admin',
             'email' => 'g.cichy2001@gmail.com',
             'password' => bcrypt('secret'),
-            'isVerified' => true,
+            'is_verified' => true,
         ]);
         DB::table('users')->insert([
             'firstName' => 'Marcin',
@@ -28,7 +28,7 @@ class UsersSeeder extends Seeder
             'role' => 'manager',
             'email' => 'default@gmail.com',
             'password' => bcrypt('secret'),
-            'isVerified' => true,
+            'is_verified' => true,
         ]);
     }
 
