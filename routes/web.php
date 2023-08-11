@@ -44,8 +44,7 @@ Route::middleware('auth')->group(function () {
 //employees
 Route::middleware(['auth'])->group(function () {
     Route::get('/pracownicy', [EmployeeController::class, 'index'])->name('employee.index');
-    Route::get('/pracownicy/work/{employeeNo}', [EmployeeController::class, 'workDetails'])->name('employee.details.work');
-    Route::get('/pracownicy/profile/{employeeNo}', [EmployeeController::class, 'profileDetails'])->name('employee.details.profile');
+    Route::get('/pracownicy/{employeeNo}', [EmployeeController::class, 'Details'])->name('employee.details');
 });
 
 //production
