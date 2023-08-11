@@ -5,6 +5,18 @@
             {{ __('Edytuj Profil Użytkownika') }}
         </a>
     </div>
+    @if(is_null($user->email_verified_at))
+        <div class="my-2 flex justify-center">
+            <x-nav-button :href="route('verification.notice', $user->employeeNo)" class="bg-red-700">
+                @if(isset($currentUser) and $currentUser->employeeNo != $user->employeeNo)
+                    {{ __('Zweryfikuj adres e-mail użytkownika '.$user->employeeNo) }}
+                @else
+                    {{ __('Zweryfikuj swój adres e-mail') }}
+                @endif
+
+            </x-nav-button>
+        </div>
+    @endif
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             @if( Auth::user()->role != 'employee')

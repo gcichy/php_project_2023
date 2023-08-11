@@ -20,7 +20,7 @@
                         {{ __('Profil') }}
                     </x-nav-link>
                 </div>
-                @if(request()->user()->role != 'employee')
+                @if(request()->user()->role != 'pracownik')
                     <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                         <x-nav-link class="text-2xl" :href="route('employee.index')" :active="request()->routeIs('employee.index')">
                             {{ __('Pracownicy') }}
@@ -124,7 +124,7 @@
                 <x-responsive-nav-link :href="route('profile.index', Auth::user()->employeeNo )" :active="request()->routeIs('profile.index')" class="text-white">
                     {{ __('Profil') }}
                 </x-responsive-nav-link>
-                @if(request()->user()->role != 'employee')
+                @if(request()->user()->role != 'pracownik')
                     <x-responsive-nav-link :href="route('employee.index')" :active="request()->routeIs('employee.index')" class="text-white" >
                         {{ __('Pracownicy') }}
                     </x-responsive-nav-link>

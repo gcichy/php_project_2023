@@ -22,12 +22,14 @@ class ProfileController extends Controller
      */
     public function index(Request $request, string $employeeNo): View
     {
+        $status = $request->verified == 1 ? 'Pomyślnie zweryfikowano adres email' : '';
         $user = User::where('employeeNo',$employeeNo)->get()[0];
         $userData = getUserData::getUserData($user);
 
         return view('profile.profile', [
-            'user' => $request->user(),
+            'user' => $user,
             'userData' => $userData,
+            'status' => $status,
         ]);
 
     }
@@ -37,12 +39,17 @@ class ProfileController extends Controller
      */
     public function edit(Request $request, string $employeeNo): View
     {
-        $user = User::where('employeeNo',$employeeNo)->get()[0];
+        $user = $this->ensureIsNotNullUser(User::where('employeeNo',$employeeNo)->get()[0]);
         $userData = getUserData::getEditUserData();
+
+        $currentUser = $this->ensureIsNotNullUser($request->user());
+
 
         return view('profile.edit', [
             'user' => $user,
+            'currentUser' => $currentUser,
             'userData' => $userData,
+
         ]);
     }
 
@@ -59,7 +66,7 @@ class ProfileController extends Controller
         $user->fill($data);
 
         if ($user->isDirty('email')) {
-            $user->emailVerifiedAt = null;
+            $user->email_verified_at = null;
         }
 
         $user->save();

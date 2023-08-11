@@ -7,6 +7,7 @@ use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StatisticsController;
+use App\Http\Middleware\CheckUserRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -41,7 +42,7 @@ Route::middleware('auth')->group(function () {
 
 
 //employees
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('/pracownicy', [EmployeeController::class, 'index'])->name('employee.index');
     Route::get('/pracownicy/work/{employeeNo}', [EmployeeController::class, 'workDetails'])->name('employee.details.work');
     Route::get('/pracownicy/profile/{employeeNo}', [EmployeeController::class, 'profileDetails'])->name('employee.details.profile');

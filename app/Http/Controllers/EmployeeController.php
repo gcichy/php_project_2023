@@ -19,7 +19,7 @@ class EmployeeController extends Controller
     {
         $employees = User::all();
 
-        if($request->user()->role == 'employee')
+        if($request->user()->role == 'pracownik')
         {
             return view('dashboard', [
                 'user' => $request->user(),

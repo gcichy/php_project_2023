@@ -1,5 +1,5 @@
 
-@if($user->isVerified == 0)
+@if(is_null($user->email_verified_at))
     <div class="my-2 flex justify-center">
         <x-nav-button :href="route('verification.notice', $user->employeeNo)" class="bg-red-700">
             @if(isset($currentUser) and $currentUser->employeeNo != $user->employeeNo)
