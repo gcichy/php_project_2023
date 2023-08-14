@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'reset' => 'Twoje hasło zostało zresetowanie',
+    'reset' => 'Twoje hasło zostało zresetowane',
     'sent' => 'Link do zmiany hasła został wysłany na twój adres email.',
     'throttled' => 'Poczekaj przed ponowną próbą',
     'token' => 'Token do zmiany hasła jest nieprawidłowy',

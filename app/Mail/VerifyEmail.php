@@ -46,7 +46,8 @@ class VerifyEmail extends Mailable
     {
         return new Content(
             markdown: 'mail.verify-email',
-            with: ['name' => $this->user->firstName],
+            with: ['name' => $this->user->firstName,
+                   'employeeNo' => $this->user->employeeNo],
         );
     }
 

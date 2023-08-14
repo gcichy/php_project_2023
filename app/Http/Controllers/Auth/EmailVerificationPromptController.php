@@ -29,6 +29,7 @@ class EmailVerificationPromptController extends Controller
         }
 
         $employee->sendEmailVerificationNotification();
+//        Mail::to($employee->email)->send(new VerifyEmail($employee));
         return $employee->hasVerifiedEmail()
             ? redirect()->intended(RouteServiceProvider::HOME)
             : view('auth.verify-email', [

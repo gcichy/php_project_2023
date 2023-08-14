@@ -5,6 +5,11 @@
             {{ __('Edytuj Profil Użytkownika') }}
         </a>
     </div>
+    @if (session('status') === 'password-updated')
+        <div class="my-2 flex justify-center">
+            <p class="text-green-500">{{ __('Zmieniono hasło.') }}</p>
+        </div>
+    @endif
     @if(is_null($user->email_verified_at))
         <div class="my-2 flex justify-center">
             <x-nav-button :href="route('verification.notice', $user->employeeNo)" class="bg-red-700">
@@ -19,19 +24,19 @@
     @endif
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            @if( Auth::user()->role != 'employee')
+            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
+                <div class="max-w-xl">
+                    @include('profile.partials.update-profile-information-form')
+                </div>
+            </div>
+            @if( Auth::user()->employeeNo == $user->employeeNo)
                 <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
                     <div class="max-w-xl">
-                        @include('profile.partials.update-profile-information-form')
+                        @include('profile.partials.update-password-form')
                     </div>
                 </div>
             @endif
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-password-form')
-                </div>
-            </div>
-            @if( Auth::user()->role != 'employee')
+            @if( Auth::user()->role != 'pracownik')
                 <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
                     <div class="max-w-xl">
                         @include('profile.partials.delete-user-form')

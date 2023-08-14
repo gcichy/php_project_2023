@@ -13,6 +13,12 @@
         </div>
     </div>
 
+    @if (session('status') === 'user-deleted')
+        <div class="my-2 flex justify-center">
+            <p class="text-green-500">{{ __('Użytkownik '.session('employeeNo').' został usunięty z systemu.') }}</p>
+        </div>
+    @endif
+
     <div class="max-w-7xl mt-[3%] mx-auto sm:px-6 lg:px-8 space-y-6">
         <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
             <div class="max-w-full">

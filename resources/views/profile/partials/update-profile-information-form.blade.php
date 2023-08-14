@@ -1,3 +1,4 @@
+@php use Illuminate\Support\Facades\Auth; @endphp
 {{--@php use Illuminate\Contracts\Auth\MustVerifyEmail; @endphp--}}
 <section>
     <header>
@@ -11,19 +12,20 @@
     </header>
 
 
-
     <form method="post" action="{{ route('profile.update', $user->employeeNo) }}" class="mt-6 space-y-6">
         @csrf
         @method('patch')
         @foreach($userData as $span => $data)
-            <div>
-                <x-input-label for="{{$data}}" :value="$span" class="lg:text-xl"/>
-                <x-text-input id="{{$data}}" name="{{$data}}" type="text" class="mt-1 block w-full"
-                              :value="old($data, $user->$data)" required autocomplete="{{$data}}"/>
-                <x-input-error class="mt-2" :messages="$errors->get($data)"/>
-            </div>
-        @endforeach
+            @if(Auth::user()->role != 'pracownik' or $data == 'phoneNr')
+                <div>
+                    <x-input-label for="{{$data}}" :value="$span" class="lg:text-xl"/>
+                    <x-text-input id="{{$data}}" name="{{$data}}" type="text" class="mt-1 block w-full"
+                                  :value="old($data, $user->$data)" required autocomplete="{{$data}}"/>
+                    <x-input-error class="mt-2" :messages="$errors->get($data)"/>
+                </div>
+            @endif
 
+        @endforeach
 
         <div>
             <x-input-label for="email" :value="__('Email')" class="lg:text-xl"/>
@@ -31,24 +33,24 @@
                           :value="old('email', $user->email)" required autocomplete="email"/>
             <x-input-error class="mt-2" :messages="$errors->get('email')"/>
 
-{{--            @if ($user instanceof MustVerifyEmail && ! $user->hasVerifiedEmail())--}}
-{{--                <div>--}}
-{{--                    <p class="text-sm mt-2 text-gray-800">--}}
-{{--                        {{ __('Your email address is unverified.') }}--}}
+            {{--            @if ($user instanceof MustVerifyEmail && ! $user->hasVerifiedEmail())--}}
+            {{--                <div>--}}
+            {{--                    <p class="text-sm mt-2 text-gray-800">--}}
+            {{--                        {{ __('Your email address is unverified.') }}--}}
 
-{{--                        <button form="send-verification"--}}
-{{--                                class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">--}}
-{{--                            {{ __('Click here to re-send the verification email.') }}--}}
-{{--                        </button>--}}
-{{--                    </p>--}}
+            {{--                        <button form="send-verification"--}}
+            {{--                                class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">--}}
+            {{--                            {{ __('Click here to re-send the verification email.') }}--}}
+            {{--                        </button>--}}
+            {{--                    </p>--}}
 
-{{--                    @if (session('status') === 'verification-link-sent')--}}
-{{--                        <p class="mt-2 font-medium text-sm text-green-600">--}}
-{{--                            {{ __('A new verification link has been sent to your email address.') }}--}}
-{{--                        </p>--}}
-{{--                    @endif--}}
-{{--                </div>--}}
-{{--            @endif--}}
+            {{--                    @if (session('status') === 'verification-link-sent')--}}
+            {{--                        <p class="mt-2 font-medium text-sm text-green-600">--}}
+            {{--                            {{ __('A new verification link has been sent to your email address.') }}--}}
+            {{--                        </p>--}}
+            {{--                    @endif--}}
+            {{--                </div>--}}
+            {{--            @endif--}}
         </div>
 
         <div class="flex items-center gap-4">

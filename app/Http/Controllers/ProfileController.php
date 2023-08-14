@@ -83,16 +83,11 @@ class ProfileController extends Controller
             'password' => ['required', 'current-password'],
         ]);
 
+
         $user = $this->ensureIsNotNullUser(User::where('employeeNo',$employeeNo)->get()[0]);
-
-        Auth::logout();
-
         $user->delete();
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return Redirect::to('/');
+        return redirect()->route('employee.index')->with('status', 'user-deleted')->with('employeeNo', $employeeNo);
     }
 
 
