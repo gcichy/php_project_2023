@@ -20,7 +20,17 @@ class PasswordController extends Controller
     {
         $validated = $request->validateWithBag('updatePassword', [
             'current_password' => ['required', 'current_password'],
-            'password' => ['required', Password::defaults(), 'confirmed'],
+            'password' => ['required', 'min:11', 'string', 'max:30',
+                'regex:/(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$%+=-_<>;:?.,\^&\*\)\(])/','different:current_password'],//Rules\Password::defaults()],
+            'password_confirmation' => ['required', 'same:password'],
+        ], [
+            'required' => 'To pole jest wymagane.',
+            'max' => 'Wpisany tekst ma za dużo znaków.',
+            'current_password.current_password' => 'Aktualne hasło jest nieprawidłowe.',
+            'password.different' => 'Nowe hasło nie może być identyczne jak poprzednie.',
+            'password.min' => 'Hasło musi zawierać minimum 11 znaków.',
+            'password.regex' => 'Hasło musi zawierać małą literę, dużą literę, liczbę i znak specjalny.',
+            'password_confirmation.same' => 'Hasła muszą być identyczne.',
         ]);
 
         $user = $this->ensureIsNotNullUser($request->user());
