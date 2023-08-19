@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\getUserData;
+use App\Helpers\HasEnsure;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use http\Url;
@@ -12,6 +13,7 @@ use Illuminate\View\View;
 
 class EmployeeController extends Controller
 {
+    use HasEnsure;
     /**
      * Display the employee dashboard.
      */
@@ -46,7 +48,7 @@ class EmployeeController extends Controller
     {
         $currentUser = Auth::user();
 //        $employeeID = (int) array_slice(explode('/', $request->url()), -2, 1)[0];
-        $employee = User::where('employeeNo',$employeeNo)->get()[0];
+        $employee = $this->ensureIsNotNullUser(User::where('employeeNo',$employeeNo)->firstOrFail());
         $userData = getUserData::getUserData($employee);
 
         return view('employee.employee_details', [
