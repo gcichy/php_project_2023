@@ -5,17 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Task extends Model
+class Shift extends Model
 {
-
     /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string,>
      */
     protected $fillable = [
-        'taskDescription',
-        'product_id',
+        'shift_start',
+        'shift_end',
+        'type',
     ];
 
     /**

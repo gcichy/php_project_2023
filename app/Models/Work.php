@@ -5,17 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Task extends Model
+class Work extends Model
 {
-
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string,>
+     * @var array<int, string, double>
      */
     protected $fillable = [
-        'taskDescription',
-        'product_id',
+        'shift_id',
+        'user_id',
+        'task_id',
+        'amount',
+        'minute_break_duration',
+        'additional_comment'
     ];
 
     /**

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('image');
             $table->string('price');
             $table->string('unit');
-            $table->integer('parentID')->nullable();
+            $table->integer('parent_id')->nullable();
             $table->timestamps();
         });
     }

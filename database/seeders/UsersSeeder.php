@@ -28,6 +28,15 @@ class UsersSeeder extends Seeder
             'email' => 'default@gmail.com',
             'password' => bcrypt('secret'),
         ]);
+        DB::table('users')->insert([
+            'firstName' => 'Katarzyna',
+            'lastName' => 'Borcz',
+            'employeeNo' => 'mborcz',
+            'role' => 'pracownik',
+            'phoneNr' => '725069188',
+            'email' => 'kasia.czrob0304@onet.pl',
+            'password' => bcrypt('secret'),
+        ]);
     }
 
 }

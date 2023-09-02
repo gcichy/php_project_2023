@@ -17,7 +17,7 @@ class ProductionStandard extends Model
         'amount',
         'unit',
         'description',
-        'taskID'
+        'task_id'
     ];
 
     /**

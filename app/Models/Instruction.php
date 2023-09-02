@@ -17,7 +17,7 @@ class Instruction extends Model
         'instruction',
         'description',
         'video',
-        'productID',
+        'product_id',
     ];
 
     /**

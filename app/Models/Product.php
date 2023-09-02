@@ -19,7 +19,7 @@ class Product extends Model
         'image',
         'price',
         'unit',
-        'parentID',
+        'parent_id',
     ];
 
     /**

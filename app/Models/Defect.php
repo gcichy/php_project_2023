@@ -5,17 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Task extends Model
+class Defect extends Model
 {
-
     /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string,>
      */
     protected $fillable = [
-        'taskDescription',
-        'product_id',
+        'work_id',
+        'amount',
+        'reason_code',
+        'additional_comment'
     ];
 
     /**

@@ -18,7 +18,10 @@ return new class extends Migration
             $table->string('instruction');
             $table->double('description');
             $table->string('video')->nullable();
-            $table->integer( 'productID');
+            $table->foreignId('product_id')
+                ->constrained('products')
+                ->onUpdate('cascade')
+                ->onDelete('cascade');
             $table->timestamps();
         });
     }

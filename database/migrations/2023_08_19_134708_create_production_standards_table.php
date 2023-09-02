@@ -19,7 +19,10 @@ return new class extends Migration
             $table->double('amount');
             $table->string('unit');
             $table->string('description');
-            $table->integer('taskID');
+            $table->foreignId('task_id')
+                ->constrained('tasks')
+                ->onUpdate('cascade')
+                ->onDelete('cascade');
             $table->timestamps();
         });
     }
