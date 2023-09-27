@@ -32,6 +32,11 @@ return new class extends Migration
                 ->constrained('product')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
+            $table->foreignId('component_id')
+                ->nullable()
+                ->constrained('component')
+                ->onUpdate('cascade')
+                ->onDelete('restrict');
             $table->foreignId('production_cycle_id')
                 ->nullable()
                 ->constrained('production_cycle')

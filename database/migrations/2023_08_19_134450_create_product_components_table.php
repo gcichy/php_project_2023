@@ -13,28 +13,20 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('production_standard', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('production_schema_id')
-                ->constrained('production_schema')
+        Schema::create('product_component', function (Blueprint $table) {
+            $table->foreignId('product_id')
+                ->constrained('product')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
             $table->foreignId('component_id')
-                ->nullable()
                 ->constrained('component')
-                ->onUpdate('cascade')
-                ->onDelete('restrict');
-            $table->string('name');
-            $table->integer('duration_hours');
-            $table->double('amount');
-            $table->foreignId('unit_id')
-                ->constrained('unit')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
             $table->string('description')->nullable();
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
             $table->timestamps();
+            $table->primary(['product_id','component_id']);
         });
     }
 
@@ -45,6 +37,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('production_standard');
+        Schema::dropIfExists('product_component');
     }
 };

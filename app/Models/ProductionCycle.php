@@ -14,7 +14,8 @@ class ProductionCycle extends Model
      */
     protected $fillable = [
         'production_schema_id',             //id of production schema for which production cycle is created
-        'product_id',                       //if production schema is bonded with any product, then product id must be supplied
+        'product_id',                       //id of product for which production cycle is created
+        'component_id',                     //if production cycle is created for component (not for product), then component id must be supplied
         'start_time',                       //cycle start time
         'end_time',                         //cycle end time
         'duration_minute_sum',              //summed duration of works from start to completion of production cycle

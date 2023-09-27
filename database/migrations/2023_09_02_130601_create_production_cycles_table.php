@@ -24,6 +24,11 @@ return new class extends Migration
                 ->constrained('product')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
+            $table->foreignId('component_id')
+                ->nullable()
+                ->constrained('component')
+                ->onUpdate('cascade')
+                ->onDelete('restrict');
             $table->dateTime('start_time');
             $table->dateTime('end_time');
             $table->unsignedBigInteger('duration_minute_sum');

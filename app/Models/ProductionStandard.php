@@ -14,7 +14,7 @@ class ProductionStandard extends Model
      */
     protected $fillable = [
         'production_schema_id',             //production schema for which production standard is set
-        'product_id',                       //id of product bonded with production schema
+        'component_id',                       //id of component bonded with production schema
         'name',
         'duration_hours',                   //examplary duration - for instance 1 hour
         'amount',                           //amount that should be produced in exemplary duration

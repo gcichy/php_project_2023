@@ -19,8 +19,8 @@ return new class extends Migration
                 ->constrained('production_cycle')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
-            $table->foreignId('production_schema_id')
-                ->constrained('production_schema')
+            $table->foreignId('production_standard_id')
+                ->constrained('production_standard')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
             $table->double('success_rate');

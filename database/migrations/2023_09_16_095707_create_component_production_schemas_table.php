@@ -13,9 +13,9 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('product_production_schema', function (Blueprint $table) {
-            $table->foreignId('product_id')
-                ->constrained('product')
+        Schema::create('component_production_schema', function (Blueprint $table) {
+            $table->foreignId('component_id')
+                ->constrained('component')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
             $table->foreignId('production_schema_id')
@@ -30,7 +30,7 @@ return new class extends Migration
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
             $table->timestamps();
-            $table->primary(['product_id','production_schema_id']);
+            $table->primary(['component_id','production_schema_id']);
         });
     }
 
@@ -41,6 +41,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('product_production_schema');
+        Schema::dropIfExists('component_production_schema');
     }
 };

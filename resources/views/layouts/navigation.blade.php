@@ -33,6 +33,11 @@
                     </x-nav-link>
                 </div>
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                    <x-nav-link class="text-2xl" :href="route('production.index')" :active="request()->routeIs('production.index')">
+                        {{ __('Produkty') }}
+                    </x-nav-link>
+                </div>
+                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                     <x-nav-link class="text-2xl" :href="route('schedule.index')" :active="request()->routeIs('schedule.index')">
                         {{ __('Harmonogram') }}
                     </x-nav-link>

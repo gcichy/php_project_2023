@@ -18,7 +18,7 @@ class ProductionStandardSeeder extends Seeder
         //łóżko domek z mdf - fronty
         DB::table('production_standard')->insert([
             'production_schema_id' => 4,
-            'product_id' => 3,
+            'component_id' => 1,
             'name' => 'Łóżko domek MDF, fronty - produkt gotowy do lakierowania',
             'duration_hours' => 8,
             'amount' => 10,
@@ -31,7 +31,7 @@ class ProductionStandardSeeder extends Seeder
         ]);
         DB::table('production_standard')->insert([
             'production_schema_id' => 5,
-            'product_id' => 3,
+            'component_id' => 1,
             'name' => 'Łóżko domek MDF, fronty - produkt polakierowany',
             'duration_hours' => 8,
             'amount' => 30,
@@ -46,7 +46,7 @@ class ProductionStandardSeeder extends Seeder
         //łóżko domek z mdf - barierka długa
         DB::table('production_standard')->insert([
             'production_schema_id' => 4,
-            'product_id' => 4,
+            'component_id' => 2,
             'name' => 'Łóżko domek MDF, barierka długa - produkt gotowy do lakierowania',
             'duration_hours' => 1,
             'amount' => 10,
@@ -59,7 +59,7 @@ class ProductionStandardSeeder extends Seeder
         ]);
         DB::table('production_standard')->insert([
             'production_schema_id' => 5,
-            'product_id' => 4,
+            'component_id' => 2,
             'name' => 'Łóżko domek MDF, barierka długa - produkt polakierowany',
             'duration_hours' => 1,
             'amount' => 20,
@@ -74,7 +74,7 @@ class ProductionStandardSeeder extends Seeder
         //łóżko domek z mdf - barierka gitara
         DB::table('production_standard')->insert([
             'production_schema_id' => 4,
-            'product_id' => 5,
+            'component_id' => 3,
             'name' => 'Łóżko domek MDF, barierka gitara - produkt gotowy do lakierowania',
             'duration_hours' => 1,
             'amount' => 10,
@@ -87,7 +87,7 @@ class ProductionStandardSeeder extends Seeder
         ]);
         DB::table('production_standard')->insert([
             'production_schema_id' => 5,
-            'product_id' => 5,
+            'component_id' => 3,
             'name' => 'Łóżko domek MDF, barierka gitara - produkt polakierowany',
             'duration_hours' => 1,
             'amount' => 20,
@@ -102,7 +102,7 @@ class ProductionStandardSeeder extends Seeder
         //łóżko domek z mdf - poprzeczka górna
         DB::table('production_standard')->insert([
             'production_schema_id' => 4,
-            'product_id' => 6,
+            'component_id' => 4,
             'name' => 'Łóżko domek MDF, poprzeczka górna - produkt gotowy do lakierowania',
             'duration_hours' => 1,
             'amount' => 20,
@@ -115,7 +115,7 @@ class ProductionStandardSeeder extends Seeder
         ]);
         DB::table('production_standard')->insert([
             'production_schema_id' => 5,
-            'product_id' => 6,
+            'component_id' => 4,
             'name' => 'Łóżko domek MDF, poprzeczka górna - produkt polakierowany',
             'duration_hours' => 1,
             'amount' => 40,
@@ -130,7 +130,7 @@ class ProductionStandardSeeder extends Seeder
         //łóżko domek z mdf - poprzeczki boczne
         DB::table('production_standard')->insert([
             'production_schema_id' => 4,
-            'product_id' => 7,
+            'component_id' => 5,
             'name' => 'Łóżko domek MDF, poprzeczki boczne - produkt gotowy do lakierowania',
             'duration_hours' => 1,
             'amount' => 15,
@@ -143,7 +143,7 @@ class ProductionStandardSeeder extends Seeder
         ]);
         DB::table('production_standard')->insert([
             'production_schema_id' => 5,
-            'product_id' => 7,
+            'component_id' => 5,
             'name' => 'Łóżko domek MDF, poprzeczki boczne - produkt polakierowany',
             'duration_hours' => 1,
             'amount' => 30,
@@ -158,7 +158,7 @@ class ProductionStandardSeeder extends Seeder
         //łóżko domek z drewna - nogi
         DB::table('production_standard')->insert([
             'production_schema_id' => 2,
-            'product_id' => 8,
+            'component_id' => 6,
             'name' => 'Łóżko domek drewno, nogi - produkt gotowy do lakierowania',
             'duration_hours' => 8,
             'amount' => 20,
@@ -171,7 +171,7 @@ class ProductionStandardSeeder extends Seeder
         ]);
         DB::table('production_standard')->insert([
             'production_schema_id' => 3,
-            'product_id' => 8,
+            'component_id' => 6,
             'name' => 'Łóżko domek drewno, nogi - produkt polakierowany',
             'duration_hours' => 8,
             'amount' => 30,
@@ -186,7 +186,7 @@ class ProductionStandardSeeder extends Seeder
         //łóżko domek z drewna - barierka krótka
         DB::table('production_standard')->insert([
             'production_schema_id' => 7,
-            'product_id' => 9,
+            'component_id' => 7,
             'name' => 'Łóżko Domek - barierka krótka, drewno - produkt gotowy do lakierowania',
             'duration_hours' => 8,
             'amount' => 10,
@@ -199,7 +199,7 @@ class ProductionStandardSeeder extends Seeder
         ]);
         DB::table('production_standard')->insert([
             'production_schema_id' => 3,
-            'product_id' => 9,
+            'component_id' => 7,
             'name' => 'Łóżko Domek - barierka krótka, drewno - produkt polakierowany',
             'duration_hours' => 8,
             'amount' => 20,
@@ -214,7 +214,7 @@ class ProductionStandardSeeder extends Seeder
         //łóżko domek z drewna - barierka długa
         DB::table('production_standard')->insert([
             'production_schema_id' => 7,
-            'product_id' => 10,
+            'component_id' => 8,
             'name' => 'Łóżko Domek - barierka długa, drewno - produkt gotowy do lakierowania',
             'duration_hours' => 8,
             'amount' => 15,
@@ -227,7 +227,7 @@ class ProductionStandardSeeder extends Seeder
         ]);
         DB::table('production_standard')->insert([
             'production_schema_id' => 3,
-            'product_id' => 10,
+            'component_id' => 8,
             'name' => 'Łóżko Domek - barierka długa, drewno - produkt polakierowany',
             'duration_hours' => 8,
             'amount' => 35,
@@ -242,7 +242,7 @@ class ProductionStandardSeeder extends Seeder
         //łóżko domek z drewna - barierka gitara
         DB::table('production_standard')->insert([
             'production_schema_id' => 7,
-            'product_id' => 11,
+            'component_id' => 9,
             'name' => 'Łóżko Domek - barierka gitara, drewno - produkt gotowy do lakierowania',
             'duration_hours' => 8,
             'amount' => 15,
@@ -255,7 +255,7 @@ class ProductionStandardSeeder extends Seeder
         ]);
         DB::table('production_standard')->insert([
             'production_schema_id' => 3,
-            'product_id' => 11,
+            'component_id' => 9,
             'name' => 'Łóżko Domek - barierka gitara, drewno - produkt polakierowany',
             'duration_hours' => 8,
             'amount' => 35,
@@ -270,7 +270,7 @@ class ProductionStandardSeeder extends Seeder
         //łóżko domek z drewna - poprzeczka górna
         DB::table('production_standard')->insert([
             'production_schema_id' => 2,
-            'product_id' => 12,
+            'component_id' => 10,
             'name' => 'Łóżko Domek - poprzeczka górna, drewno - produkt gotowy do lakierowania',
             'duration_hours' => 8,
             'amount' => 40,
@@ -283,7 +283,7 @@ class ProductionStandardSeeder extends Seeder
         ]);
         DB::table('production_standard')->insert([
             'production_schema_id' => 3,
-            'product_id' => 12,
+            'component_id' => 10,
             'name' => 'Łóżko Domek - poprzeczka górna, drewno - produkt polakierowany',
             'duration_hours' => 8,
             'amount' => 80,
@@ -298,7 +298,7 @@ class ProductionStandardSeeder extends Seeder
         //łóżko domek z drewna - poprzeczki boczne
         DB::table('production_standard')->insert([
             'production_schema_id' => 2,
-            'product_id' => 13,
+            'component_id' => 11,
             'name' => 'Łóżko Domek - poprzeczki boczne, drewno - produkt gotowy do lakierowania',
             'duration_hours' => 8,
             'amount' => 25,
@@ -311,7 +311,7 @@ class ProductionStandardSeeder extends Seeder
         ]);
         DB::table('production_standard')->insert([
             'production_schema_id' => 3,
-            'product_id' => 13,
+            'component_id' => 11,
             'name' => 'Łóżko Domek - poprzeczki boczne, drewno - produkt polakierowany',
             'duration_hours' => 8,
             'amount' => 40,
@@ -326,7 +326,7 @@ class ProductionStandardSeeder extends Seeder
         //stelaż
         DB::table('production_standard')->insert([
             'production_schema_id' => 6,
-            'product_id' => 14,
+            'component_id' => 12,
             'name' => 'stelaż - produkt gotowy do lakierowania',
             'duration_hours' => 8,
             'amount' => 30,
@@ -339,7 +339,7 @@ class ProductionStandardSeeder extends Seeder
         ]);
         DB::table('production_standard')->insert([
             'production_schema_id' => 5,
-            'product_id' => 14,
+            'component_id' => 12,
             'name' => 'stelaż, drewno - produkt polakierowany',
             'duration_hours' => 8,
             'amount' => 30,
