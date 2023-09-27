@@ -13,16 +13,18 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('production_standards', function (Blueprint $table) {
+        Schema::create('production_schema', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->double('amount');
-            $table->string('unit');
+            $table->string('production_schema');
             $table->string('description');
-            $table->foreignId('task_id')
-                ->constrained('tasks')
+            $table->integer('tasks_count');
+            $table->foreignId('parent_id')
+                ->nullable()
+                ->constrained('production_schema')
                 ->onUpdate('cascade')
-                ->onDelete('cascade');
+                ->onDelete('restrict');
+            $table->string('created_by')->nullable();
+            $table->string('updated_by')->nullable();
             $table->timestamps();
         });
     }
@@ -34,6 +36,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('production_standards');
+        Schema::dropIfExists('production_schema');
     }
 };

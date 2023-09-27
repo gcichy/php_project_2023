@@ -5,21 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Instruction extends Model
+class WorkEffectivity extends Model
 {
-
     /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string, double>
      */
     protected $fillable = [
-        'product_id',                       //if provided instruction is made for product
-        'task_id',                          //if provided instruction is made for task
-        'name',
-        'instruction_html',                 //html text of instruction
-        'instruction_image',                //image file name of instruction
-        'video',
+        'production_cycle_id',
+        'production_standard_id',
+        'success_rate',                     //ratio amount created/standard amount
+        //other performance measurements
     ];
 
     /**

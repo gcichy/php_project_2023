@@ -24,6 +24,8 @@ return new class () extends Migration {
             $table->string('password');
             $table->double('salary')->default(0);
             $table->rememberToken();
+            $table->string('created_by')->nullable();
+            $table->string('updated_by')->nullable();
             $table->timestamps();
         });
     }

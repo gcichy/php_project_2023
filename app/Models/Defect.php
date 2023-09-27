@@ -13,8 +13,9 @@ class Defect extends Model
      * @var array<int, string,>
      */
     protected $fillable = [
-        'work_id',
+        'work_id',                          //id of work, for which defects are reported
         'amount',
+        'unit_id',                          //id of unit in which defects are produced (it may differ from task unit)
         'reason_code',
         'additional_comment'
     ];

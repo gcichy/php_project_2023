@@ -13,8 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('reason_codes', function (Blueprint $table) {
+        Schema::create('shift', function (Blueprint $table) {
             $table->id();
+            $table->dateTime('start_time');
+            $table->dateTime('end_time');
+            $table->unsignedSmallInteger('type');
+            $table->string('created_by')->nullable();
+            $table->string('updated_by')->nullable();
             $table->timestamps();
         });
     }
@@ -26,6 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('reason_codes');
+        Schema::dropIfExists('shift');
     }
 };

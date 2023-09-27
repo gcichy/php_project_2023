@@ -13,9 +13,9 @@ class Shift extends Model
      * @var array<int, string,>
      */
     protected $fillable = [
-        'shift_start',
-        'shift_end',
-        'type',
+        'shift_start',                      //date of work start for certain working day
+        'shift_end',                        //date of work end for certain working day
+        'type',                             //can be normal workday, weekend, or extra hours
     ];
 
     /**

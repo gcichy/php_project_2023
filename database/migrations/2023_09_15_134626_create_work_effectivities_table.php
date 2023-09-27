@@ -13,10 +13,17 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('task', function (Blueprint $table) {
+        Schema::create('work_effectivity', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('description')->nullable();
+            $table->foreignId('production_cycle_id')
+                ->constrained('production_cycle')
+                ->onUpdate('cascade')
+                ->onDelete('restrict');
+            $table->foreignId('production_schema_id')
+                ->constrained('production_schema')
+                ->onUpdate('cascade')
+                ->onDelete('restrict');
+            $table->double('success_rate');
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
             $table->timestamps();
@@ -30,6 +37,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('task');
+        Schema::dropIfExists('work_effectivity');
     }
 };

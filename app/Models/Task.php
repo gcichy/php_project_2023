@@ -14,9 +14,9 @@ class Task extends Model
      * @var array<int, string,>
      */
     protected $fillable = [
-        'taskDescription',
-        'product_id',
-    ];
+        'name',
+        'description',
+   ];
 
     /**
      * The attributes that should be hidden for serialization.

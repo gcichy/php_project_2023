@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ProductionStandard extends Model
+class ProductionSchema extends Model
 {
     /**
      * The attributes that are mass assignable.
@@ -13,12 +13,10 @@ class ProductionStandard extends Model
      * @var array<int, string, double>
      */
     protected $fillable = [
-        'production_schema_id',             //production schema for which production standard is set
-        'product_id',                       //id of product bonded with production schema
-        'name',
-        'duration_hours',                   //examplary duration - for instance 1 hour
-        'amount',                           //amount that should be produced in exemplary duration
+        'production_schema',
         'description',
+        'tasks_count',                      //number of tasks for production schema
+        'parent_id',                        //id of parent production schema
     ];
 
     /**
@@ -29,4 +27,5 @@ class ProductionStandard extends Model
     protected $hidden = [
         'id',
     ];
+
 }

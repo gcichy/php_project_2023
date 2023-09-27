@@ -13,7 +13,7 @@ class ReasonCode extends Model
      * @var array<int, string,>
      */
     protected $fillable = [
-        'reason_code',
+        'reason_code',                      //number that helps to identify the reason for defect creation
         'description',
     ];
 

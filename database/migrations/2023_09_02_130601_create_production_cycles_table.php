@@ -13,22 +13,24 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('defect', function (Blueprint $table) {
+        Schema::create('production_cycle', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('work_id')
-                ->constrained('work')
+            $table->foreignId('production_schema_id')
+                ->constrained('production_schema')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
-            $table->foreignId('reason_code')
-                ->constrained('reason_code', 'reason_code')
+            $table->foreignId('product_id')
+                ->nullable()
+                ->constrained('product')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
-            $table->double('amount');
-            $table->foreignId('unit_id')
-                ->constrained('unit')
-                ->onUpdate('cascade')
-                ->onDelete('restrict');
-            $table->string('additional_comment');
+            $table->dateTime('start_time');
+            $table->dateTime('end_time');
+            $table->unsignedBigInteger('duration_minute_sum');
+            $table->double('amount_sum');
+            $table->boolean('cycle_finished');
+            $table->boolean('settled');
+            $table->string('additional_comment')->nullable();
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
             $table->timestamps();
@@ -42,6 +44,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('defect');
+        Schema::dropIfExists('production_cycle');
     }
 };

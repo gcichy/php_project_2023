@@ -13,18 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('work', function (Blueprint $table) {
+        Schema::create('production_standard', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('shift_id')
-                ->constrained('shift')
-                ->onUpdate('cascade')
-                ->onDelete('restrict');
-            $table->foreignId('task_id')
-                ->constrained('task')
-                ->onUpdate('cascade')
-                ->onDelete('restrict');
-            $table->foreignId('user_id')
-                ->constrained('users')
+            $table->foreignId('production_schema_id')
+                ->constrained('production_schema')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
             $table->foreignId('product_id')
@@ -32,14 +24,14 @@ return new class extends Migration
                 ->constrained('product')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
-            $table->foreignId('production_cycle_id')
-                ->nullable()
-                ->constrained('production_cycle')
+            $table->string('name');
+            $table->integer('duration_hours');
+            $table->double('amount');
+            $table->foreignId('unit_id')
+                ->constrained('unit')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
-            $table->unsignedBigInteger('duration_minute');
-            $table->double('amount')->nullable();
-            $table->string('additional_comment');
+            $table->string('description')->nullable();
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
             $table->timestamps();
@@ -53,6 +45,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('work');
+        Schema::dropIfExists('production_standard');
     }
 };

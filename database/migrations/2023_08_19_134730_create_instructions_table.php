@@ -13,15 +13,24 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('instructions', function (Blueprint $table) {
+        Schema::create('instruction', function (Blueprint $table) {
             $table->id();
-            $table->string('instruction');
-            $table->double('description');
-            $table->string('video')->nullable();
             $table->foreignId('product_id')
-                ->constrained('products')
+                ->nullable()
+                ->constrained('product')
                 ->onUpdate('cascade')
-                ->onDelete('cascade');
+                ->onDelete('restrict');
+            $table->foreignId('task_id')
+                ->nullable()
+                ->constrained('task')
+                ->onUpdate('cascade')
+                ->onDelete('restrict');
+            $table->string('name');
+            $table->string('instruction_html')->nullable();
+            $table->string('instruction_image')->nullable();
+            $table->string('video')->nullable();
+            $table->string('created_by')->nullable();
+            $table->string('updated_by')->nullable();
             $table->timestamps();
         });
     }
@@ -33,6 +42,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('instructions');
+        Schema::dropIfExists('instruction');
     }
 };
