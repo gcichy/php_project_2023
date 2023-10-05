@@ -18,4 +18,11 @@ class ComponentProductionSchema extends Model
         'sequence_no',                      //order in which production_schema is used while component manufacturing
         'unit_id',                          //unit for the final product created basing on a certain schema (pcs etc.)
     ];
+
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'component_production_schema';
 }

@@ -29,4 +29,11 @@ class Defect extends Model
         'id',
     ];
 
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'defect';
+
 }

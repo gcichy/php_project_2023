@@ -44,7 +44,7 @@ class EmployeeController extends Controller
 
     }
 
-    public function Details(Request $request, string $employeeNo): View
+    public function details(Request $request, string $employeeNo): View
     {
         $currentUser = Auth::user();
 //        $employeeID = (int) array_slice(explode('/', $request->url()), -2, 1)[0];

@@ -28,4 +28,11 @@ class WorkEffectivity extends Model
         'id',
     ];
 
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'work_effectivity';
+
 }

@@ -3,6 +3,7 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeStatisticsController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScheduleController;
@@ -44,7 +45,14 @@ Route::middleware('auth')->group(function () {
 //employees
 Route::middleware(['auth'])->group(function () {
     Route::get('/pracownicy', [EmployeeController::class, 'index'])->name('employee.index');
-    Route::get('/pracownicy/{employeeNo}', [EmployeeController::class, 'Details'])->name('employee.details');
+    Route::get('/pracownicy/{employeeNo}', [EmployeeController::class, 'details'])->name('employee.details');
+});
+
+//products
+Route::middleware(['auth'])->group(function () {
+    Route::get('/produkty', [ProductController::class, 'index'])->name('product.index');
+    Route::get('/produkty/{id}', [ProductController::class, 'details'])->name('product.details');
+    Route::get('/dodaj_produkt', [ProductController::class, 'add'])->name('product.add');
 });
 
 //production

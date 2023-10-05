@@ -29,4 +29,11 @@ class ProductionStandard extends Model
     protected $hidden = [
         'id',
     ];
+
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'production_standard';
 }

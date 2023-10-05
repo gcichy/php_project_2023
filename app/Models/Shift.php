@@ -27,4 +27,11 @@ class Shift extends Model
         'id',
     ];
 
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'shift';
+
 }

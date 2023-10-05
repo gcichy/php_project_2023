@@ -18,4 +18,10 @@ class ProductComponent extends Model
         'description',
     ];
 
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'product_component';
 }

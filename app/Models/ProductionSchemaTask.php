@@ -20,4 +20,11 @@ class ProductionSchemaTask extends Model
         'additional_description'            //enable to add description to task of certain production_schema
     ];
 
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'production_schema_task';
+
 }
