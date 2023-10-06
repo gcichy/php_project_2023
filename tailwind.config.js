@@ -8,11 +8,18 @@ module.exports = {
         "./resources/**/*.blade.php",
         "./resources/**/*.js",
         "./resources/**/*.vue",
+        "./node_modules/tw-elements/dist/js/**/*.js",
         // "./node_modules/flowbite/**/*.js"
     ],
 
     theme: {
         extend: {
+            colors: {
+                'blue' : {
+                    150: '#def2fc',
+                    450: '#1ca2e6'
+                }
+            },
             fontFamily: {
                 sans: ['Nunito', ...defaultTheme.fontFamily.sans],
             },
