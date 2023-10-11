@@ -9,7 +9,7 @@ module.exports = {
         "./resources/**/*.js",
         "./resources/**/*.vue",
         "./node_modules/tw-elements/dist/js/**/*.js",
-        // "./node_modules/flowbite/**/*.js"
+        "./node_modules/flowbite/**/*.js"
     ],
 
     theme: {
@@ -27,7 +27,6 @@ module.exports = {
     },
 
     plugins: [require('@tailwindcss/forms')],
-
-    // plugins: [require('flowbite/plugin')],
+    plugins: [require('flowbite/plugin')],
 
 };

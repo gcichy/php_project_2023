@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\getUserData;
 use App\Helpers\HasEnsure;
 use App\Models\Component;
+use App\Models\ComponentProductionSchema;
 use App\Models\Product;
 use App\Models\ProductComponent;
 use App\Models\User;
@@ -44,20 +45,57 @@ class ProductController
 
     }
 
-    public function details(Request $request, string $id): View
+    public function productDetails(Request $request, string $id): View
     {
-
-
-        return view('product.product_details', [
+        return view('product.product-details', [
             'productId' => $id,
+        ]);
+
+    }
+    public function componentDetails(Request $request, string $id): View
+    {
+        $component = Component::find($id);
+        $data = DB::select('select cps.production_schema_id,
+                                       ps.production_schema,
+                                       ps.description as prod_schema_desc,
+                                       pst.task_id,
+                                       pst.sequence_no as task_sequence_no,
+                                       pst.amount_required,
+                                       pst.additional_description,
+                                       t.name,
+                                       t.description as task_desc
+                                from component_production_schema cps
+                                join production_schema ps
+                                    on ps.id = cps.production_schema_id
+                                join production_schema_task pst
+                                    on pst.production_schema_id = ps.id
+                                join task t
+                                    on t.id = pst.task_id
+                                where cps.component_id = 2
+                                order by ps.id asc, pst.sequence_no asc');
+
+        if(!is_null($component) and count($data) > 0) {
+            return view('product.component-details', [
+                'comp' => $component,
+                'data' => $data
+            ]);
+        }
+
+        return view('product.component-details', [
+            'error_msg' => 'Brak danych dla komponentu.',
         ]);
 
     }
 
 
-    public function add(): View
+    public function addProduct(): View
     {
-        return view('product.product_add');
+        return view('product.product-add');
+    }
+
+    public function addComponent(): View
+    {
+        return view('product.component-add');
     }
 
 }

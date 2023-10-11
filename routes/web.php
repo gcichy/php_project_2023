@@ -31,14 +31,14 @@ Route::get('/', function () {
 //profile
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard',[DashboardController::class, 'create'])->name('dashboard');
-    Route::get('/profile/{employeeNo}', [ProfileController::class, 'index'])->name('profile.index');
+    Route::get('/profil/{employeeNo}', [ProfileController::class, 'index'])->name('profile.index');
 //    Route::get('/profile_edit', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::get('/profile_edit/{employeeNo}', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/edytuj-profil/{employeeNo}', [ProfileController::class, 'edit'])->name('profile.edit');
 //    Route::patch('/profile_edit/{employeeNo}', function (Request $request, string $employeeNo) {
 //        dd($request);
 //    })->name('profile.update');
-    Route::patch('/profile_edit/{employeeNo}', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile_edit/{employeeNo}', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::patch('/edytuj-profil/{employeeNo}', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/edytuj-profil/{employeeNo}', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 
@@ -51,8 +51,10 @@ Route::middleware(['auth'])->group(function () {
 //products
 Route::middleware(['auth'])->group(function () {
     Route::get('/produkty', [ProductController::class, 'index'])->name('product.index');
-    Route::get('/produkty/{id}', [ProductController::class, 'details'])->name('product.details');
-    Route::get('/dodaj_produkt', [ProductController::class, 'add'])->name('product.add');
+    Route::get('/produkty/{id}', [ProductController::class, 'productDetails'])->name('product.details');
+    Route::get('/komponenty/{id}', [ProductController::class, 'componentDetails'])->name('product.details_component');
+    Route::get('/dodaj-produkt', [ProductController::class, 'addProduct'])->name('product.add');
+    Route::get('/dodaj-komponent', [ProductController::class, 'addComponent'])->name('product.add_component');
 });
 
 //production

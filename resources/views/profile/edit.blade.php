@@ -1,10 +1,10 @@
 @php use Illuminate\Support\Facades\Auth; @endphp
 <x-app-layout>
-    <div class="space-x-8 mt-8 flex">
-        <a class='block w-full pl-3 pr-4 py-2 border-l-4 lg:border-l-8 lg:py-8 lg:text-3xl text-left text-base font-medium text-gray-800 bg-gray-50 border-gray-300 focus:outline-none   transition duration-150 ease-in-out'>
-            {{ __('Edytuj Profil Użytkownika') }}
-        </a>
-    </div>
+    @php
+        $viewName = 'Edytuj Profil Użytkownika';
+    @endphp
+    <x-information-panel :viewName="$viewName">
+    </x-information-panel>
     @if (session('status') === 'password-updated')
         <div class="my-2 flex justify-center">
             <p class="text-green-500">{{ __('Zmieniono hasło.') }}</p>
