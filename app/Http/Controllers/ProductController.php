@@ -8,6 +8,7 @@ use App\Models\Component;
 use App\Models\ComponentProductionSchema;
 use App\Models\Product;
 use App\Models\ProductComponent;
+use App\Models\ProductionStandard;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -55,15 +56,32 @@ class ProductController
     public function componentDetails(Request $request, string $id): View
     {
         $component = Component::find($id);
-        $data = DB::select('select cps.production_schema_id,
-                                       ps.production_schema,
+        $prod_standards = DB::select('select  pstd.id,
+                                                    pstd.name,pstd.description,
+                                                    pstd.duration_hours,
+                                                    pstd.amount,
+                                                    u.unit
+                                            from production_standard pstd
+                                            join unit u
+                                                on u.id = pstd.id
+                                            where pstd.component_id = '.$id
+                                            .' order by pstd.production_schema_id asc');
+        $data = DB::select('select
+                                       cps.component_id,
+                                       cps.production_schema_id as prod_schema_id,
+                                       ps.production_schema as prod_schema,
                                        ps.description as prod_schema_desc,
                                        pst.task_id,
                                        pst.sequence_no as task_sequence_no,
                                        pst.amount_required,
                                        pst.additional_description,
-                                       t.name,
-                                       t.description as task_desc
+                                       t.name as task_name,
+                                       t.description as task_desc,
+                                       pstd.name as prod_std_name,
+                                       pstd.description as prod_std_desc,
+                                       pstd.duration_hours prod_std_duration,
+                                       pstd.amount as prod_std_amount,
+                                       u.unit as prod_std_unit
                                 from component_production_schema cps
                                 join production_schema ps
                                     on ps.id = cps.production_schema_id
@@ -71,12 +89,18 @@ class ProductController
                                     on pst.production_schema_id = ps.id
                                 join task t
                                     on t.id = pst.task_id
-                                where cps.component_id = 2
-                                order by ps.id asc, pst.sequence_no asc');
+                                left join production_standard pstd
+                                    on pstd.component_id = cps.component_id
+                                    and pstd.production_schema_id = cps.production_schema_id
+                                left join unit u
+                                    on u.id = pstd.unit_id
+                                where cps.component_id = '.$id.
+                                ' order by cps.sequence_no asc, pst.sequence_no asc');
 
-        if(!is_null($component) and count($data) > 0) {
+        if(!is_null($component)) {
             return view('product.component-details', [
                 'comp' => $component,
+                'prod_standards' => $prod_standards,
                 'data' => $data
             ]);
         }
@@ -86,7 +110,6 @@ class ProductController
         ]);
 
     }
-
 
     public function addProduct(): View
     {
