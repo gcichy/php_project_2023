@@ -9,6 +9,7 @@ use App\Models\ComponentProductionSchema;
 use App\Models\Instruction;
 use App\Models\Product;
 use App\Models\ProductComponent;
+use App\Models\ProductionSchema;
 use App\Models\ProductionStandard;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -156,9 +157,13 @@ class ProductController
         return view('product.product-add');
     }
 
-    public function addComponent(): View
+    public function addComponent(Request $request): View
     {
-        return view('product.component-add');
+        $prod_schemas = ProductionSchema::all();
+        return view('product.component-add',[
+            'prod_schemas' => $prod_schemas,
+            'user' => $request->user(),
+        ]);
     }
 
 }
