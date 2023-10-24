@@ -95,7 +95,7 @@ class ProfileController extends Controller
     private function validateUpdate(Request $request, User $user) {
 
         $request->validate([
-            'firstName' => ['required', 'string',  'max:30','regex:/^[a-zA-ZźżćśńółąęŻŹĆŚŃÓŁĄĘ ]+$/'],
+            '  ' => ['required', 'string',  'max:30','regex:/^[a-zA-ZźżćśńółąęŻŹĆŚŃÓŁĄĘ ]+$/'],
             'lastName' => ['required', 'string',  'max:30', 'regex:/^[a-zA-ZźżćśńółąęŻŹĆŚŃÓŁĄĘ ]+$/'],
             'role' => ['required', 'string', 'in:admin,manager,pracownik'],
             'employeeNo' => ['required', 'string',  'max:255', Rule::unique(User::class)->ignore($user->id)],

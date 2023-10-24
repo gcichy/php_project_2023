@@ -31,8 +31,7 @@ return new class extends Migration
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
             $table->string('name');
-            $table->string('instruction_html')->nullable();
-            $table->string('instruction_image')->nullable();
+            $table->string('instruction_pdf')->nullable();
             $table->string('video')->nullable();
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();

@@ -1,17 +1,10 @@
 <x-app-layout>
-    <script type="module">
-
-        $(document).ready(function() {
-            $('#stats-tab').attr('color','#1ca2e6');
-        });
-
-    </script>
     @php
         $viewName = 'Szczegóły komponentu';
     @endphp
     <x-information-panel :viewName="$viewName">
     </x-information-panel>
-    @if(isset($comp) and isset($prod_standards) and isset($data))
+    @if(isset($comp) and isset($prod_standards) and isset($data) and isset($instruction))
         <div class="w-full md:w-[90%] md:ml-[5%] mt-4 md:mt-8 bg-white border border-gray-200 rounded-md shadow dark:bg-gray-800 dark:border-gray-700">
             <ul class="flex text-sm md:text-lg lg:text-xl font-medium text-center text-gray-500 divide-x divide-gray-200 rounded-lg  dark:divide-gray-600 dark:text-gray-400" id="fullWidthTab" data-tabs-toggle="#fullWidthTabContent" role="tablist">
                 <li class="w-full">
@@ -40,7 +33,7 @@
                                 </div>
                             @endif
                         </div>
-                        <div class="flex flex-col items-center justify-center border-2 md:w-[100%]">
+                        <div class="flex flex-col items-center justify-center md:w-[100%]">
                             <div class="comp-list-{{$comp->id}} w-full">
                                 <div class="relative overflow-x-auto shadow-md">
                                     <table class="w-full text-sm md:text-lg text-left text-gray-500 dark:text-gray-400">
@@ -234,29 +227,35 @@
                             @endforeach
                             </div>
                         </ol>
+                    @else
+                        <p class="w-full text-center text-red-700 text-lg mt-6">Brak danych.</p>
                     @endif
                 </div>
                 <div class="hidden p-4 bg-white rounded-lg lg:p-8 dark:bg-gray-800 flex flex-col justify-center items-center" id="manual" role="tabpanel" aria-labelledby="manual-tab">
-                    <div class="w-full flex flex-col justify-center items-center mb-12">
-                        <p class="w-full lg:w-[80%] mb-4 text-md md:text-xl font-medium pl-2 lg:pl-4 lg:pb-2 text-gray-950 border-l-4 border-blue-450">
-                            Instrukcja video
-                        </p>
-                        <video class="w-full lg:w-[80%]" width="320" height="240" controls>
-                            <source src="{{asset('storage/lights_go.mp4')}}" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                    </div>
-                    <div class="w-full flex flex-col justify-center items-center">
-                        <p class="w-full lg:w-[80%] mb-4 text-md md:text-xl font-medium pl-2 lg:pl-4 lg:pb-2 text-gray-950 border-l-4 border-blue-450">
-                            Instrukcja tekstowa
-                        </p>
-                        <embed class="w-full lg:w-[80%] h-[400px] lg:h-[600px] xl:h-[800px]" src="{{asset('storage/DATA_MODEL_prototyp.pdf')}}" width="800px" height="800px"/>
-                    </div>
+                    @if($instruction instanceof \App\Models\Instruction)
+                        <div class="w-full flex flex-col justify-center items-center mb-12 mt-4">
+                            <p class="w-full lg:w-[80%] mb-8 text-md md:text-xl font-medium pl-2 lg:pl-4 lg:pb-2 text-gray-950 border-l-4 border-blue-450">
+                                {{$instruction->name}}
+                            </p>
+                            @if(!is_null($instruction->video))
+                                <video class="w-full lg:w-[80%]" width="320" height="240" controls>
+                                    <source src="{{asset('storage/lights_go.mp4')}}" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            @endif
+                        </div>
+                        @if(!is_null($instruction->instruction_pdf))
+                            <div class="w-full flex flex-col justify-center items-center">
+                                <embed class="w-full lg:w-[80%] h-[400px] lg:h-[600px] xl:h-[800px]" src="{{asset('storage/DATA_MODEL_prototyp.pdf')}}" width="800px" height="800px"/>
+                            </div>
+                        @endif
+                    @else
+                        <p class="w-full text-center text-red-700 text-lg mt-6">Brak instrukcji.</p>
+                    @endif
                 </div>
             </div>
         </div>
     @elseif(isset($error_msg))
         <p class="w-full text-center text-red-700 text-lg mt-6">{{$error_msg}}</p>
     @endif
-
 </x-app-layout>
