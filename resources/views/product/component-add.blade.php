@@ -1,5 +1,128 @@
 <x-app-layout>
+    <script type="module">
+        function checkActive() {
+            //check if any element is active, if not details button's href is set to current url
+            if($('.list-element.active-list-elem').length === 0) {
+                $('.remove').css('background-color','gray');
+                $('.details').css('background-color','gray').attr('href', $(location).attr('href'));
+            }
+            //else if id is set properly, url is set to be classified as product.details route
+            else {
+                var id = $('.list-element.active-list-elem').attr('id').split('-');
+                if(id.length > 1) {
+                    id = id[1];
+                    var newUrl = "";
+                    //if products div has display block, then create route to products, else to components
+                    if($('#left').css('display') === 'block') {
+                        newUrl = $(location).attr('href') + '/' + id;
+                    } else {
+                        newUrl = $(location).attr('href').replace('produkty','komponenty') + '/' + id;
+                    }
 
+
+                    $('.remove').css('background-color','rgb(224 36 36)');
+                    $('.details').css('background-color','#1ca2e6').attr('href', newUrl);
+                }
+                else {
+                    $('.details').css('background-color','gray').attr('href', $(location).attr('href'));
+                    $('.remove').css('background-color','gray');
+
+
+                }
+            }
+        }
+        function isActiveProdSchema(elem_id) {
+            let ids = $('#prodschema-input').val().split('_');
+            return ids.includes(elem_id)
+        }
+
+        $(document).ready(function() {
+            checkActive();
+
+            $('.list-element').on('click', function () {
+                let is_active = ($(this).hasClass('active-list-elem') ? true : false);
+                $(this).addClass('active-list-elem');
+
+                let id = $(this).attr('id').split('-')[1];
+                //prodsschema can be unclicked if list of schemas is visible (schema is not chosen)
+                if(!$('#confirm-schema-button').hasClass('hidden')) {
+                    let list_id = '.prodschema-list-' + id;
+                    if($(list_id).hasClass('hidden')) {
+                        if (is_active) {
+                            if(!$(list_id).hasClass('just-hidden')) {
+                                $(this).removeClass('active-list-elem');
+                            } else {
+                                $(list_id).removeClass('just-hidden');
+                            }
+                        }
+                    }
+                }
+
+                checkActive();
+            });
+
+            //on click button is rotated and component list appears
+            $('.expand-btn').on('click', function () {
+                let id = $(this).attr('id').split('-')[1];
+                var list_id = '.prodschema-list-' + id;
+
+                console.log(list_id);
+                if($(this).hasClass('rotate-180')) {
+                    $(this).removeClass('rotate-180');
+                    $(this).addClass('rotate-0');
+                } else {
+                    $(this).removeClass('rotate-0');
+                    $(this).addClass('rotate-180');
+                }
+
+                if($(list_id).hasClass('hidden')) {
+                    $(list_id).removeClass('hidden');
+                } else {
+                    $(list_id).addClass('hidden');
+                    $(list_id).addClass('just-hidden');
+                }
+            });
+
+            $('#dropdownSearchButton').on('click', function () {
+                if($('.list-element-prodschema').hasClass('hidden')) {
+                    $('.list-element-prodschema').removeClass('hidden');
+                }
+                else {
+                    $('.list-element-prodschema').addClass('hidden');
+
+                }
+                if($('.prodschema-toggle').hasClass('hidden')) {
+                    $('.prodschema-toggle').removeClass('hidden');
+                    $('#label-schema').addClass('hidden');
+
+                }
+                else {
+                    $('.prodschema-toggle').addClass('hidden');
+                    $('#label-schema').removeClass('hidden');
+                }
+            });
+
+            $('#confirm-schema-button').on('click', function (){
+                if($('#label-schema').hasClass('hidden')) {
+                    $('#label-schema').removeClass('hidden');
+                    $('.prodschema-toggle').addClass('hidden');
+                    $('.list-element-prodschema:not(.active-list-elem)').addClass('hidden');
+                    let id_string = '';
+                    let chosen_elements = $('.list-element-prodschema.active-list-elem');
+                    chosen_elements.each(function(idx) {
+                        let id = $(this).attr('id').split('-')[1];
+                        id_string += !id ? '_' : id + '_';
+                    })
+                    id_string = id_string.slice(0, id_string.length - 1)
+                    $('#prodschema-input').val(id_string);
+                    console.log($('#prodschema-input').val());
+                }
+
+
+            });
+        });
+
+    </script>
     <div class="space-x-8 mt-8 flex bg-gray-50 border-gray-300  justify-between">
         <a class ='block w-1/2 pl-3 pr-4 py-2 border-blue-450 border-l-4 lg:border-l-8 lg:py-8 lg:text-3xl text-left text-base font-medium text-gray-800  transition duration-150 ease-in-out'>
             {{ __('Dodaj komponent') }}
@@ -76,60 +199,98 @@
 
                                 <!-- Right column container with background and description-->
                                 <div class="flex items-center flex-col justify-start rounded-b-lg lg:w-6/12 lg:rounded-r-lg lg:rounded-bl-none p-2 lg:p-0 bg-white/30">
-                                    <button id="dropdownSearchButton" data-dropdown-toggle="dropdownSearch" data-dropdown-placement="bottom"
-                                            class="mt-5[%] lg:mt-[7%] text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-lg px-5 py-2.5 text-center inline-flex items-center justify-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button">
+                                    <button id="dropdownSearchButton" class="mt-5[%] lg:mt-[7%] text-white bg-blue-450 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-md lg:text-lg px-5 py-2.5 text-center inline-flex items-center justify-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button">
                                         Schematy produkcji
                                         <svg class="w-2.5 h-2.5 ml-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
                                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
                                         </svg>
                                     </button>
-                                    @if(isset($prod_schemas))
-                                        <div class="w-full mt-[3%] mx-auto sm:px-2 space-y-6 border-2 border-red-600">
-                                            <div class="p-4 sm:p-8 bg-white flex justify-start items-center flex-col">
+                                    @if(isset($schema_data) and count($schema_data) > 0)
+                                        <div class="w-full mt-[5%] mx-auto sm:px-2 space-y-6 border-2 border-red-600">
+                                            <p id="label-schema" class=" w-full block text-sm lg:text-lg font-medium text-left text-gray-900 dark:text-white">
+                                                Wybrane schematy
+                                            </p>
+                                            <div class="px-4 sm:px-8 bg-white flex justify-start items-center flex-col">
                                                 @php
                                                     $inputPlaceholder = "Wpisz nazwę schematu...";
-                                                    $xListElem = "prod_schema";
+                                                    $xListElem = "prodschema";
                                                 @endphp
-                                                <x-search-input class="w-full" :inputPlaceholder="$inputPlaceholder" :xListElementUniqueId="$xListElem"></x-search-input>
-                                                <div class="w-full">
-                                                    @foreach($prod_schemas as $schem)
-                                                        <x-list-element class="list-element-{{$xListElem}} list-element w-full flex-col text-xs md:text-sm lg:text-md 2xl:text-lg lg:py-4 my-3" id="prod-schema-{{$schem->id}}">
-                                                            <div class="w-[100%] flex justify-between items-center">
-                                                                <div class="w-full flex justify-between items-center">
-                                                                    <div class="w-full flex justify-left items-center">
-                                                                        <p class="inline-block list-element-name ml-[3%]">{{$schem->production_schema}}</p>
+                                                <div id="search-schema" class="prodschema-toggle w-full hidden">
+                                                    <x-search-input class="w-full" :inputPlaceholder="$inputPlaceholder" :xListElementUniqueId="$xListElem"></x-search-input>
+                                                </div>
+                                                <div id="prodschema-dropdown" class="w-full">
+                                                    @foreach($schema_data as $prod_schema_tasks)
+                                                        @if(count($prod_schema_tasks) > 0)
+                                                            <x-list-element class="list-element-{{$xListElem}} list-element w-full hidden flex-col text-xs md:text-sm lg:text-md 2xl:text-lg lg:py-4 my-3" id="prodschema-{{$prod_schema_tasks[0]->prod_schema_id}}">
+                                                                <div class="w-[100%] flex justify-between items-center">
+                                                                    <div class="w-full flex justify-between items-center">
+                                                                        <div class="w-full flex justify-left items-center">
+                                                                            <p class="inline-block list-element-name ml-[3%]">{{$prod_schema_tasks[0]->prod_schema}}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div id="expbtn-{{$prod_schema_tasks[0]->prod_schema_id}}" class="expand-btn inline-block bg-gray-800 w-4 h-4 lg:w-6 lg:h-6 md:rounded-md rounded-sm rotate-0 transition-all mr-0">
+                                                                        <img src="{{asset('storage/expand-down.png') }}" >
                                                                     </div>
                                                                 </div>
-                                                                <div id="expbtn-{{$schem->id}}" class="expand-btn inline-block bg-gray-800 w-4 h-4 lg:w-6 lg:h-6 md:rounded-md rounded-sm rotate-0 transition-all mr-0">
-                                                                    <img src="{{asset('storage/expand-down.png') }}" >
+                                                                <div class="mt-4">
+                                                                    <label for="production-standard-{{$prod_schema_tasks[0]->prod_schema_id}}" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Norma Produkcji</label>
+                                                                    <div id="production-standard-{{$prod_schema_tasks[0]->prod_schema_id}}" class="flex flex-row justify-start items-center w-full xl:w-[60%]">
+                                                                        <div class="w-[20%] mr-[3%]">
+                                                                            <label for="duration" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Czas [h]</label>
+                                                                            <input type="number" id="duration" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                                        </div>
+                                                                        <div class="w-[20%] mr-[3%]">
+                                                                            <label for="amount" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Ilość</label>
+                                                                            <input type="number" id="amount" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                                        </div>
+                                                                        <div class="w-[30%] mr-[3%]">
+                                                                            <label for="unit" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Jednostka</label>
+                                                                            <select id="unit" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                                                                @if(isset($units) and count($units) > 0)
+                                                                                    @foreach($units as $u)
+                                                                                        <option value="{{$u->unit}}">{{$u->unit}}</option>
+                                                                                    @endforeach
+                                                                                @else
+                                                                                    <option value=""></option>
+                                                                                @endif
+                                                                            </select>
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-{{--                                                                <ul class="comp-list-{{$prod->id}} w-[80%] mt-[3%] relative m-0 w-full hidden list-none overflow-hidden p-0 transition-[height] duration-200 ease-in-out text-lg"  data-te-stepper-init data-te-stepper-type="vertical">--}}
-{{--                                                                    @php $i = 1; @endphp--}}
-{{--                                                                    <h2 class="text-gray-800">Lista komponentów:</h2>--}}
-{{--                                                                    @foreach($prod_comp_list[$prod->id] as $comp)--}}
-{{--                                                                        <li data-te-stepper-step-ref class="relative h-fit after:absolute after:left-[2.45rem] after:top-[3.6rem] after:mt-px after:h-[calc(100%-2.45rem)] after:w-px after:bg-[#e0e0e0] after:content-[''] dark:after:bg-neutral-600">--}}
-{{--                                                                            <div data-te-stepper-head-ref class="w-[80%] flex cursor-pointer items-center p-6 leading-[1.3rem] no-underline after:bg-[#e0e0e0] after:content-[''] hover:bg-[#f9f9f9] focus:outline-none dark:after:bg-neutral-600 dark:hover:bg-[#3b3b3b]">--}}
-{{--                                                                        <span data-te-stepper-head-icon-ref class="mr-3 flex h-[1.938rem] w-[1.938rem] items-center justify-center rounded-full bg-[#ebedef] text-lg font-medium text-[#40464f]">--}}
-{{--                                                                            {{$i}}--}}
-{{--                                                                        </span>--}}
-{{--                                                                                <span data-te-stepper-head-text-ref class="text-gray-800 after:absolute after:flex after:text-[0.8rem] after:content-[data-content] dark:text-neutral-300">--}}
-{{--                                                                            {{$comp->name}}--}}
-{{--                                                                        </span>--}}
-{{--                                                                            </div>--}}
-{{--                                                                            <div data-te-stepper-content-ref class="transition-[height, margin-bottom, padding-top, padding-bottom] left-0 overflow-hidden pb-6 pl-[3.75rem] pr-6 duration-300 ease-in-out text-[16px] text-neutral-500 ">--}}
-{{--                                                                                {{$comp->description}}--}}
-{{--                                                                            </div>--}}
-{{--                                                                        </li>--}}
-{{--                                                                        @php $i++; @endphp--}}
-{{--                                                                    @endforeach--}}
-{{--                                                                </ul>--}}
-                                                        </x-list-element>
+                                                                <ul class="prodschema-list-{{$prod_schema_tasks[0]->prod_schema_id}} mt-[3%] relative m-0 w-full hidden list-none overflow-hidden p-0 transition-[height] duration-200 ease-in-out text-xs md:text-sm lg:text-md">
+                                                                    @php $i = 1; @endphp
+                                                                    <h2 class="text-gray-800">Lista zadań:</h2>
+                                                                    @foreach($prod_schema_tasks as $task)
+                                                                        <li class="relative h-fit after:absolute after:left-[2.45rem] after:top-[3.6rem] after:mt-px after:h-[calc(100%-2.45rem)] after:w-px after:bg-[#e0e0e0] after:content-[''] dark:after:bg-neutral-600">
+                                                                            <div class="w-full flex cursor-pointer items-center p-6 leading-[1.3rem] no-underline after:bg-[#e0e0e0] after:content-[''] hover:bg-[#f9f9f9] focus:outline-none dark:after:bg-neutral-600 dark:hover:bg-[#3b3b3b]">
+                                                                                <span class="mr-5 flex h-[1.938rem] w-[1.938rem] items-center justify-center rounded-full bg-blue-450 text-sm md:text-md lg:text-lg font-medium text-white">
+                                                                                    {{$i}}
+                                                                                </span>
+                                                                                <span class="text-gray-800 after:absolute after:flex after:text-[0.8rem] after:content-[data-content] dark:text-neutral-300">
+                                                                                    {{$task->task_name}}
+                                                                                </span>
+                                                                            </div>
+                                                                            <div class="transition-[height, margin-bottom, padding-top, padding-bottom] left-0 overflow-hidden pb-2 pl-[3.75rem] pr-6 duration-300 ease-in-out text-neutral-500 ">
+                                                                                {{$task->task_desc}}
+                                                                            </div>
+                                                                        </li>
+                                                                        @php $i++; @endphp
+                                                                    @endforeach
+                                                                </ul>
+                                                            </x-list-element>
+                                                        @endif
                                                     @endforeach
                                                 </div>
+                                                <button type="button" id="confirm-schema-button" class="prodschema-toggle hidden text-white bg-blue-450 hover:bg-blue-800 focus:outline-none focus:ring-2  focus:ring-offset-2 focus:ring-blue-450 font-medium rounded-lg text-sm lg:text-lg px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                                                    WYBIERZ
+                                                </button>
+                                                <input id="prodschema-input" type="text" class="hidden" value=""/>
                                             </div>
                                         </div>
+                                    @else
+                                        <p class="w-full text-center text-red-700 text-lg mt-6">Brak danych.</p>
                                     @endif
+
 {{--                                    <!-- Dropdown menu -->--}}
 {{--                                    <div id="dropdownSearch" class="z-10 hidden bg-white rounded-lg shadow w-[80%] lg:w-[40%] dark:bg-gray-700">--}}
 {{--                                        <div class="p-3">--}}

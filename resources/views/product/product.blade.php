@@ -137,32 +137,12 @@
                                                     if($prod->material) $name .= ' - '.$prod->material;
                                                     if($prod->color) $name .= ' - '.$prod->color;
                                                 @endphp
-                                                <p class="inline-block list-element-name ml-[3%]">{{$name}}</p>
+                                                <p class="inline-block list-element-name ml-[3%] xl:text-2xl  text-md lg:text-xl">{{$name}}</p>
                                             </div>
                                             <div id="expbtn-{{$prod->id}}-prod" class="expand-btn inline-block bg-gray-800 w-4 h-4 lg:w-8 lg:h-8 md:w-6 md:h-6 sm:w-4 sm:h-4 mr-8 md:rounded-md rounded-sm rotate-0 transition-all">
                                                 <img src="{{asset('storage/expand-down.png') }}" >
                                             </div>
                                         </div>
-                                        {{--                                    <ul class="comp-list-{{$prod->id}} w-[80%] mt-[3%] relative m-0 w-full hidden list-none overflow-hidden p-0 transition-[height] duration-200 ease-in-out text-lg"  data-te-stepper-init data-te-stepper-type="vertical">--}}
-                                        {{--                                        @php $i = 1; @endphp--}}
-                                        {{--                                        <h2 class="text-gray-800">Lista komponentów:</h2>--}}
-                                        {{--                                        @foreach($prod_comp_list[$prod->id] as $comp)--}}
-                                        {{--                                            <li data-te-stepper-step-ref class="relative h-fit after:absolute after:left-[2.45rem] after:top-[3.6rem] after:mt-px after:h-[calc(100%-2.45rem)] after:w-px after:bg-[#e0e0e0] after:content-[''] dark:after:bg-neutral-600">--}}
-                                        {{--                                                <div data-te-stepper-head-ref class="w-[80%] flex cursor-pointer items-center p-6 leading-[1.3rem] no-underline after:bg-[#e0e0e0] after:content-[''] hover:bg-[#f9f9f9] focus:outline-none dark:after:bg-neutral-600 dark:hover:bg-[#3b3b3b]">--}}
-                                        {{--                                            <span data-te-stepper-head-icon-ref class="mr-3 flex h-[1.938rem] w-[1.938rem] items-center justify-center rounded-full bg-[#ebedef] text-lg font-medium text-[#40464f]">--}}
-                                        {{--                                                {{$i}}--}}
-                                        {{--                                            </span>--}}
-                                        {{--                                                    <span data-te-stepper-head-text-ref class="text-gray-800 after:absolute after:flex after:text-[0.8rem] after:content-[data-content] dark:text-neutral-300">--}}
-                                        {{--                                                {{$comp->name}}--}}
-                                        {{--                                            </span>--}}
-                                        {{--                                                </div>--}}
-                                        {{--                                                <div data-te-stepper-content-ref class="transition-[height, margin-bottom, padding-top, padding-bottom] left-0 overflow-hidden pb-6 pl-[3.75rem] pr-6 duration-300 ease-in-out text-[16px] text-neutral-500 ">--}}
-                                        {{--                                                    {{$comp->description}}--}}
-                                        {{--                                                </div>--}}
-                                        {{--                                            </li>--}}
-                                        {{--                                            @php $i++; @endphp--}}
-                                        {{--                                        @endforeach--}}
-                                        {{--                                    </ul>--}}
                                         <div class="prod-list-{{$prod->id}} hidden mt-6 w-full md:w-[60%]">
                                             <div class="relative overflow-x-auto shadow-md">
                                                 <table class="w-full text-sm md:text-lg text-left text-gray-500 dark:text-gray-400">
@@ -261,7 +241,7 @@
                                                         <img src="{{asset('storage/'.$comp->image)}}">
                                                     @endif
                                                 </div>
-                                                <p class="inline-block list-element-name ml-[3%]">{{$comp->name}} - {{$comp->material}}</p>
+                                                <p class="inline-block list-element-name ml-[3%] xl:text-2xl text-md lg:text-xl">{{$comp->name}} - {{$comp->material}}</p>
                                             </div>
                                             <div id="expbtn-{{$comp->id}}-comp" class="expand-btn inline-block bg-gray-800 w-4 h-4 lg:w-8 lg:h-8 md:w-6 md:h-6 sm:w-4 sm:h-4 mr-8 md:rounded-md rounded-sm rotate-0 transition-all">
                                                 <img src="{{asset('storage/expand-down.png') }}" >

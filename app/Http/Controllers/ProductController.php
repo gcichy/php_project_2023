@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Models\ProductComponent;
 use App\Models\ProductionSchema;
 use App\Models\ProductionStandard;
+use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -159,9 +160,43 @@ class ProductController
 
     public function addComponent(Request $request): View
     {
+        $units = Unit::select('unit','name')->get();
         $prod_schemas = ProductionSchema::all();
+        $data = DB::select('select
+                                        psh.id as prod_schema_id,
+                                        psh.production_schema as prod_schema,
+                                        psh.description as prod_schema_desc,
+                                        psh.tasks_count,
+                                        psht.task_id,
+                                        psht.sequence_no as task_sequence_no,
+                                        t.name as task_name,
+                                        t.description as task_desc
+                                    from production_schema psh
+                                             left join production_schema_task psht
+                                                  on psh.id = psht.production_schema_id
+                                             left join task t
+                                                  on t.id = psht.task_id
+                                    order by production_schema_id, task_sequence_no');
+
+        $prod_schema_tasks = array();
+        if(count($data) > 0) {
+            $curr_schema_id = $data[0]->prod_schema_id;
+            $temp = [];
+
+            foreach ($data as $row) {
+                if ($row->prod_schema_id != $curr_schema_id) {
+                    $prod_schema_tasks[$curr_schema_id] = $temp;
+                    $curr_schema_id = $row->prod_schema_id;
+                    $temp = [];
+                }
+                $temp[] = $row;
+            }
+        }
+
         return view('product.component-add',[
             'prod_schemas' => $prod_schemas,
+            'schema_data' => $prod_schema_tasks,
+            'units' => $units,
             'user' => $request->user(),
         ]);
     }

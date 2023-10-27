@@ -81,10 +81,10 @@
 
                     <div class="w-full">
                         @foreach($employees as $emp)
-                            <x-list-element class="list-element-{{$xListElem}} list-element flex-col" id="employee-{{$emp->employeeNo}}">
+                            <x-list-element class="list-element-{{$xListElem}} list-element flex-col lg:py-8" id="employee-{{$emp->employeeNo}}">
                                 <div class="w-[100%] flex justify-between items-center">
                                     <div class="w-[80%] md:w-[60%] flex justify-left items-center">
-                                        <p class="inline-block list-element-name ml-[3%]">{{$emp->firstName}} {{$emp->lastName}}</p>
+                                        <p class="inline-block list-element-name ml-[3%]  xl:text-2xl text-md lg:text-xl">{{$emp->firstName}} {{$emp->lastName}}</p>
                                     </div>
                                 </div>
                             </x-list-element>
