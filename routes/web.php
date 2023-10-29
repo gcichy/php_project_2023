@@ -55,6 +55,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/komponenty/{id}', [ProductController::class, 'componentDetails'])->name('product.details_component');
     Route::get('/dodaj-produkt', [ProductController::class, 'addProduct'])->name('product.add');
     Route::get('/dodaj-komponent', [ProductController::class, 'addComponent'])->name('product.add_component');
+    Route::post('/dodaj-komponent', [ProductController::class, 'storeComponent'])->name('product.store_component');
 });
 
 //production

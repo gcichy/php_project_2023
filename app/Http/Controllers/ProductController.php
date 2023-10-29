@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Models\ProductComponent;
 use App\Models\ProductionSchema;
 use App\Models\ProductionStandard;
+use App\Models\StaticValue;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -160,6 +161,7 @@ class ProductController
 
     public function addComponent(Request $request): View
     {
+        $materials = StaticValue::where('type','material')->get();
         $units = Unit::select('unit','name')->get();
         $prod_schemas = ProductionSchema::all();
         $data = DB::select('select
@@ -198,7 +200,43 @@ class ProductController
             'schema_data' => $prod_schema_tasks,
             'units' => $units,
             'user' => $request->user(),
+            'material_list' => $materials,
         ]);
     }
 
+    public function storeComponent(Request $request): View
+    {
+        dd($request);
+        $materials = StaticValue::where('type','material')->select('value')->get();
+        $mat_in = 'in:';
+        foreach ($materials as $mat) {
+            $mat_in .= $mat->value.',';
+        }
+        $mat_in = rtrim($mat_in,',');
+
+        //independent tu nie dajemy tylko osobno bo odwala ten button...
+        $request->validate([
+            'name' => ['required', 'string',  'min:1','max:100'],
+            'material' => ['required', 'string',  $mat_in],
+
+        ],
+            [
+                'required' => 'To pole jest wymagane.',
+                'max' => 'Wpisany tekst ma za dużo znaków.',
+                'firstName.regex' => 'Pole Imię może zawierać liczb.',
+                'lastName.regex' => 'Pole Nazwisko nie może zawierać liczb.',
+                'role.in' => 'Niepoprawne stanowisko. Musi być jedno z: pracownik, manager, admin.',
+                'employeeNo.unique' => 'Ta nazwa użytkownika jest zajęta.',
+                'phoneNr.digits' => 'Numer telefonu musi zawierać dokładnie 9 cyfr.',
+                'phoneNr.unique' => 'Ten numer telefonu jest już w systemie.',
+                'email.unique' => 'Ten email jest już w systemie.',
+                'email.email' => 'Niepoprawny email. Upewnij się, że wpisujesz poprawny adres.',
+                'password.min' => 'Hasło musi zawierać minimum 11 znaków.',
+                'password.regex' => 'Hasło musi zawierać małą literę, dużą literę, liczbę i znak specjalny.',
+                'password_confirmation.same' => 'Hasła muszą być identyczne.',
+                'salary.numeric' => 'Wynagrodzenie musi być liczbą',
+                'salary.min' => 'Wynagrodzenie musi być liczbą nieujemną.',
+            ]);
+        return $this->index($request);
+    }
 }
