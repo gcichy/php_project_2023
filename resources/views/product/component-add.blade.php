@@ -147,7 +147,7 @@
         <div class="container h-full w-full p-10">
             <div class="g-6 flex h-full flex-wrap items-center justify-center text-neutral-800 dark:text-neutral-200">
                 <div class="w-full">
-                    <form method="POST" action="{{ route('product.store_component') }}">
+                    <form method="POST" action="{{ route('product.store_component') }}" enctype="multipart/form-data">
                         @csrf
                         <div class="block rounded-lg bg-white shadow-lg dark:bg-neutral-800">
                             <div class="g-0 lg:flex lg:flex-wrap">
@@ -185,36 +185,28 @@
                                             <div id="dimension" class="flex flex-row justify-start items-center w-full xl:w-[60%]">
                                                 <div class="w-[30%] mr-[3%]">
                                                     <label for="height" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Wysokość</label>
-                                                    <input type="number" id="height" name="height" value="{{old('height')}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
-                                                    <x-input-error :messages="$errors->get('height')" class="mt-2" />
-                                                    <x-input-error :messages="$errors->get('length')" class="mt-2" />
-                                                    <x-input-error :messages="$errors->get('width')" class="mt-2" />
+                                                    <input type="number" id="height" name="height" value="{{old('height') ? old('height') : 0}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
                                                 </div>
                                                 <div class="w-[30%] mr-[3%]">
                                                     <label for="length" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Długość</label>
-                                                    <input type="number" id="length" name="length" value="{{old('length')}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                    <input type="number" id="length" name="length" value="{{old('length') ? old('length') : 0}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
                                                 </div>
                                                 <div class="w-[30%] mr-[3%]">
                                                     <label for="width" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Szerokość</label>
-                                                    <input type="number" id="width" name="width" value="{{old('width')}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                    <input type="number" id="width" name="width" value="{{old('width') ? old('width') : 0}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
                                                 </div>
                                             </div>
+                                            <x-input-error :messages="$errors->get('height')" class="mt-2" />
+                                            <x-input-error :messages="$errors->get('length')" class="mt-2" />
+                                            <x-input-error :messages="$errors->get('width')" class="mt-2" />
                                         </div>
                                         <div class="mb-6">
-                                            <label for="image" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Zdjęcie komponentu</label>
-                                            <div id="image" class="flex items-center justify-center w-full">
-                                                <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-40 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
-                                                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                                        <svg class="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                                                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
-                                                        </svg>
-                                                        <p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">Klikni aby dodać</span> lub upuść plik w polu</p>
-                                                        <p class="text-xs text-gray-500 dark:text-gray-400">Format: SVG, PNG, JPG, JPEG</p>
-                                                    </div>
-                                                    <input id="dropzone-file" type="file" name="dropzone-file" value="{{old('dropzone-file')}}" class="hidden" />
-                                                </label>
-                                                <x-input-error :messages="$errors->get('dropzone-file')" class="mt-2" />
-                                            </div>
+                                            @php
+                                                $label = 'Zdjęcie Komponentu';
+                                                $info = 'Format: SVG, PNG, JPG, JPEG, BMP';
+                                            @endphp
+                                            <x-file-input :label="$label" :info="$info"></x-file-input>
+
                                         </div>
                                         <div class="mb-6">
                                             <label for="description" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Opis komponentu</label>
@@ -241,7 +233,12 @@
                                                 Wybrane schematy <span class="text-red-700">*</span>
                                                 <br><span class="text-green-500 text-xs lg:text-sm"><em>Aby dodać komponent przypisz do niego schemat(y) produkcji</em></span>
                                             </p>
-
+                                            <x-input-error :messages="$errors->get('prodschema_input')" class="w-full p-2"/>
+                                            @if(isset($prod_schema_errors))
+                                                @foreach($prod_schema_errors as $err)
+                                                    <x-input-error :messages="$err" class="w-full p-2"/>
+                                                @endforeach
+                                            @endif
                                             <div class="px-4 sm:px-8 bg-white flex justify-start items-center flex-col">
                                                 @php
                                                     $inputPlaceholder = "Wpisz nazwę schematu...";
@@ -270,18 +267,18 @@
                                                                     </label>
                                                                     <div id="production-standard-{{$prod_schema_tasks[0]->prod_schema_id}}" class="flex flex-row justify-start items-center w-full xl:w-[60%]">
                                                                         <div class="w-[20%] mr-[3%]">
-                                                                            @php $duration = 'duration-'.$prod_schema_tasks[0]->prod_schema_id @endphp
+                                                                            @php $duration = 'duration_'.$prod_schema_tasks[0]->prod_schema_id @endphp
                                                                             <label for="{{$duration}}" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Czas [h] <span class="text-red-700">*</span></label>
                                                                             <input type="number" id="{{$duration}}" name="{{$duration}}" value="{{old($duration)}}"
                                                                                    class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
                                                                         </div>
                                                                         <div class="w-[20%] mr-[3%]">
-                                                                            @php $amount = 'amount-'.$prod_schema_tasks[0]->prod_schema_id @endphp
+                                                                            @php $amount = 'amount_'.$prod_schema_tasks[0]->prod_schema_id @endphp
                                                                             <label for="{{$amount}}" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Ilość <span class="text-red-700">*</span></label>
                                                                             <input type="number" id="{{$amount}}" name="{{$amount}}" value="{{old($amount)}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
                                                                         </div>
                                                                         <div class="w-[30%] mr-[3%]">
-                                                                            @php $unit_name = 'unit-'.$prod_schema_tasks[0]->prod_schema_id @endphp
+                                                                            @php $unit_name = 'unit_'.$prod_schema_tasks[0]->prod_schema_id @endphp
                                                                             <label for="{{$unit_name}}" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Jednostka <span class="text-red-700">*</span></label>
                                                                             <select id="{{$unit_name}}" name="{{$unit_name}}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                                                                                 @if(isset($units) and count($units) > 0)
@@ -322,7 +319,7 @@
                                                 <button type="button" id="confirm-schema-button" class="prodschema-toggle hidden text-white bg-blue-450 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm lg:text-lg px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                                                     WYBIERZ
                                                 </button>
-                                                <input id="prodschema-input" name="prodschema-input" value="{{old('prodschema-input')}}" type="text" class="hidden"/>
+                                                <input id="prodschema-input" name="prodschema_input" value="{{old('prodschema_input')}}" type="text" class="hidden"/>
                                             </div>
                                         </div>
                                     @else

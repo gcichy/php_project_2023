@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\getUserData;
 use App\Helpers\HasEnsure;
+use App\Helpers\saveFile;
 use App\Models\Component;
 use App\Models\ComponentProductionSchema;
 use App\Models\Instruction;
@@ -14,10 +15,16 @@ use App\Models\ProductionStandard;
 use App\Models\StaticValue;
 use App\Models\Unit;
 use App\Models\User;
+use Exception;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use PhpParser\Node\Expr\Cast\Double;
+use stdClass;
 
 class ProductController
 {
@@ -195,48 +202,158 @@ class ProductController
             }
         }
 
+        $prod_schema_errors = $request->session()->get('prod_schema_errors');
         return view('product.component-add',[
             'prod_schemas' => $prod_schemas,
             'schema_data' => $prod_schema_tasks,
             'units' => $units,
             'user' => $request->user(),
             'material_list' => $materials,
+            'prod_schema_errors' => $prod_schema_errors
+
         ]);
     }
 
-    public function storeComponent(Request $request): View
+    public function storeComponent(Request $request): RedirectResponse
     {
-        dd($request);
-        $materials = StaticValue::where('type','material')->select('value')->get();
+        //dd($request);
+        //$request->file('dropzone-file')->extension()
+        $materials = StaticValue::where('type','material')->select('value', 'value_full')->get();
+
+        $err_mess = '';
         $mat_in = 'in:';
         foreach ($materials as $mat) {
             $mat_in .= $mat->value.',';
+            $err_mess .= $mat->value_full.' ,';
         }
         $mat_in = rtrim($mat_in,',');
+        $err_mess = rtrim($err_mess,',');
+
+        $file_ext = empty($request->file('dropzone-file')) ? '' : $request->file('dropzone-file')->extension();
 
         //independent tu nie dajemy tylko osobno bo odwala ten button...
         $request->validate([
             'name' => ['required', 'string',  'min:1','max:100'],
             'material' => ['required', 'string',  $mat_in],
-
+            'dropzone_file' => ['mimes:jpeg,gif,bmp,png,jpg,svg'],
+            'height' => ['gt:-1'],
+            'length' => ['gt:-1'],
+            'width' => ['gt:-1'],
+            'description' => ['max:200'],
+            'prodschema_input' => ['required'],
         ],
             [
+                'material.in' => 'Wybierz jeden z materiałów: '.$err_mess,
+                'dropzone_file.mimes' => 'Przesłany plik powinien mieć rozszerzenie: jpeg,bmp,png,jpg,svg. Rozszerzenie pliku: '.$file_ext,
+                'height.gt' => 'Wysokość nie może być ujemna',
+                'length.gt' => 'Długość nie może być ujemna',
+                'width.gt' => 'Szerokość nie może być ujemna',
+                'prodschema_input.required' => 'Wybierz przynajmniej jeden schemat produkcji',
                 'required' => 'To pole jest wymagane.',
                 'max' => 'Wpisany tekst ma za dużo znaków.',
-                'firstName.regex' => 'Pole Imię może zawierać liczb.',
-                'lastName.regex' => 'Pole Nazwisko nie może zawierać liczb.',
-                'role.in' => 'Niepoprawne stanowisko. Musi być jedno z: pracownik, manager, admin.',
-                'employeeNo.unique' => 'Ta nazwa użytkownika jest zajęta.',
-                'phoneNr.digits' => 'Numer telefonu musi zawierać dokładnie 9 cyfr.',
-                'phoneNr.unique' => 'Ten numer telefonu jest już w systemie.',
-                'email.unique' => 'Ten email jest już w systemie.',
-                'email.email' => 'Niepoprawny email. Upewnij się, że wpisujesz poprawny adres.',
-                'password.min' => 'Hasło musi zawierać minimum 11 znaków.',
-                'password.regex' => 'Hasło musi zawierać małą literę, dużą literę, liczbę i znak specjalny.',
-                'password_confirmation.same' => 'Hasła muszą być identyczne.',
-                'salary.numeric' => 'Wynagrodzenie musi być liczbą',
-                'salary.min' => 'Wynagrodzenie musi być liczbą nieujemną.',
+                'min' => 'Wpisany tekst ma za mało znaków.',
             ]);
-        return $this->index($request);
+
+        $schema_arr = $this->validateProdSchemas($request);
+        if(array_key_exists('ERROR', $schema_arr)) {
+            $schema_arr = $schema_arr['ERROR'];
+            return back()->with('prod_schema_errors', $schema_arr);
+        }
+        else if(array_key_exists('INSERT', $schema_arr)) {
+            $schema_arr = $schema_arr['INSERT'];
+        }
+        $file_name = '';
+        if(!empty($request->file('dropzone-file'))) {
+            $file_name = saveFile::saveFile($request->file('dropzone-file'), 'component_images');
+        }
+
+        $independent = $request->independent == null ? 0 : $request->independent;
+        $desc = empty($request->description) ? '' : $request->description;
+        $height = doubleval($request->height);
+        $length = doubleval($request->length);
+        $width = doubleval($request->width);
+        $this->InsertComponent($request->name, $request->material, $desc, $independent,
+                                $height, $length, $width, $file_name);
+
+
+
+
+        return redirect()->route('product.index');
     }
+
+    private function validateProdSchemas(Request $request): array
+    {
+        $units = DB::select('select unit from unit');
+        //CAST DB::select result to simple array
+        $units = collect($units)->map(function (stdClass $arr) { return $arr->unit; })->toArray();
+
+        $error_arr = [];
+        $insert_arr = [];
+        $schemas = explode('_',$request->prodschema_input);
+        foreach ($schemas as $schema) {
+            $schema_id = intval($schema);
+            if($schema_id > 0) {
+                $duration = 'duration_'.$schema_id;
+                $amount = 'amount_'.$schema_id;
+                $unit = 'unit_'.$schema_id;
+
+                if($request->$duration == null or $request->$duration <= 0) {
+                    $error_arr[0] = 'Niepoprawna wartość Czas [h] dla jednego ze schematów produkcji';
+                }
+                if($request->$amount == null or $request->$amount <= 0) {
+                    $error_arr[1] = 'Niepoprawna wartość Ilość dla jednego ze schematów produkcji';
+                }
+                if($request->$unit == null or !in_array($request->$unit, $units)) {
+                    $error_arr[2] = 'Niepoprawna wartość Jednostka dla jednego ze schematów produkcji';
+                }
+
+                $error_arr = array_values($error_arr);
+                if(count($error_arr) == 0) {
+                    $insert_arr[$schema_id] = array(
+                        "duration" => $request->$duration,
+                        "amount" => $request->$amount,
+                        "unit" => $request->$unit
+                    );
+                }
+            }
+        }
+
+        if(count($error_arr) > 0) {
+            return array('ERROR' => $error_arr);
+        }
+        return array('INSERT' => $insert_arr);
+
+    }
+
+    private function InsertComponent(string $name, string $material, string $description, int $independent,
+                                     float $height, float $length, float $width, string $image): string
+    {
+        $employee_no = 'unknown';
+        $user = Auth::user();
+        if( ($user instanceof User) and !empty($user->employeeNo)) {
+            $employee_no = $user->employeeNo;
+        }
+
+        try {
+            DB::table('component')->insert([
+                'name' => $name,
+                'material' => $material,
+                'description' => $description,
+                'independent' => $independent,
+                'image' => $image,
+                'height' => $height,
+                'length' => $length,
+                'width' => $width,
+                'created_by' => $employee_no,
+                'updated_by' => $employee_no,
+                'created_at' => date('y-m-d h:i:s'),
+                'updated_at' => date('y-m-d h:i:s'),
+            ]);
+        } catch (Exception $e) {
+            return 'INSERT ERROR: failed to insert into Component table:'.$e->getMessage();
+        }
+
+        return true;
+    }
+
 }
