@@ -21,6 +21,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use PhpParser\Node\Expr\Cast\Double;
@@ -203,20 +204,21 @@ class ProductController
         }
 
         $prod_schema_errors = $request->session()->get('prod_schema_errors');
+        $insert_error = $request->session()->get('insert_error');
         return view('product.component-add',[
             'prod_schemas' => $prod_schemas,
             'schema_data' => $prod_schema_tasks,
             'units' => $units,
             'user' => $request->user(),
             'material_list' => $materials,
-            'prod_schema_errors' => $prod_schema_errors
+            'prod_schema_errors' => $prod_schema_errors,
+            'insert_error' => $insert_error,
 
         ]);
     }
 
     public function storeComponent(Request $request): RedirectResponse
     {
-        //dd($request);
         //$request->file('dropzone-file')->extension()
         $materials = StaticValue::where('type','material')->select('value', 'value_full')->get();
 
@@ -229,13 +231,16 @@ class ProductController
         $mat_in = rtrim($mat_in,',');
         $err_mess = rtrim($err_mess,',');
 
-        $file_ext = empty($request->file('dropzone-file')) ? '' : $request->file('dropzone-file')->extension();
-
+        $ext_comp_photo = empty($request->file('comp_photo')) ? '' : $request->file('comp_photo')->extension();
+        $ext_instr_pdf = empty($request->file('instr_pdf')) ? '' : $request->file('instr_pdf')->extension();
+        $ext_instr_video = empty($request->file('instr_video')) ? '' : $request->file('instr_video')->extension();
         //independent tu nie dajemy tylko osobno bo odwala ten button...
         $request->validate([
-            'name' => ['required', 'string',  'min:1','max:100'],
+            'name' => ['required', 'string',  'min:1','max:100', 'unique:'.Component::class],
             'material' => ['required', 'string',  $mat_in],
-            'dropzone_file' => ['mimes:jpeg,gif,bmp,png,jpg,svg'],
+            'comp_photo' => ['mimes:jpeg,gif,bmp,png,jpg,svg', 'max:16384'],
+            'instr_pdf' => ['mimes:pdf,docx', 'max:16384'],
+            'instr_video' => ['mimes:mp4,mov,mkv,wmv', 'max:51300'],
             'height' => ['gt:-1'],
             'length' => ['gt:-1'],
             'width' => ['gt:-1'],
@@ -243,12 +248,18 @@ class ProductController
             'prodschema_input' => ['required'],
         ],
             [
-                'material.in' => 'Wybierz jeden z materiałów: '.$err_mess,
-                'dropzone_file.mimes' => 'Przesłany plik powinien mieć rozszerzenie: jpeg,bmp,png,jpg,svg. Rozszerzenie pliku: '.$file_ext,
-                'height.gt' => 'Wysokość nie może być ujemna',
-                'length.gt' => 'Długość nie może być ujemna',
-                'width.gt' => 'Szerokość nie może być ujemna',
-                'prodschema_input.required' => 'Wybierz przynajmniej jeden schemat produkcji',
+                'name.unique' => 'Nazwa komponentu musi być unikalna.',
+                'material.in' => 'Wybierz jeden z materiałów: '.$err_mess.'.',
+                'comp_photo.mimes' => 'Przesłany plik powinien mieć rozszerzenie: jpeg,bmp,png,jpg,svg. Rozszerzenie pliku: '.$ext_comp_photo.'.',
+                'instr_pdf.mimes' => 'Przesłany plik powinien mieć rozszerzenie: pdf,docx. Rozszerzenie pliku: '.$ext_instr_video.'.',
+                'instr_video.mimes' => 'Przesłany plik powinien mieć rozszerzenie: mp4,mov,mkv,wmv. Rozszerzenie pliku: '.$ext_instr_pdf.'.',
+                'comp_photo.max' => 'Przesłany plik jest za duży. Maksymalny rozmiar pliku: 16 MB.',
+                'instr_pdf.max' => 'Przesłany plik jest za duży. Maksymalny rozmiar pliku: 16 MB.',
+                'instr_video.max' => 'Przesłany plik jest za duży. Maksymalny rozmiar pliku: 50 MB.',
+                'height.gt' => 'Wysokość nie może być ujemna.',
+                'length.gt' => 'Długość nie może być ujemna.',
+                'width.gt' => 'Szerokość nie może być ujemna.',
+                'prodschema_input.required' => 'Wybierz przynajmniej jeden schemat produkcji.',
                 'required' => 'To pole jest wymagane.',
                 'max' => 'Wpisany tekst ma za dużo znaków.',
                 'min' => 'Wpisany tekst ma za mało znaków.',
@@ -257,23 +268,29 @@ class ProductController
         $schema_arr = $this->validateProdSchemas($request);
         if(array_key_exists('ERROR', $schema_arr)) {
             $schema_arr = $schema_arr['ERROR'];
-            return back()->with('prod_schema_errors', $schema_arr);
+            return back()->with('prod_schema_errors', $schema_arr)->withInput();
         }
         else if(array_key_exists('INSERT', $schema_arr)) {
             $schema_arr = $schema_arr['INSERT'];
         }
-        $file_name = '';
-        if(!empty($request->file('dropzone-file'))) {
-            $file_name = saveFile::saveFile($request->file('dropzone-file'), 'component_images');
-        }
 
+
+        $user = Auth::user();
         $independent = $request->independent == null ? 0 : $request->independent;
         $desc = empty($request->description) ? '' : $request->description;
         $height = doubleval($request->height);
         $length = doubleval($request->length);
         $width = doubleval($request->width);
-        $this->InsertComponent($request->name, $request->material, $desc, $independent,
-                                $height, $length, $width, $file_name);
+
+        $insert_result = $this->insertComponent($user, $request->name, $request->material, $desc, $independent,
+                                $height, $length, $width, $request->file('comp_photo'),$request->file('instr_pdf'),
+                                $request->file('instr_video'), $schema_arr);
+
+
+        if(array_key_exists('ERROR', $insert_result)) {
+            $insert_result = $insert_result['ERROR'];
+            return back()->with('insert_error', $insert_result)->withInput();
+        }
 
 
 
@@ -287,32 +304,43 @@ class ProductController
         //CAST DB::select result to simple array
         $units = collect($units)->map(function (stdClass $arr) { return $arr->unit; })->toArray();
 
+        //errors to be displayed on page are stored here
         $error_arr = [];
         $insert_arr = [];
         $schemas = explode('_',$request->prodschema_input);
+
+        //each prod schema values validation
+        $sequence_no_arr = array_map(function($x) { return $x; }, range(1, count($schemas)));
         foreach ($schemas as $schema) {
             $schema_id = intval($schema);
             if($schema_id > 0) {
                 $duration = 'duration_'.$schema_id;
                 $amount = 'amount_'.$schema_id;
                 $unit = 'unit_'.$schema_id;
+                $sequence_no = 'sequenceno_'.$schema_id;
 
                 if($request->$duration == null or $request->$duration <= 0) {
-                    $error_arr[0] = 'Niepoprawna wartość Czas [h] dla jednego ze schematów produkcji';
+                    $error_arr[] = 'Niepoprawna wartość Czas [h] dla jednego ze schematów produkcji.';
                 }
                 if($request->$amount == null or $request->$amount <= 0) {
-                    $error_arr[1] = 'Niepoprawna wartość Ilość dla jednego ze schematów produkcji';
+                    $error_arr[] = 'Niepoprawna wartość Ilość dla jednego ze schematów produkcji.';
                 }
                 if($request->$unit == null or !in_array($request->$unit, $units)) {
-                    $error_arr[2] = 'Niepoprawna wartość Jednostka dla jednego ze schematów produkcji';
+                    $error_arr[] = 'Niepoprawna wartość Jednostka dla jednego ze schematów produkcji.';
+                }
+                if($request->$sequence_no == null or !in_array($request->$sequence_no, $sequence_no_arr)) {
+                    $error_arr[] = 'Niepoprawne wartości Kolejność wyk. Schematy powinny zawierać liczby od 1 do '.count($schemas).' (w dowolnej kolejności).';
+                } else {
+                    array_splice($sequence_no_arr,array_search($request->$sequence_no, $sequence_no_arr),1);
                 }
 
-                $error_arr = array_values($error_arr);
+                $error_arr = array_unique($error_arr);
                 if(count($error_arr) == 0) {
                     $insert_arr[$schema_id] = array(
                         "duration" => $request->$duration,
                         "amount" => $request->$amount,
-                        "unit" => $request->$unit
+                        "unit" => $request->$unit,
+                        "sequence_no" => $request->$sequence_no
                     );
                 }
             }
@@ -325,22 +353,47 @@ class ProductController
 
     }
 
-    private function InsertComponent(string $name, string $material, string $description, int $independent,
-                                     float $height, float $length, float $width, string $image): string
+    private function insertComponent(User $user, string $name, string $material, string $description, int $independent,
+                                     float $height, float $length, float $width, $comp_image, $instr_pdf,
+                                     $instr_video, array $schema_arr): array
     {
-        $employee_no = 'unknown';
-        $user = Auth::user();
-        if( ($user instanceof User) and !empty($user->employeeNo)) {
-            $employee_no = $user->employeeNo;
-        }
+        $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
 
         try {
-            DB::table('component')->insert([
+            $comp_id = DB::select('select id from component order by id desc limit 1');
+            //convert comp_id to simple array
+            $comp_id = collect($comp_id)->map(function (stdClass $arr) { return $arr->id; })->toArray();
+            //if no records in component table, then first will be added
+            $comp_id = count($comp_id) > 0 ? $comp_id[0] : 1;
+            $comp_id++;
+        }
+        catch(Exception $e) {
+            Log::channel('error')->error('Error inserting component: '.$e->getMessage(), [
+                'employeeNo' => $employee_no,
+            ]);
+            return array('ERROR' => 'Nowy komponent nie został dodany: błąd przy nadawaniu id komponentu.');
+        }
+
+
+
+        try {
+            $image_name = '';
+            if($comp_image instanceof UploadedFile) {
+                $image_name = saveFile::saveFile($comp_image, 'component_images', 'comp_'.$comp_id.'_');
+                //if failed to save comp image file
+                if(empty($image_name)) {
+                    return array('ERROR' => 'Nowy komponent nie został dodany: błąd przy zapisie pliku "Zdjęcie komponentu".');
+                }
+            }
+
+            DB::beginTransaction();
+
+            $comp_id = DB::table('component')->insertGetId([
                 'name' => $name,
                 'material' => $material,
                 'description' => $description,
                 'independent' => $independent,
-                'image' => $image,
+                'image' => $image_name,
                 'height' => $height,
                 'length' => $length,
                 'width' => $width,
@@ -349,11 +402,127 @@ class ProductController
                 'created_at' => date('y-m-d h:i:s'),
                 'updated_at' => date('y-m-d h:i:s'),
             ]);
+
+            $this->insertCompProdSchemaAndProdStd($comp_id, $schema_arr, $employee_no);
+
+            //od tego miejsca jest nieprzetestowane
+            $instr_files_save_status = $this->saveInstructionFiles($instr_pdf, $instr_video);
+            if(array_key_exists('ERROR', $instr_files_save_status)) {
+                if(array_key_exists('SAVED_FILES', $instr_files_save_status)) {
+                    foreach ($instr_files_save_status['SAVED_FILES'] as $file_name) {
+                        saveFile::deleteFile('instructions', $file_name);
+                    }
+
+                }
+                return array('ERROR',$instr_files_save_status['ERROR']);
+            }
+
+
+            $this->insertInstruction($comp_id, $name, $employee_no, $instr_files_save_status['SAVED_FILES'][0], $instr_files_save_status['SAVED_FILES'][1]);
+
+
+            DB::rollBack();
+            return array('ERROR' => 'Tu byłby commit.');
         } catch (Exception $e) {
-            return 'INSERT ERROR: failed to insert into Component table:'.$e->getMessage();
+            Log::channel('error')->error('Error inserting component: '.$e->getMessage(), [
+                'employeeNo' => $employee_no,
+            ]);
+            DB::rollBack();
+
+            if(isset($instr_files_save_status) and array_key_exists('SAVED_FILES', $instr_files_save_status)) {
+                foreach ($instr_files_save_status['SAVED_FILES'] as $file_name) {
+                    saveFile::deleteFile('instructions', $file_name);
+                }
+            }
+
+            return array('ERROR' => 'Nowy komponent nie został dodany: błąd przy wprowadzaniu danych do systemu.');
         }
 
-        return true;
+
     }
+
+    private function insertInstruction(int $comp_id, string $name, string $employee_no, string $instr_pdf_name, string $instr_video_name): void
+    {
+
+        $instr_name = 'Instrukcja wykonania komponentu: '.$name;
+        DB::table('instruction')->insert([
+            'component_id' => $comp_id,
+            'name' => $instr_name,
+            'instr_pdf' => $instr_pdf_name,
+            'instr_video' => $instr_video_name,
+            'created_by' => $employee_no,
+            'updated_by' => $employee_no,
+            'created_at' => date('y-m-d h:i:s'),
+            'updated_at' => date('y-m-d h:i:s'),
+        ]);
+    }
+
+    private function saveInstructionFiles( $instr_pdf, $instr_video): array
+    {
+        $instr_id = DB::select('select id from instruction order by id desc limit 1');
+        //convert comp_id to simple array
+        $instr_id = collect($instr_id)->map(function (stdClass $arr) { return $arr->id; })->toArray();
+        //if no records in component table, then first will be added
+        $instr_id = count($instr_id) > 0 ? $instr_id[0] : 1;
+        $instr_id++;
+
+        $instr_pdf_name = '';
+        if($instr_pdf instanceof UploadedFile) {
+            $instr_pdf_name = saveFile::saveFile($instr_pdf, 'instructions', 'instr_doc_'.$instr_id.'_');
+            //if failed to save comp image file
+            if(empty($instr_pdf_name)) {
+                return array('ERROR' => 'Nowy komponent nie został dodany: błąd przy zapisie pliku "Instrukcja wykonania komponentu".');
+            }
+        }
+
+        $instr_video_name = '';
+        if($instr_video instanceof UploadedFile) {
+            $instr_video_name = saveFile::saveFile($instr_video, 'instructions', 'instr_doc_'.$instr_id.'_');
+            //if failed to save comp image file
+            if(empty($instr_video_name)) {
+                return array('ERROR' => 'Nowy komponent nie został dodany: błąd przy zapisie pliku "Film instruktażowy".',
+                    'SAVED_FILES' => [$instr_pdf_name]);
+            }
+        }
+
+        return array('SAVED_FILES' => [$instr_pdf_name, $instr_video_name]);
+    }
+
+    private function insertCompProdSchemaAndProdStd(int $comp_id, array $schema_arr, string $employee_no ): void
+    {
+
+        foreach ($schema_arr as $schema_id => $value) {
+
+            $unit_id = DB::select("select id from unit where unit = '".$value['unit']."'");
+            $unit_id = collect($unit_id)->map(function (stdClass $arr) { return $arr->id; })->toArray();
+            $unit_id = count($unit_id) > 0 ? $unit_id[0] : 0;
+
+            DB::table('component_production_schema')->insert([
+                'component_id' => $comp_id,
+                'production_schema_id' => $schema_id,
+                'sequence_no' => $value['sequence_no'],
+                'unit_id' => $unit_id,
+                'created_by' => $employee_no,
+                'updated_by' => $employee_no,
+                'created_at' => date('y-m-d h:i:s'),
+                'updated_at' => date('y-m-d h:i:s'),
+            ]);
+
+            DB::table('production_standard')->insert([
+                'component_id' => $comp_id,
+                'production_schema_id' => $schema_id,
+                'name' => '',
+                'duration_hours' => $value['duration'],
+                'amount' =>$value['amount'],
+                'unit_id' => $unit_id,
+                'created_by' => $employee_no,
+                'updated_by' => $employee_no,
+                'created_at' => date('y-m-d h:i:s'),
+                'updated_at' => date('y-m-d h:i:s'),
+            ]);
+        }
+    }
+
+
 
 }
