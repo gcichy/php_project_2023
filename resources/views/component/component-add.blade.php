@@ -55,7 +55,16 @@
             return ids.includes(elem_id)
         }
 
+        function checkIndependent() {
+            if($('#independent').val()) {
+                $('#independent').prop('checked', true);
+            } else {
+                $('#independent').prop('checked', false);
+            }
+        }
+
         $(document).ready(function() {
+            checkIndependent();
             getActiveOnLoad('prodschema', $('#prodschema-input').val());
             checkActive();
 
@@ -151,12 +160,17 @@
             });
 
             $('#independent').on('click', function () {
-                $(this).val($(this).val() === 1 ? 0 : 1);
+                $(this).val($(this).prop("checked") ? 1 : 0);
             });
         });
 
     </script>
-    @props(['insert_err'])
+    BYŁOBY, ALE TRZEBA JESZCZE POKMINIĆ Z KOLJENOŚCIĄ WYKONANIA
+    @php
+        if(!isset($selected_comp_schemas)) $selected_comp_schemas = null;
+        if(!isset($prodschema_input)) $prodschema_input = null;
+        if(!isset($selected_comp)) $selected_comp = null;
+    @endphp
     <div class="space-x-8 mt-8 flex bg-gray-50 border-gray-300  justify-between">
         <a class ='block w-1/2 pl-3 pr-4 py-2 border-blue-450 border-l-4 lg:border-l-8 lg:py-8 lg:text-3xl text-left text-base font-medium text-gray-800  transition duration-150 ease-in-out'>
             {{ __('Dodaj komponent') }}
@@ -173,7 +187,7 @@
         <div class="container h-full w-full p-10">
             <div class="g-6 flex h-full flex-wrap items-center justify-center text-neutral-800 dark:text-neutral-200">
                 <div class="w-full">
-                    <form method="POST" action="{{ route('product.store_component') }}" enctype="multipart/form-data">
+                    <form method="POST" action="{{ route('component.store') }}" enctype="multipart/form-data">
                         @csrf
                         <div class="block rounded-lg bg-white shadow-lg dark:bg-neutral-800">
                             <div class="g-0 lg:flex lg:flex-wrap">
@@ -182,7 +196,7 @@
                                     <div class="md:mx-6 md:p-12">
                                         <div class="mb-6">
                                             <label for="name" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Nazwa <span class="text-red-700">*</span></label>
-                                            <input type="text" id="name" name="name" value="{{old('name')}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                            <input type="text" id="name" name="name" value="{{old('name') ? old('name') : (empty($selected_comp) ? '' : $selected_comp->name )}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
                                             <x-input-error :messages="$errors->get('name')" class="mt-2" />
                                         </div>
                                         <div class="mb-6">
@@ -190,7 +204,11 @@
                                             <select id="material" name="material" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                                                 @if(isset($material_list) and count($material_list) > 0)
                                                     @foreach($material_list as $mat)
-                                                        <option value="{{$mat->value}}">{{$mat->value_full}}</option>
+                                                        @if($selected_comp instanceof \App\Models\Component and $mat->value == $selected_comp->material)
+                                                            <option value="{{$mat->value}}" selected>{{$mat->value_full}}</option>
+                                                        @else
+                                                            <option value="{{$mat->value}}">{{$mat->value_full}}</option>
+                                                        @endif
                                                     @endforeach
                                                 @else
                                                     <option value=""></option>
@@ -201,8 +219,8 @@
                                         <div class="mb-6">
                                             <label for="independent" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Produkowany Niezależnie</label>
                                             <label class="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" id="independent" name="independent" value="{{old('independent')}}" class="sr-only peer">
-                                                <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                                <input type="checkbox" id="independent" name="independent" value="{{old('independent') ? old('independent') : (empty($selected_comp) ? '' : $selected_comp->independent )}}" class="sr-only peer">
+                                                <div class="w-11 h-6 bg-gray-200 rounded-full peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                                                 <x-input-error :messages="$errors->get('independent')" class="mt-2" />
                                             </label>
                                         </div>
@@ -211,15 +229,15 @@
                                             <div id="dimension" class="flex flex-row justify-start items-center w-full xl:w-[60%]">
                                                 <div class="w-[30%] mr-[3%]">
                                                     <label for="height" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Wysokość</label>
-                                                    <input type="number" id="height" name="height" value="{{old('height') ? old('height') : 0}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                    <input type="number" id="height" name="height" value="{{old('height') ? old('height') : (empty($selected_comp) || empty($selected_comp->height) ? 0 : $selected_comp->height )}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
                                                 </div>
                                                 <div class="w-[30%] mr-[3%]">
                                                     <label for="length" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Długość</label>
-                                                    <input type="number" id="length" name="length" value="{{old('length') ? old('length') : 0}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                    <input type="number" id="length" name="length" value="{{old('length') ? old('length') : (empty($selected_comp) || empty($selected_comp->length) ? 0 : $selected_comp->length )}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
                                                 </div>
                                                 <div class="w-[30%] mr-[3%]">
                                                     <label for="width" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Szerokość</label>
-                                                    <input type="number" id="width" name="width" value="{{old('width') ? old('width') : 0}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                    <input type="number" id="width" name="width" value="{{old('width') ? old('width') : (empty($selected_comp) || empty($selected_comp->width) ? 0 : $selected_comp->width )}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
                                                 </div>
                                             </div>
                                             <x-input-error :messages="$errors->get('height')" />
@@ -236,7 +254,7 @@
                                         </div>
                                         <div class="mb-6">
                                             <label for="description" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Opis komponentu</label>
-                                            <input type="text" id="description" name="description" value="{{old('description')}}" class="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 sm:text-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                            <input type="text" id="description" name="description" value="{{old('description') ? old('description') : (empty($selected_comp) ? '' : $selected_comp->description )}}" class="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs lg:text-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                                             <x-input-error :messages="$errors->get('description')" class="mt-2" />
                                         </div>
                                     </div>
@@ -275,6 +293,7 @@
                                                         <x-search-input class="w-full" :inputPlaceholder="$inputPlaceholder" :xListElementUniqueId="$xListElem"></x-search-input>
                                                     </div>
                                                     <div id="prodschema-dropdown" class="w-full">
+                                                        @php $j = 0; @endphp
                                                         @foreach($schema_data as $prod_schema_tasks)
                                                             @if(count($prod_schema_tasks) > 0)
                                                                 <x-list-element class="list-element-{{$xListElem}} list-element w-full hidden flex-col text-md lg:text-lg lg:py-4 my-3" id="prodschema-{{$prod_schema_tasks[0]->prod_schema_id}}">
@@ -296,13 +315,24 @@
                                                                             <div class="w-[15%] mr-[3%]">
                                                                                 @php $duration = 'duration_'.$prod_schema_tasks[0]->prod_schema_id @endphp
                                                                                 <label for="{{$duration}}" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Czas [h] <span class="text-red-700">*</span></label>
-                                                                                <input type="number" id="{{$duration}}" name="{{$duration}}" value="{{old($duration)}}"
-                                                                                       class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                                                @if(!empty($selected_comp_schemas) and count($selected_comp_schemas) > 0 and $prod_schema_tasks[0]->prod_schema_id == $selected_comp_schemas[$j]->production_schema_id)
+                                                                                    <input type="number" id="{{$duration}}" name="{{$duration}}" value="{{old($duration) ? old($duration) : (empty($selected_comp_schemas[$j]) ? '' : $selected_comp_schemas[$j]->duration_hours )}}"
+                                                                                           class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                                                @else
+                                                                                    <input type="number" id="{{$duration}}" name="{{$duration}}" value="{{old($duration)}}"
+                                                                                           class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                                                @endif
                                                                             </div>
                                                                             <div class="w-[15%] mr-[3%]">
                                                                                 @php $amount = 'amount_'.$prod_schema_tasks[0]->prod_schema_id @endphp
                                                                                 <label for="{{$amount}}" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Ilość <span class="text-red-700">*</span></label>
-                                                                                <input type="number" id="{{$amount}}" name="{{$amount}}" value="{{old($amount)}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                                                @if(!empty($selected_comp_schemas) and count($selected_comp_schemas) > 0 and $prod_schema_tasks[0]->prod_schema_id == $selected_comp_schemas[$j]->production_schema_id)
+                                                                                    <input type="number" id="{{$amount}}" name="{{$amount}}" value="{{old($amount) ? old($amount) : (empty($selected_comp_schemas[$j]) ? '' : $selected_comp_schemas[$j]->amount)}}"
+                                                                                           class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                                                @else
+                                                                                    <input type="number" id="{{$amount}}" name="{{$amount}}" value="{{old($amount)}}"
+                                                                                           class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                                                @endif
                                                                             </div>
                                                                             <div class="w-[30%] mr-[3%]">
                                                                                 @php $unit_name = 'unit_'.$prod_schema_tasks[0]->prod_schema_id @endphp
@@ -310,7 +340,14 @@
                                                                                 <select id="{{$unit_name}}" name="{{$unit_name}}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                                                                                     @if(isset($units) and count($units) > 0)
                                                                                         @foreach($units as $u)
-                                                                                            <option value="{{$u->unit}}">{{$u->unit}}</option>
+                                                                                            @if(!empty($selected_comp_schemas)
+                                                                                                    and count($selected_comp_schemas) > 0
+                                                                                                    and $prod_schema_tasks[0]->prod_schema_id == $selected_comp_schemas[$j]->production_schema_id
+                                                                                                    and $u->unit == $selected_comp_schemas[$j]->unit )
+                                                                                                <option value="{{$u->unit}}" selected>{{$u->unit}}</option>
+                                                                                            @else
+                                                                                                <option value="{{$u->unit}}">{{$u->unit}}</option>
+                                                                                            @endif
                                                                                         @endforeach
                                                                                     @else
                                                                                         <option value=""></option>
@@ -320,7 +357,14 @@
                                                                             <div class="w-[20%] mr-[3%]">
                                                                                 @php $sequenceno = 'sequenceno_'.$prod_schema_tasks[0]->prod_schema_id @endphp
                                                                                 <label for="{{$sequenceno}}" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Kolejność wyk <span class="text-red-700">*</span></label>
-                                                                                <input type="number" id="{{$sequenceno}}" name="{{$sequenceno}}" value="{{old($sequenceno)}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                                                @if(!empty($selected_comp_schemas) and count($selected_comp_schemas) > 0 and $prod_schema_tasks[0]->prod_schema_id == $selected_comp_schemas[$j]->production_schema_id)
+                                                                                    <input type="number" id="{{$sequenceno}}" name="{{$sequenceno}}" value="{{old($sequenceno) ? old($sequenceno) : (empty($selected_comp_schemas[$j]) ? '' : $selected_comp_schemas[$j]->sequence_no)}}"
+                                                                                           class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                                                    @php if($j + 1 < count($selected_comp_schemas)) $j++ @endphp
+                                                                                @else
+                                                                                    <input type="number" id="{{$sequenceno}}" name="{{$sequenceno}}" value="{{old($sequenceno)}}"
+                                                                                           class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                                                @endif
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -351,7 +395,7 @@
                                                     <button type="button" id="confirm-schema-button" class="prodschema-toggle hidden text-white bg-blue-450 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm lg:text-lg px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                                                         WYBIERZ
                                                     </button>
-                                                    <input id="prodschema-input" name="prodschema_input" value="{{old('prodschema_input')}}" type="text" class="hidden"/>
+                                                    <input id="prodschema-input" name="prodschema_input" value="{{old('prodschema_input') ? old('prodschema_input') : (empty($prodschema_input) ? '' : $prodschema_input )}}" type="text" class="hidden"/>
                                                 </div>
                                             </div>
                                         @else

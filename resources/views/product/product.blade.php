@@ -1,31 +1,40 @@
 <x-app-layout>
     <script type="module">
         function checkActive() {
+            let similar = $('.similar');
+            let remove = $('.remove');
+            let details = $('.details');
             //check if any element is active, if not details button's href is set to current url
             if($('.list-element.active-list-elem').length === 0) {
-                $('.remove').css('background-color','gray');
-                $('.details').css('background-color','gray').attr('href', $(location).attr('href'));
+                remove.css('background-color','gray');
+                details.css('background-color','gray').attr('href', $(location).attr('href'));
+                similar.css('background-color','gray').attr('href', $(location).attr('href'));
             }
             //else if id is set properly, url is set to be classified as product.details route
             else {
-                var id = $('.list-element.active-list-elem').attr('id').split('-');
+                let id = $('.list-element.active-list-elem').attr('id').split('-');
                 if(id.length > 1) {
                     id = id[1];
-                    var newUrl = "";
+                    let newUrl = '';
+                    let similarUrl = '';
                     //if products div has display block, then create route to products, else to components
                     if($('#left').css('display') === 'block') {
                         newUrl = $(location).attr('href') + '/' + id;
+                        similarUrl = $(location).attr('href').replace('produkty','dodaj-produkt') + '/' + id;
                     } else {
                         newUrl = $(location).attr('href').replace('produkty','komponenty') + '/' + id;
+                        similarUrl = $(location).attr('href').replace('produkty','dodaj-komponent') + '/' + id;
                     }
 
 
-                    $('.remove').css('background-color','rgb(224 36 36)');
-                    $('.details').css('background-color','#1ca2e6').attr('href', newUrl);
+                    remove.css('background-color','rgb(224 36 36)');
+                    details.css('background-color','#1ca2e6').attr('href', newUrl);
+                    similar.css('background-color','#1ca2e6').attr('href', similarUrl);
                 }
                 else {
-                    $('.details').css('background-color','gray').attr('href', $(location).attr('href'));
-                    $('.remove').css('background-color','gray');
+                    details.css('background-color','gray').attr('href', $(location).attr('href'));
+                    remove.css('background-color','gray');
+                    similar.css('background-color','gray').attr('href', $(location).attr('href'));
 
 
                 }
@@ -93,6 +102,20 @@
 
     </script>
     @if(isset($user) and $user instanceof \App\Models\User)
+        @if(session('status'))
+            <div class="flex justify-center items-center">
+                <p class="w-full !text-md lg:text-xl font-medium text-center p-6 text-green-600 space-y-1">
+                    {{session('status')}}
+                </p>
+            </div>
+        @endif
+        @if(session('status_err'))
+            <div class="flex justify-center items-center">
+                <p class="w-full !text-md lg:text-xl font-medium text-center p-6 text-red-700 space-y-1">
+                    {{session('status_err')}}
+                </p>
+            </div>
+        @endif
         @php
             $left = "Produkty";
             $right = "Komponenty";
@@ -107,6 +130,9 @@
                     @if(in_array($user->role,array('admin','manager')))
                         <x-nav-button :href="route('product.add')" class="ml-1 lg:ml-3">
                             {{ __('Dodaj') }}
+                        </x-nav-button>
+                        <x-nav-button class="on-select similar ml-1 lg:ml-3 bg-blue-450 hover:bg-blue-800">
+                            {{ __('Dodaj Podobny') }}
                         </x-nav-button>
                         <x-nav-button  class="ml-1 lg:ml-3 lg:mr-5 on-select remove bg-red-600">
                             {{ __('Usuń') }}
@@ -129,6 +155,7 @@
                                             <div class="w-[80%] md:w-[60%] flex justify-left items-center">
                                                 <div class="border-2 inline-block w-[50px] h-[50px] md:w-[100px] md:h-[100px]">
                                                     @if(!empty($prod->image))
+                                                        @php $path = isset($storage_path_products) ? $storage_path_products.'/' : ''; @endphp
                                                         <img src="{{asset('storage/'.$prod->image)}}">
                                                     @endif
                                                 </div>
@@ -211,12 +238,15 @@
             <x-slot name="rightContent">
                 <x-information-panel :viewName="$right">
                     {{--    routing for details set in java script above   --}}
-                    <x-nav-button  class="on-select details bg-blue-450">
+                    <x-nav-button  class="on-select details bg-blue-450 hover:bg-blue-800">
                         {{ __('Szczegóły') }}
                     </x-nav-button>
                     @if(in_array($user->role,array('admin','manager')))
-                        <x-nav-button :href="route('product.add_component')" class="ml-1 lg:ml-3">
+                        <x-nav-button :href="route('component.add')" class="ml-1 lg:ml-3">
                             {{ __('Dodaj') }}
+                        </x-nav-button>
+                        <x-nav-button class="on-select similar bg-blue-450 hover:bg-blue-800 ml-1 lg:ml-3">
+                            {{ __('Dodaj Podobny') }}
                         </x-nav-button>
                         <x-nav-button  class="ml-1 lg:ml-3 lg:mr-5 on-select remove bg-red-600">
                             {{ __('Usuń') }}
@@ -238,7 +268,8 @@
                                             <div class="w-[80%] flex justify-left items-center">
                                                 <div class="border-2 inline-block w-[50px] h-[50px] md:w-[100px] md:h-[100px]">
                                                     @if(!empty($comp->image))
-                                                        <img src="{{asset('storage/'.$comp->image)}}">
+                                                        @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
+                                                        <img src="{{asset('storage/'.$path.$comp->image)}}">
                                                     @endif
                                                 </div>
                                                 <p class="inline-block list-element-name ml-[3%] xl:text-2xl text-md lg:text-xl">{{$comp->name}} - {{$comp->material}}</p>

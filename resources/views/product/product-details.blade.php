@@ -115,7 +115,8 @@
                         <div class="flex flex-col items-center justify-center xl:w-[95%]">
                             @if(!empty($prod->image))
                                 <div class="max-w-[350px] lg:max-w-[450px]">
-                                    <img src="{{asset('storage/'.$prod->image)}}">
+                                    @php $path = isset($storage_path) ? $storage_path.'/' : ''; @endphp
+                                    <img src="{{asset('storage/'.$path.$prod->image)}}">
                                 </div>
                             @endif
                         </div>

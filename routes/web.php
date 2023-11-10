@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ComponentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeStatisticsController;
@@ -52,10 +53,15 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/produkty', [ProductController::class, 'index'])->name('product.index');
     Route::get('/produkty/{id}', [ProductController::class, 'productDetails'])->name('product.details');
-    Route::get('/komponenty/{id}', [ProductController::class, 'componentDetails'])->name('product.details_component');
-    Route::get('/dodaj-produkt', [ProductController::class, 'addProduct'])->name('product.add');
-    Route::get('/dodaj-komponent', [ProductController::class, 'addComponent'])->name('product.add_component');
-    Route::post('/dodaj-komponent', [ProductController::class, 'storeComponent'])->name('product.store_component');
+    Route::get('/dodaj-produkt/{id?}', [ProductController::class, 'addProduct'])->name('product.add');
+});
+
+//components
+Route::middleware(['auth'])->group(function () {
+    Route::get('/komponenty/{id}', [ComponentController::class, 'componentDetails'])->name('component.details');
+    Route::get('/dodaj-komponent', [ComponentController::class, 'addComponent'])->name('component.add');
+    Route::post('/dodaj-komponent', [ComponentController::class, 'storeComponent'])->name('component.store');
+    Route::get('/dodaj-komponent/{id}', [ComponentController::class, 'addSimilarComponent'])->name('component.add-similar');
 });
 
 //production
