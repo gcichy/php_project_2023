@@ -29,7 +29,7 @@
                         <div class="flex flex-col items-center justify-center xl:w-[95%]">
                             @if(!empty($comp->image))
                                 <div class="max-w-[350px] lg:max-w-[450px]">
-                                    @php $path = isset($storage_path) ? $storage_path.'/' : ''; @endphp
+                                    @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
                                     <img src="{{asset('storage/'.$path.$comp->image)}}">
                                 </div>
                             @endif
@@ -238,16 +238,17 @@
                             <p class="w-full lg:w-[80%] mb-8 text-md md:text-xl font-medium pl-2 lg:pl-4 lg:pb-2 text-gray-950 border-l-4 border-blue-450">
                                 {{$instruction->name}}
                             </p>
+                            @php $path = isset($storage_path_instructions) ? $storage_path_instructions.'/' : ''; @endphp
                             @if(!is_null($instruction->video))
                                 <video class="w-full lg:w-[80%]" width="320" height="240" controls>
-                                    <source src="{{asset('storage/lights_go.mp4')}}" type="video/mp4">
+                                    <source src="{{asset('storage/'.$path.$instruction->video)}}" type="video/mp4">
                                     Your browser does not support the video tag.
                                 </video>
                             @endif
                         </div>
                         @if(!is_null($instruction->instruction_pdf))
                             <div class="w-full flex flex-col justify-center items-center">
-                                <embed class="w-full lg:w-[80%] h-[400px] lg:h-[600px] xl:h-[800px]" src="{{asset('storage/DATA_MODEL_prototyp.pdf')}}" width="800px" height="800px"/>
+                                <embed class="w-full lg:w-[80%] h-[400px] lg:h-[600px] xl:h-[800px]" src="{{asset('storage/'.$path.$instruction->instruction_pdf)}}" width="800px" height="800px"/>
                             </div>
                         @endif
                     @else

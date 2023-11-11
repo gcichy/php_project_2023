@@ -4,11 +4,13 @@
             let similar = $('.similar');
             let remove = $('.remove');
             let details = $('.details');
+            let edit = $('.edit');
             //check if any element is active, if not details button's href is set to current url
             if($('.list-element.active-list-elem').length === 0) {
-                remove.css('background-color','gray');
-                details.css('background-color','gray').attr('href', $(location).attr('href'));
-                similar.css('background-color','gray').attr('href', $(location).attr('href'));
+                remove.removeClass('bg-red-600').addClass('bg-gray-400').attr('href', $(location).attr('href'));
+                details.removeClass('bg-blue-450').addClass('bg-gray-400').attr('href', $(location).attr('href'));
+                similar.removeClass('bg-gray-800').addClass('bg-gray-400').attr('href', $(location).attr('href'));
+                edit.removeClass('bg-orange-500').addClass('bg-gray-400').attr('href', $(location).attr('href'));
             }
             //else if id is set properly, url is set to be classified as product.details route
             else {
@@ -17,26 +19,29 @@
                     id = id[1];
                     let newUrl = '';
                     let similarUrl = '';
+                    let editUrl = '';
                     //if products div has display block, then create route to products, else to components
                     if($('#left').css('display') === 'block') {
                         newUrl = $(location).attr('href') + '/' + id;
                         similarUrl = $(location).attr('href').replace('produkty','dodaj-produkt') + '/' + id;
+                        editUrl = $(location).attr('href').replace('produkty','edytuj-produkt') + '/' + id;
                     } else {
                         newUrl = $(location).attr('href').replace('produkty','komponenty') + '/' + id;
                         similarUrl = $(location).attr('href').replace('produkty','dodaj-komponent') + '/' + id;
+                        editUrl = $(location).attr('href').replace('produkty','edytuj-komponent') + '/' + id;
                     }
 
 
-                    remove.css('background-color','rgb(224 36 36)');
-                    details.css('background-color','#1ca2e6').attr('href', newUrl);
-                    similar.css('background-color','#1ca2e6').attr('href', similarUrl);
+                    remove.removeClass('bg-gray-400').addClass('bg-red-600');
+                    details.removeClass('bg-gray-400').addClass('bg-blue-450').attr('href', newUrl);
+                    similar.removeClass('bg-gray-400').addClass('bg-gray-800').attr('href', similarUrl);
+                    edit.removeClass('bg-gray-400').addClass('bg-orange-500').attr('href', editUrl);
                 }
                 else {
-                    details.css('background-color','gray').attr('href', $(location).attr('href'));
-                    remove.css('background-color','gray');
-                    similar.css('background-color','gray').attr('href', $(location).attr('href'));
-
-
+                    remove.removeClass('bg-red-600').addClass('bg-gray-400').attr('href', $(location).attr('href'));
+                    details.removeClass('bg-blue-450').addClass('bg-gray-400').attr('href', $(location).attr('href'));
+                    similar.removeClass('bg-gray-800').addClass('bg-gray-400').attr('href', $(location).attr('href'));
+                    edit.removeClass('bg-orange-500').addClass('bg-gray-400').attr('href', $(location).attr('href'));
                 }
             }
         }
@@ -131,10 +136,13 @@
                         <x-nav-button :href="route('product.add')" class="ml-1 lg:ml-3">
                             {{ __('Dodaj') }}
                         </x-nav-button>
-                        <x-nav-button class="on-select similar ml-1 lg:ml-3 bg-blue-450 hover:bg-blue-800">
+                        <x-nav-button class="on-select similar hover:bg-gray-700 ml-1 lg:ml-3">
                             {{ __('Dodaj Podobny') }}
                         </x-nav-button>
-                        <x-nav-button  class="ml-1 lg:ml-3 lg:mr-5 on-select remove bg-red-600">
+                        <x-nav-button class="on-select edit bg-orange-500 hover:bg-orange-800 ml-1 lg:ml-3">
+                            {{ __('Edytuj') }}
+                        </x-nav-button>
+                        <x-nav-button  class="on-select remove bg-red-600 hover:bg-red-800 ml-1 lg:ml-3 lg:mr-5">
                             {{ __('Usuń') }}
                         </x-nav-button>
                     @endif
@@ -156,7 +164,7 @@
                                                 <div class="border-2 inline-block w-[50px] h-[50px] md:w-[100px] md:h-[100px]">
                                                     @if(!empty($prod->image))
                                                         @php $path = isset($storage_path_products) ? $storage_path_products.'/' : ''; @endphp
-                                                        <img src="{{asset('storage/'.$prod->image)}}">
+                                                        <img src="{{asset('storage/'.$path.$prod->image)}}">
                                                     @endif
                                                 </div>
                                                 @php
@@ -237,7 +245,7 @@
             </x-slot>
             <x-slot name="rightContent">
                 <x-information-panel :viewName="$right">
-                    {{--    routing for details set in java script above   --}}
+                    {{--    routing for details similar and edit set in java script above   --}}
                     <x-nav-button  class="on-select details bg-blue-450 hover:bg-blue-800">
                         {{ __('Szczegóły') }}
                     </x-nav-button>
@@ -245,10 +253,13 @@
                         <x-nav-button :href="route('component.add')" class="ml-1 lg:ml-3">
                             {{ __('Dodaj') }}
                         </x-nav-button>
-                        <x-nav-button class="on-select similar bg-blue-450 hover:bg-blue-800 ml-1 lg:ml-3">
+                        <x-nav-button class="on-select similar hover:bg-gray-700 ml-1 lg:ml-3">
                             {{ __('Dodaj Podobny') }}
                         </x-nav-button>
-                        <x-nav-button  class="ml-1 lg:ml-3 lg:mr-5 on-select remove bg-red-600">
+                        <x-nav-button class="on-select edit bg-orange-500 hover:bg-orange-800 ml-1 lg:ml-3">
+                            {{ __('Edytuj') }}
+                        </x-nav-button>
+                        <x-nav-button  class="on-select remove bg-red-600 hover:bg-red-800 ml-1 lg:ml-3 lg:mr-5">
                             {{ __('Usuń') }}
                         </x-nav-button>
                     @endif

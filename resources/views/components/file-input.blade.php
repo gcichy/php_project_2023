@@ -10,10 +10,17 @@
 
 <script type="module">
     $(document).ready(function() {
-        var dropzoneFile = $('#{{$name}}');
-        var nameContainer = $('#{{$name}}-name-container');
+        let dropzoneFile = $('#{{$name}}');
+        let nameContainer = $('#{{$name}}-name-container');
+        let fileToCopy = $('#{{$name}}-file-to-copy')
+        console.log(fileToCopy.val());
         if(!(dropzoneFile.val() == null || dropzoneFile.val() === '')) {
             $('#{{$name}}-name').text(dropzoneFile.val());
+            fileToCopy.val(null);
+            nameContainer.removeClass('hidden');
+        }
+        else if(!(fileToCopy.val() == null || fileToCopy.val() === '')) {
+            $('#{{$name}}-name').text(fileToCopy.val());
             nameContainer.removeClass('hidden');
         }
 
@@ -26,6 +33,7 @@
 
         $('#{{$name}}-remove-btn').on('click', function () {
             dropzoneFile.val(null);
+            fileToCopy.val(null);
             nameContainer.addClass('hidden');
         })
     });
@@ -53,6 +61,7 @@
             </button>
         </div>
         <x-input-error :messages="$errors->get($name)" class="mt-2" />
+        <input id="{{$name}}-file-to-copy" type="text" name="{{$name}}_file_to_copy" value="{{isset($file) ? $file : ''}}" class="hidden" />
     </div>
 @endif
 

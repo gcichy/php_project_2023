@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\getUserData;
 use App\Helpers\HasEnsure;
-use App\Helpers\saveFile;
+use App\Helpers\fileTrait;
 use App\Models\Component;
 use App\Models\ComponentProductionSchema;
 use App\Models\Instruction;
@@ -91,7 +91,9 @@ class ProductController
                 'prod' => $product,
                 'data' => $data,
                 'instruction' => $instruction,
-                'storage_path' => 'products',
+                'storage_path_products' => 'products',
+                'storage_path_instructions' => 'instructions',
+                'storage_path_components' => 'components',
             ]);
         }
 

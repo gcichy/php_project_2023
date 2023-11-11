@@ -165,15 +165,15 @@
         });
 
     </script>
-    BYŁOBY, ALE TRZEBA JESZCZE POKMINIĆ Z KOLJENOŚCIĄ WYKONANIA
     @php
         if(!isset($selected_comp_schemas)) $selected_comp_schemas = null;
         if(!isset($prodschema_input)) $prodschema_input = null;
         if(!isset($selected_comp)) $selected_comp = null;
+        if(!isset($selected_comp_instr)) $selected_comp_instr = null;
     @endphp
     <div class="space-x-8 mt-8 flex bg-gray-50 border-gray-300  justify-between">
         <a class ='block w-1/2 pl-3 pr-4 py-2 border-blue-450 border-l-4 lg:border-l-8 lg:py-8 lg:text-3xl text-left text-base font-medium text-gray-800  transition duration-150 ease-in-out'>
-            {{ __('Dodaj komponent') }}
+            {{ (isset($update) and $update) ? __('Edytuj komponent') : __('Dodaj komponent') }}
         </a>
         <div class="py-5 pr-5 flex justify-center align-middle">
         </div>
@@ -187,13 +187,19 @@
         <div class="container h-full w-full p-10">
             <div class="g-6 flex h-full flex-wrap items-center justify-center text-neutral-800 dark:text-neutral-200">
                 <div class="w-full">
-                    <form method="POST" action="{{ route('component.store') }}" enctype="multipart/form-data">
+
+                    @if(isset($update) and $update)
+                        <form method="POST" action="{{ route('component.update') }}" enctype="multipart/form-data">
+                    @else
+                        <form method="POST" action="{{ route('component.store') }}" enctype="multipart/form-data">
+                    @endif
                         @csrf
                         <div class="block rounded-lg bg-white shadow-lg dark:bg-neutral-800">
                             <div class="g-0 lg:flex lg:flex-wrap">
                                 <!-- Left column container-->
                                 <div class="px-4 md:px-0 lg:w-6/12">
                                     <div class="md:mx-6 md:p-12">
+                                        <input type="text" id="component-id" name="component_id" value="{{old('component_id') ? old('component_id') : (empty($selected_comp) ? '' : $selected_comp->id )}}" class="hidden">
                                         <div class="mb-6">
                                             <label for="name" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Nazwa <span class="text-red-700">*</span></label>
                                             <input type="text" id="name" name="name" value="{{old('name') ? old('name') : (empty($selected_comp) ? '' : $selected_comp->name )}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
@@ -249,12 +255,16 @@
                                                 $label = 'Zdjęcie Komponentu';
                                                 $info = 'Format: svg, png, jpg, jpeg, bmp';
                                                 $input_name = 'comp_photo';
+                                                $file_to_copy = ($selected_comp instanceof \App\Models\Component and !empty($selected_comp->image)) ? $selected_comp->image : '';
                                             @endphp
-                                            <x-file-input :name="$input_name" :label="$label" :info="$info"></x-file-input>
+                                            <x-file-input :name="$input_name" :label="$label" :info="$info" :file="$file_to_copy"></x-file-input>
                                         </div>
                                         <div class="mb-6">
                                             <label for="description" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Opis komponentu</label>
-                                            <input type="text" id="description" name="description" value="{{old('description') ? old('description') : (empty($selected_comp) ? '' : $selected_comp->description )}}" class="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs lg:text-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+{{--                                            <input type="textarea" id="description" name="description" value="{{old('description') ? old('description') : (empty($selected_comp) ? '' : $selected_comp->description )}}" class="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs lg:text-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">--}}
+                                                <textarea id="description" name="description" rows="4" class="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs lg:text-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+{{old('description') ? old('description') : (empty($selected_comp) ? '' : $selected_comp->description )}}
+                                                </textarea>
                                             <x-input-error :messages="$errors->get('description')" class="mt-2" />
                                         </div>
                                     </div>
@@ -423,16 +433,18 @@
                                                 $label = 'Instrukcja wykonania Komponentu';
                                                 $info = 'Format: pdf, docx';
                                                 $input_name = 'instr_pdf';
+                                                $file_to_copy = ($selected_comp_instr instanceof \App\Models\Instruction and !empty($selected_comp_instr->instruction_pdf)) ? $selected_comp_instr->instruction_pdf : '';
                                             @endphp
-                                            <x-file-input :name="$input_name" :label="$label" :info="$info"></x-file-input>
+                                            <x-file-input :name="$input_name" :label="$label" :info="$info" :file="$file_to_copy"></x-file-input>
                                         </div>
                                         <div class="mb-6 w-full">
                                             @php
                                                 $label = 'Film instruktażowy';
                                                 $info = 'Format: mp4, mov, wmv, mkv';
                                                 $input_name = 'instr_video';
+                                                $file_to_copy = ($selected_comp_instr instanceof \App\Models\Instruction and !empty($selected_comp_instr->video)) ? $selected_comp_instr->video : '';
                                             @endphp
-                                            <x-file-input :name="$input_name" :label="$label" :info="$info"></x-file-input>
+                                            <x-file-input :name="$input_name" :label="$label" :info="$info" :file="$file_to_copy"></x-file-input>
                                         </div>
                                     </div>
                                 </div>
@@ -445,7 +457,7 @@
                                 type="submit"
                                 data-te-ripple-init
                                 data-te-ripple-color="light">
-                                Dodaj
+                                {{ (isset($update) and $update) ? __('Edytuj') : __('Dodaj') }}
                             </button>
                         </div>
                     </form>

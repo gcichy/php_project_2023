@@ -61,7 +61,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/komponenty/{id}', [ComponentController::class, 'componentDetails'])->name('component.details');
     Route::get('/dodaj-komponent', [ComponentController::class, 'addComponent'])->name('component.add');
     Route::post('/dodaj-komponent', [ComponentController::class, 'storeComponent'])->name('component.store');
-    Route::get('/dodaj-komponent/{id}', [ComponentController::class, 'addSimilarComponent'])->name('component.add-similar');
+    Route::get('/dodaj-komponent/{id}', [ComponentController::class, 'editComponent'])->name('component.add-similar');
+    Route::get('/edytuj-komponent/{id}', [ComponentController::class, 'editComponent'])->name('component.edit');
+    Route::post('/edytuj-komponent', [ComponentController::class, 'storeUpdatedComponent'])->name('component.update');
 });
 
 //production
