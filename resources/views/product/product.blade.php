@@ -106,6 +106,7 @@
         });
 
     </script>
+    NIE USUWA INSTRUKCJI PRZY UPDATE
     @if(isset($user) and $user instanceof \App\Models\User)
         @if(session('status'))
             <div class="flex justify-center items-center">
