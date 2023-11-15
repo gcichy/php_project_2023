@@ -53,7 +53,11 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/produkty', [ProductController::class, 'index'])->name('product.index');
     Route::get('/produkty/{id}', [ProductController::class, 'productDetails'])->name('product.details');
-    Route::get('/dodaj-produkt/{id?}', [ProductController::class, 'addProduct'])->name('product.add');
+    Route::get('/dodaj-produkt', [ProductController::class, 'addProduct'])->name('product.add');
+    Route::post('/dodaj-produkt', [ComponentController::class, 'storeProduct'])->name('product.store');
+    Route::get('/dodaj-produkt/{id}', [ProductController::class, 'editProduct'])->name('product.edit');
+    Route::post('/edytuj-produkt', [ComponentController::class, 'storeUpdatedProduct'])->name('product.update');
+    Route::delete('/usun-produkt/{id}', [ProductController::class, 'destroyProduct'])->name('product.destroy');
 });
 
 //components
@@ -64,6 +68,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dodaj-komponent/{id}', [ComponentController::class, 'editComponent'])->name('component.add-similar');
     Route::get('/edytuj-komponent/{id}', [ComponentController::class, 'editComponent'])->name('component.edit');
     Route::post('/edytuj-komponent', [ComponentController::class, 'storeUpdatedComponent'])->name('component.update');
+    Route::post('/usun-komponent', [ComponentController::class, 'destroyComponent'])->name('component.destroy');
 });
 
 //production

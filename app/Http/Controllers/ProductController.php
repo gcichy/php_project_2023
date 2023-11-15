@@ -107,6 +107,89 @@ class ProductController
 
     public function addProduct(Request $request, ?string $id = null): View
     {
-        return view('product.product-add');
+        $data = $this->getAddProductData(false);
+        $components = Component::all();
+        $prod_schema_errors = $request->session()->get('prod_schema_errors');
+        $insert_error = $request->session()->get('insert_error');
+        return view('product.product-add', [
+            'components' => $components,
+            'prod_schemas' => $data['prod_schemas'],
+            'schema_data' => $data['prod_schema_tasks'],
+            'units' => $data['units'],
+            'material_list' => $data['materials'],
+            'user' => $request->user(),
+            'prod_schema_errors' => $prod_schema_errors,
+            'insert_error' => $insert_error,
+
+        ]);
     }
+
+
+    private function getAddProductData(bool $adjusted_to_component, int $component_id = 0): array
+    {
+        $materials = StaticValue::where('type','material')->get();
+        $units = Unit::select('unit','name')->get();
+        $prod_schemas = ProductionSchema::all();
+        if($adjusted_to_component) {
+            $data = DB::select('select
+                                        psh.id as prod_schema_id,
+                                        cps.sequence_no as prod_schema_sequence_no,
+                                        psh.production_schema as prod_schema,
+                                        psh.description as prod_schema_desc,
+                                        psh.tasks_count,
+                                        psht.task_id,
+                                        psht.sequence_no as task_sequence_no,
+                                        t.name as task_name,
+                                        t.description as task_desc
+                                    from production_schema psh
+                                             left join production_schema_task psht
+                                                on psh.id = psht.production_schema_id
+                                             left join task t
+                                                on t.id = psht.task_id
+                                             left join component_production_schema cps
+                                                on psh.id = cps.production_schema_id
+                                                and cps.component_id = '.$component_id.'
+                                    order by cps.sequence_no, psht.production_schema_id, psht.sequence_no');
+        } else {
+            $data = DB::select('select
+                                        psh.id as prod_schema_id,
+                                        psh.production_schema as prod_schema,
+                                        psh.description as prod_schema_desc,
+                                        psh.tasks_count,
+                                        psht.task_id,
+                                        psht.sequence_no as task_sequence_no,
+                                        t.name as task_name,
+                                        t.description as task_desc
+                                    from production_schema psh
+                                             left join production_schema_task psht
+                                                  on psh.id = psht.production_schema_id
+                                             left join task t
+                                                  on t.id = psht.task_id
+                                    order by production_schema_id, task_sequence_no');
+        }
+
+
+        $prod_schema_tasks = array();
+        if(count($data) > 0) {
+            $curr_schema_id = $data[0]->prod_schema_id;
+            $temp = [];
+
+            foreach ($data as $row) {
+                if ($row->prod_schema_id != $curr_schema_id) {
+                    $prod_schema_tasks[$curr_schema_id] = $temp;
+                    $curr_schema_id = $row->prod_schema_id;
+                    $temp = [];
+                }
+                $temp[] = $row;
+            }
+            $prod_schema_tasks[$curr_schema_id] = $temp;
+        }
+
+        return array('materials' => $materials,
+            'units' => $units,
+            'prod_schema_tasks' => $prod_schema_tasks,
+            'prod_schemas' => $prod_schemas
+        );
+    }
+
 }

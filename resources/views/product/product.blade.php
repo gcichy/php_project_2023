@@ -1,5 +1,6 @@
 <x-app-layout>
     <script type="module">
+
         function checkActive() {
             let similar = $('.similar');
             let remove = $('.remove');
@@ -7,7 +8,7 @@
             let edit = $('.edit');
             //check if any element is active, if not details button's href is set to current url
             if($('.list-element.active-list-elem').length === 0) {
-                remove.removeClass('bg-red-600').addClass('bg-gray-400').attr('href', $(location).attr('href'));
+                remove.removeClass('bg-red-600').addClass('bg-gray-400')
                 details.removeClass('bg-blue-450').addClass('bg-gray-400').attr('href', $(location).attr('href'));
                 similar.removeClass('bg-gray-800').addClass('bg-gray-400').attr('href', $(location).attr('href'));
                 edit.removeClass('bg-orange-500').addClass('bg-gray-400').attr('href', $(location).attr('href'));
@@ -32,13 +33,13 @@
                     }
 
 
-                    remove.removeClass('bg-gray-400').addClass('bg-red-600');
+                    remove.removeClass('bg-gray-400').addClass('bg-red-600').prop('disabled', false)
                     details.removeClass('bg-gray-400').addClass('bg-blue-450').attr('href', newUrl);
                     similar.removeClass('bg-gray-400').addClass('bg-gray-800').attr('href', similarUrl);
                     edit.removeClass('bg-gray-400').addClass('bg-orange-500').attr('href', editUrl);
                 }
                 else {
-                    remove.removeClass('bg-red-600').addClass('bg-gray-400').attr('href', $(location).attr('href'));
+                    remove.removeClass('bg-red-600').addClass('bg-gray-400')
                     details.removeClass('bg-blue-450').addClass('bg-gray-400').attr('href', $(location).attr('href'));
                     similar.removeClass('bg-gray-800').addClass('bg-gray-400').attr('href', $(location).attr('href'));
                     edit.removeClass('bg-orange-500').addClass('bg-gray-400').attr('href', $(location).attr('href'));
@@ -72,10 +73,11 @@
             //on click button is rotated and component list appears
             $('.expand-btn').on('click', function () {
                 let id = $(this).attr('id').split('-')[1];
+                let list_id = '';
                 if($(this).attr('id').includes('prod')) {
-                    var list_id = '.prod-list-' + id;
+                    list_id = '.prod-list-' + id;
                 } else {
-                    var list_id = '.comp-list-' + id;
+                    list_id = '.comp-list-' + id;
                 }
 
                 if($(this).hasClass('rotate-180')) {
@@ -93,20 +95,31 @@
                     $(list_id).addClass('just-hidden');
                 }
             });
-        });
 
-        $('#rightBtn').on('click', function (){
-            $('.list-element').removeClass('active-list-elem');
-            checkActive();
-        });
+            $('#rightBtn').on('click', function (){
+                $('.list-element').removeClass('active-list-elem');
+                checkActive();
+            });
 
-        $('#leftBtn').on('click', function (){
-            $('.list-element').removeClass('active-list-elem');
-            checkActive();
-        });
+            $('#leftBtn').on('click', function (){
+                $('.list-element').removeClass('active-list-elem');
+                checkActive();
+            });
 
+            $('#remove-comp-modal').on('click', function(){
+                $('.element-remove').addClass('hidden');
+                let activeElem = $('.list-element.active-list-elem');
+                if(typeof activeElem.attr('id') === "string") {
+                    let id = activeElem.attr('id').split('-');
+                    if(id.length > 1) {
+                        id = '#component-remove-' + id[1];
+                        $(id).removeClass('hidden')
+                    }
+                }
+            });
+
+        });
     </script>
-    NIE USUWA INSTRUKCJI PRZY UPDATE
     @if(isset($user) and $user instanceof \App\Models\User)
         @if(session('status'))
             <div class="flex justify-center items-center">
@@ -201,6 +214,14 @@
                                                     </tr>
                                                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                                         <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                            GTIN
+                                                        </th>
+                                                        <td class="px-6 py-4">
+                                                            {{is_null($prod->gtin) ? '' : $prod->gtin}}
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                                             Materiał
                                                         </th>
                                                         <td class="px-6 py-4">
@@ -260,9 +281,12 @@
                         <x-nav-button class="on-select edit bg-orange-500 hover:bg-orange-800 ml-1 lg:ml-3">
                             {{ __('Edytuj') }}
                         </x-nav-button>
-                        <x-nav-button  class="on-select remove bg-red-600 hover:bg-red-800 ml-1 lg:ml-3 lg:mr-5">
+                        <button type="button" id="remove-comp-modal" disabled class="btn btn-primary on-select remove inline-flex items-center ml-1 lg:ml-3 lg:mr-5 px-2 py-1 lg:px-4 lg:py-2 bg-red-600 hover:bg-red-800 border border-transparent rounded-md font-semibold text-md lg:text-xl text-white uppercase tracking-widest focus:bg-gray-700  focus:ring-4 focus:outline-none focus:ring-blue-300  focus:ring-offset-2 transition ease-in-out duration-150">
                             {{ __('Usuń') }}
-                        </x-nav-button>
+                        </button>
+{{--                        <x-nav-button  class="on-select remove bg-red-600 hover:bg-red-800 ml-1 lg:ml-3 lg:mr-5">--}}
+{{--                            {{ __('Usuń') }}--}}
+{{--                        </x-nav-button>--}}
                     @endif
                 </x-information-panel>
                 @if(isset($components))
@@ -378,4 +402,28 @@
             </x-slot>
         </x-toggle-buttons>
     @endif
+    @php
+        $header = 'Usuń komponent';
+        $route = 'component.destroy';
+        $button_id = 'remove-comp-modal';
+    @endphp
+    <x-remove-modal :header="$header" :buttonId="$button_id" :route="$route">
+        @foreach($components as $comp)
+            <div class="element-remove hidden" id="component-remove-{{$comp->id}}">
+                <x-list-element class="flex-col">
+                    <div class="w-[100%] flex justify-between items-center">
+                        <div class="w-[80%] flex justify-left items-center">
+                            <div class="border-2 inline-block w-[50px] h-[50px] md:w-[100px] md:h-[100px]">
+                                @if(!empty($comp->image))
+                                    @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
+                                    <img src="{{asset('storage/'.$path.$comp->image)}}">
+                                @endif
+                            </div>
+                            <p class="inline-block list-element-name ml-[3%] xl:text-2xl text-md lg:text-xl">{{$comp->name}} - {{$comp->material}}</p>
+                        </div>
+                    </div>
+                </x-list-element>
+            </div>
+        @endforeach
+    </x-remove-modal>
 </x-app-layout>

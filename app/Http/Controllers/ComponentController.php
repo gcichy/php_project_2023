@@ -31,6 +31,7 @@ use stdClass;
 class ComponentController
 {
     use HasEnsure;
+
     /**
      * Display the employee dashboard.
      */
@@ -39,8 +40,8 @@ class ComponentController
     {
         $component = Component::find($id);
 
-        $instruction = Instruction::where('component_id', $id)->select('name', 'instruction_pdf','video')->get();
-        if(count($instruction) > 0){
+        $instruction = Instruction::where('component_id', $id)->select('name', 'instruction_pdf', 'video')->get();
+        if (count($instruction) > 0) {
             $instruction = $instruction[0];
         }
 
@@ -52,8 +53,8 @@ class ComponentController
                                             from production_standard pstd
                                             join unit u
                                                 on u.id = pstd.id
-                                            where pstd.component_id = '.$id
-                                            .' order by pstd.production_schema_id asc');
+                                            where pstd.component_id = ' . $id
+            . ' order by pstd.production_schema_id asc');
         $data = DB::select('select
                                        cps.component_id,
                                        cps.production_schema_id as prod_schema_id,
@@ -82,16 +83,16 @@ class ComponentController
                                     and pstd.production_schema_id = cps.production_schema_id
                                 left join unit u
                                     on u.id = pstd.unit_id
-                                where cps.component_id = '.$id.
-                                ' order by cps.sequence_no asc, pst.sequence_no asc');
+                                where cps.component_id = ' . $id .
+            ' order by cps.sequence_no asc, pst.sequence_no asc');
 
-        if(!is_null($component)) {
+        if (!is_null($component)) {
             return view('component.component-details', [
                 'comp' => $component,
                 'prod_standards' => $prod_standards,
                 'data' => $data,
                 'instruction' => $instruction,
-                'storage_path_components'=> 'components',
+                'storage_path_components' => 'components',
                 'storage_path_instructions' => 'instructions',
             ]);
         }
@@ -101,13 +102,14 @@ class ComponentController
         ]);
 
     }
+
     public function addComponent(Request $request, ?string $id = null): View
     {
         $data = $this->getAddComponentData(false);
 
         $prod_schema_errors = $request->session()->get('prod_schema_errors');
         $insert_error = $request->session()->get('insert_error');
-        return view('component.component-add',[
+        return view('component.component-add', [
             'prod_schemas' => $data['prod_schemas'],
             'schema_data' => $data['prod_schema_tasks'],
             'units' => $data['units'],
@@ -120,17 +122,17 @@ class ComponentController
 
     }
 
-    public function editComponent(Request $request, string $id): View | RedirectResponse
+    public function editComponent(Request $request, string $id): View|RedirectResponse
     {
         $prod_schema_errors = $request->session()->get('prod_schema_errors');
         $insert_error = $request->session()->get('insert_error');
 
-        if($id != null) {
+        if ($id != null) {
             $comp = Component::find($id);
-            if($comp instanceof Component) {
+            if ($comp instanceof Component) {
 
                 $selected_comp_instr = Instruction::where('component_id', $comp->id)
-                                ->select('instruction_pdf', 'video')->get();
+                    ->select('instruction_pdf', 'video')->get();
                 $selected_comp_instr = count($selected_comp_instr) > 0 ? $selected_comp_instr[0] : null;
 
                 $data = $this->getAddComponentData(true, $comp->id);
@@ -146,21 +148,21 @@ class ComponentController
                                         on cps.production_schema_id = ps.id
                                     left join production_standard pstd
                                         on ps.id = pstd.production_schema_id
-                                        and pstd.component_id = '.$comp->id.'
+                                        and pstd.component_id = ' . $comp->id . '
                                     left join unit u
                                         on u.id = pstd.unit_id
-                                    where cps.component_id = '.$comp->id.'
+                                    where cps.component_id = ' . $comp->id . '
                                     order by cps.sequence_no');
 
                 $prodschema_input = '';
                 foreach ($selected_comp_schemas as $schema) {
-                    $prodschema_input .= $schema->production_schema_id.'_';
+                    $prodschema_input .= $schema->production_schema_id . '_';
                 }
-                $prodschema_input = substr($prodschema_input, 0, strlen($prodschema_input)-1);
+                $prodschema_input = substr($prodschema_input, 0, strlen($prodschema_input) - 1);
 
-                $update = str_contains($request->url(),'edytuj');
+                $update = str_contains($request->url(), 'edytuj');
 
-                return view('component.component-add',[
+                return view('component.component-add', [
                     'prod_schemas' => $data['prod_schemas'],
                     'schema_data' => $data['prod_schema_tasks'],
                     'units' => $data['units'],
@@ -186,11 +188,10 @@ class ComponentController
         $this->validateAddComponentForm($request, 'INSERT');
 
         $schema_arr = $this->validateProdSchemas($request);
-        if(array_key_exists('ERROR', $schema_arr)) {
+        if (array_key_exists('ERROR', $schema_arr)) {
             $schema_arr = $schema_arr['ERROR'];
             return back()->with('prod_schema_errors', $schema_arr)->withInput();
-        }
-        else if(array_key_exists('INSERT', $schema_arr)) {
+        } else if (array_key_exists('INSERT', $schema_arr)) {
             $schema_arr = $schema_arr['INSERT'];
         }
 
@@ -209,20 +210,20 @@ class ComponentController
 
             $comp_image = !empty($request->file('comp_photo')) ? $request->file('comp_photo') : $request->comp_photo_file_to_copy;
             $insert_result = $this->insertComponent($employee_no, $request->name, $request->material, $desc, $independent,
-                                    $height, $length, $width, $comp_image);
+                $height, $length, $width, $comp_image);
 
-            if(array_key_exists('SAVED_FILES', $insert_result)) {
+            if (array_key_exists('SAVED_FILES', $insert_result)) {
                 $saved_files['components'] = $insert_result['SAVED_FILES'];
             }
 
-            if(array_key_exists('ERROR', $insert_result)) {
+            if (array_key_exists('ERROR', $insert_result)) {
                 throw new Exception('Error inserting component: error occurred in Component->insertComponent method.
-    Error message: '.$insert_result['ERROR']);
+    Error message: ' . $insert_result['ERROR']);
             }
 
 
             $comp_id = array_key_exists('ID', $insert_result) ? $insert_result['ID'] : 0;
-            if($comp_id == 0) {
+            if ($comp_id == 0) {
                 throw new Exception('Error inserting component: after insert to component table. Failed to evaluate id of inserted component.');
 
             }
@@ -233,21 +234,21 @@ class ComponentController
             $instr_video = !empty($request->file('instr_video')) ? $request->file('instr_video') : $request->instr_video_file_to_copy;
             $insert_result = $this->insertInstruction($comp_id, $request->name, $employee_no, $instr_pdf, $instr_video);
 
-            if(array_key_exists('SAVED_FILES', $insert_result)) {
+            if (array_key_exists('SAVED_FILES', $insert_result)) {
                 foreach ($insert_result['SAVED_FILES'] as $file_name) {
                     $saved_files['instructions'] = $file_name;
                 }
             }
 
-            if(array_key_exists('ERROR', $insert_result)) {
+            if (array_key_exists('ERROR', $insert_result)) {
                 throw new Exception('Error inserting component: error occurred in Component->insertInstruction method.
-    Error message: '.$insert_result['ERROR']);
+    Error message: ' . $insert_result['ERROR']);
             }
-            //DB::commit();
-            DB::rollBack();
+            DB::commit();
+            //DB::rollBack();
 
         } catch (Exception $e) {
-            Log::channel('error')->error('Error inserting component: '.$e->getMessage(), [
+            Log::channel('error')->error('Error inserting component: ' . $e->getMessage(), [
                 'employeeNo' => $employee_no,
             ]);
             DB::rollBack();
@@ -256,7 +257,7 @@ class ComponentController
                 fileTrait::deleteFile($path, $file_name);
             }
 
-            if(isset($insert_result) and array_key_exists('ERROR', $insert_result)) {
+            if (isset($insert_result) and array_key_exists('ERROR', $insert_result)) {
                 return back()->with('insert_error', $insert_result['ERROR'])
                     ->withInput();
             }
@@ -271,25 +272,24 @@ class ComponentController
         $this->validateAddComponentForm($request, 'UPDATE');
 
         $schema_arr = $this->validateProdSchemas($request);
-        if(array_key_exists('ERROR', $schema_arr)) {
+        if (array_key_exists('ERROR', $schema_arr)) {
             $schema_arr = $schema_arr['ERROR'];
             return back()->with('prod_schema_errors', $schema_arr)->withInput();
-        }
-        else if(array_key_exists('INSERT', $schema_arr)) {
+        } else if (array_key_exists('INSERT', $schema_arr)) {
             $schema_arr = $schema_arr['INSERT'];
         }
 
         $user = Auth::user();
         $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
 
-        if(!isset($request->component_id) or empty($request->component_id)) {
+        if (!isset($request->component_id) or empty($request->component_id)) {
             Log::channel('error')->error('Error updating component: error occurred in Component->insertComponent method. ID of the component not found', [
                 'employeeNo' => $employee_no,
             ]);
             return back()->with('status', 'Nie udało się etytować komponentu - nie znaleziono ID.')->withInput();
         }
-        if(!(Component::find($request->component_id) instanceof Component)) {
-            Log::channel('error')->error('Error updating component: error occurred in Component->insertComponent method. Component with id '.$request->component_id.' not found', [
+        if (!(Component::find($request->component_id) instanceof Component)) {
+            Log::channel('error')->error('Error updating component: error occurred in Component->insertComponent method. Component with id ' . $request->component_id . ' not found', [
                 'employeeNo' => $employee_no,
             ]);
             return back()->with('status', 'Nie udało się etytować komponentu - komponent o podanym komponentu o podanym ID.')->withInput();
@@ -311,13 +311,13 @@ class ComponentController
             $update_result = $this->updateComponent($comp_id, $employee_no, $request->name, $request->material, $desc, $independent,
                 $height, $length, $width, $comp_image);
 
-            if(array_key_exists('SAVED_FILES', $update_result)) {
+            if (array_key_exists('SAVED_FILES', $update_result)) {
                 $saved_files['components'] = $update_result['SAVED_FILES'];
             }
 
-            if(array_key_exists('ERROR', $update_result)) {
+            if (array_key_exists('ERROR', $update_result)) {
                 throw new Exception('Error inserting component: error occurred in Component->insertComponent method.
-    Error message: '.$update_result['ERROR']);
+    Error message: ' . $update_result['ERROR']);
             }
 
             $this->updateCompProdSchemaAndProdStd($comp_id, $schema_arr, $employee_no);
@@ -326,21 +326,21 @@ class ComponentController
             $instr_video = !empty($request->file('instr_video')) ? $request->file('instr_video') : $request->instr_video_file_to_copy;
             $update_result = $this->updateInstruction($comp_id, $request->name, $employee_no, $instr_pdf, $instr_video);
 
-            if(array_key_exists('SAVED_FILES', $update_result)) {
+            if (array_key_exists('SAVED_FILES', $update_result)) {
                 foreach ($update_result['SAVED_FILES'] as $file_name) {
                     $saved_files['instructions'] = $file_name;
                 }
             }
 
-            if(array_key_exists('ERROR', $update_result)) {
+            if (array_key_exists('ERROR', $update_result)) {
                 throw new Exception('Error updating component: error occurred in Component->insertInstruction method.
-    Error message: '.$update_result['ERROR']);
+    Error message: ' . $update_result['ERROR']);
             }
             DB::commit();
             //DB::rollBack();
 
         } catch (Exception $e) {
-            Log::channel('error')->error('Error updating component: '.$e->getMessage(), [
+            Log::channel('error')->error('Error updating component: ' . $e->getMessage(), [
                 'employeeNo' => $employee_no,
             ]);
             DB::rollBack();
@@ -349,7 +349,7 @@ class ComponentController
                 fileTrait::deleteFile($path, $file_name);
             }
 
-            if(isset($update_result) and array_key_exists('ERROR', $update_result)) {
+            if (isset($update_result) and array_key_exists('ERROR', $update_result)) {
                 return back()->with('insert_error', $update_result['ERROR'])
                     ->withInput();
             }
@@ -360,6 +360,71 @@ class ComponentController
     }
 
 
+    public function destroyComponent(Request $request): RedirectResponse
+    {
+
+        try {
+            $request->validate([
+                'confirmation' => ['regex:(usuń|usun)'],
+            ],
+                [
+                    'confirmation.regex' => 'Nie można usunąć komponentu: niepoprawna wartość. Wpisz "usuń".',
+                ]);
+        }
+        catch (Exception $e) {
+            return redirect()->back()->with('status_err', $e->getMessage());
+        }
+
+        $user = Auth::user();
+        $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
+        $comp_id = $request->remove_id;
+        $comp = Component::find($comp_id);
+        if($comp instanceof Component) {
+            try {
+
+                DB::beginTransaction();
+
+                ProductComponent::where('component_id', $comp_id)->delete();
+                ComponentProductionSchema::where('component_id', $comp_id)->delete();
+                ProductionStandard::where('component_id', $comp_id)->delete();
+
+                $instr= Instruction::where('component_id',$comp_id)
+                    ->select('instruction_pdf','video')
+                    ->get();
+                $instr = count($instr) == 1 ? $instr[0] : null;
+
+                Instruction::where('component_id', $comp_id)->delete();
+                Component::where('id', $comp_id)->delete();
+
+                if($instr instanceof Instruction) {
+                    if(fileTrait::fileExists('instructions', $instr->instruction_pdf)) {
+                        fileTrait::deleteFile('instructions', $instr->instruction_pdf);
+                    }
+                    if(fileTrait::fileExists('instructions', $instr->video)) {
+                        fileTrait::deleteFile('instructions', $instr->video);
+                    }
+                }
+                if(fileTrait::fileExists('components', $comp->image)) {
+                    fileTrait::deleteFile('components', $comp->image);
+                }
+
+                DB::commit();
+
+            } catch (Exception $e) {
+                Log::channel('error')->error('Error deleting component: ' . $e->getMessage(), [
+                    'employeeNo' => $employee_no,
+                ]);
+                DB::rollBack();
+
+                return back()->with('status_err', 'Komponent nie został usunięty: błąd przy usuwaniu danych z systemu.')
+                    ->withInput();
+            }
+        }
+
+        return  redirect()->route('product.index')
+            ->with('status', 'Nie można usunąć komponentu: nie znaleziono wybranego komponentu.')
+            ->withInput();
+    }
 
     ///////////////////////////////////////////////////////////
     ///  PRIVATE METHODS
@@ -576,8 +641,15 @@ class ComponentController
             }
 
         }
+        else if(is_null($comp_image)) {
+            if(!empty($comp_old->image) and fileTrait::fileExists('components', $comp_old->image)) {
+                fileTrait::deleteFile('components', $comp_old->image);
+            }
+            $image_name = null;
+        }
 
-        if(!empty($image_name)) {
+        //if image name is null update occurs
+        if(is_null($image_name) || !empty($image_name)) {
             try {
                 DB::table('component')
                     ->where('id', $comp_id)
@@ -591,6 +663,7 @@ class ComponentController
                     'SAVED_FILES' => $image_name);
             }
         }
+
 
         return array('SAVED_FILES' => $image_name);
 
@@ -683,6 +756,8 @@ class ComponentController
         $instr_old = Instruction::where('component_id',$comp_id)->get();
         $instr_id = collect($instr_old)->map(function (Instruction $arr) { return $arr->id; })->toArray();
 
+        $instr_old = count($instr_old) == 1 ? $instr_old[0] : null;
+
         if(count($instr_id) > 0) {
             $instr_id = $instr_id[0];
 
@@ -708,7 +783,6 @@ class ComponentController
         }
 
         $instr_pdf_name = '';
-
         if($instr_pdf instanceof UploadedFile) {
             $instr_pdf_name = fileTrait::saveFile($instr_pdf, 'instructions', 'instr_doc_'.$instr_id.'_');
             //if failed to save instr file
@@ -719,11 +793,17 @@ class ComponentController
                 fileTrait::deleteFile('instructions', $instr_old->instruction_pdf);
             }
         }
+        else if(is_null($instr_pdf)) {
+            if(!empty($instr_old->instruction_pdf) and fileTrait::fileExists('instructions', $instr_old->instruction_pdf)) {
+                fileTrait::deleteFile('instructions', $instr_old->instruction_pdf);
+            }
+            $instr_pdf_name = null;
+        }
 
 
         $instr_video_name = '';
         if($instr_video instanceof UploadedFile) {
-            $instr_video_name = fileTrait::saveFile($instr_video, 'instructions', 'instr_vid'.$instr_id.'_');
+            $instr_video_name = fileTrait::saveFile($instr_video, 'instructions', 'instr_vid_'.$instr_id.'_');
             //if failed to save comp instr video file
             if(empty($instr_video_name)) {
                 if(empty($instr_pdf_name)){
@@ -736,29 +816,40 @@ class ComponentController
                 fileTrait::deleteFile('instructions', $instr_old->video);
             }
         }
+        else if(is_null($instr_video)) {
+            if(!empty($instr_old->video) and fileTrait::fileExists('instructions', $instr_old->video)) {
+                fileTrait::deleteFile('instructions', $instr_old->video);
+            }
+            $instr_video_name = null;
+        }
+
 
         $saved_files = [];
         if(!empty($instr_pdf_name)) {
             $saved_files[] = $instr_pdf_name;
         }
+        else if(!is_null($instr_pdf_name)) {
+            $instr_pdf_name = $instr_old->instruction_pdf;
+        }
         if(!empty($instr_video_name)) {
             $saved_files[] = $instr_video_name;
         }
+        else if(!is_null($instr_video_name)) {
+            $instr_video_name = $instr_old->video;
+        }
 
-        if(count($saved_files) > 0) {
-            try {
-                DB::table('instruction')
-                    ->where('id', $instr_id)
-                    ->update(['instruction_pdf' => $instr_pdf_name,
-                        'video' => $instr_video_name,]);
+        try {
+            DB::table('instruction')
+                ->where('id', $instr_id)
+                ->update(['instruction_pdf' => $instr_pdf_name,
+                    'video' => $instr_video_name,]);
 
-            } catch(Exception $e) {
-                Log::channel('error')->error('Error updating component: '.$e->getMessage(), [
-                    'employeeNo' => $employee_no,
-                ]);
-                return array('ERROR' => 'Nowy komponent nie został edytowany: błąd przy zapisie nazwy plików "Instrukcja wykonania komponentu" oraz "Film instruktażowy" w bazie danych.',
-                    'SAVED_FILES' => $saved_files);
-            }
+        } catch(Exception $e) {
+            Log::channel('error')->error('Error updating component: '.$e->getMessage(), [
+                'employeeNo' => $employee_no,
+            ]);
+            return array('ERROR' => 'Nowy komponent nie został edytowany: błąd przy zapisie nazwy plików "Instrukcja wykonania komponentu" oraz "Film instruktażowy" w bazie danych.',
+                'SAVED_FILES' => $saved_files);
         }
 
 

@@ -22,7 +22,7 @@ trait fileTrait
             if(File::isDirectory('storage/'.$path)) {
                 $new_file_name = self::getFileName($path, $file_name);
                 $file->storeAs('public/'.$path,$new_file_name);
-                return $file_name;
+                return $new_file_name;
             }
             Log::channel('error')->error('Error saving file: directory "storage/'.$path.'" has not been found', [
                     'employeeNo' => $user instanceof User ? $user->employeeNo : '',

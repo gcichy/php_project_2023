@@ -105,7 +105,7 @@
                 </li>
                 <li class="w-full">
                     <button id="manual-tab" data-tabs-target="#manual" type="button" role="tab" aria-controls="manual" aria-selected="false" class="aria-selected:text-blue-450 inline-block w-full p-4 bg-gray-50 hover:bg-gray-100 focus:outline-none dark:bg-gray-700 dark:hover:bg-gray-600">
-                        Instrukcja
+                        Pliki
                     </button>
                 </li>
             </ul>
@@ -138,7 +138,15 @@
                                                 Nazwa
                                             </th>
                                             <td class="px-6 py-4">
-                                                {{$prod->name}}
+                                                {{is_null($prod->name) ? '' : $prod->name}}
+                                            </td>
+                                        </tr>
+                                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                            <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                GTIN
+                                            </th>
+                                            <td class="px-6 py-4">
+                                                {{is_null($prod->gtin) ? '' : $prod->gtin}}
                                             </td>
                                         </tr>
                                         <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
@@ -305,6 +313,18 @@
                     @endif
                 </div>
                 <div class="hidden p-4 bg-white rounded-lg lg:p-8 dark:bg-gray-800 flex flex-col justify-center items-center" id="manual" role="tabpanel" aria-labelledby="manual-tab">
+                    @if(!empty($prod->barcode_image))
+                        <div class="w-full flex flex-col justify-center items-center mb-12">
+                            <p class="w-full lg:w-[80%] mb-4 text-md md:text-xl font-medium pl-2 lg:pl-4 lg:pb-2 text-gray-950 border-l-4 border-blue-450">
+                                Kod kreskowy produktu
+                            </p>
+                            @php $path = isset($storage_path_products) ? $storage_path_products.'/' : ''; @endphp
+                            <div class="w-full flex flex-col justify-center items-center">
+                                <img class=" h-[200px] lg:h-[300px] xl:h-[400px]" src="{{asset('storage/'.$path.$prod->barcode_image)}}"/>
+                            </div>
+
+                        </div>
+                    @endif
                     @if($instruction instanceof \App\Models\Instruction)
                         <div class="w-full flex flex-col justify-center items-center mb-12">
                             <p class="w-full lg:w-[80%] mb-4 text-md md:text-xl font-medium pl-2 lg:pl-4 lg:pb-2 text-gray-950 border-l-4 border-blue-450">
