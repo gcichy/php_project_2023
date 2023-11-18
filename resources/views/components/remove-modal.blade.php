@@ -4,37 +4,38 @@
 
             // Open modal
             $("#{{$buttonId}}").on('click', function () {
-                $("#modal-background, #modal").removeClass("hidden");
+                $("#modal-background-{{$id}}, #modal-{{$id}}").removeClass("hidden");
                 let activeElem = $('.list-element.active-list-elem');
                 if(typeof activeElem.attr('id') === "string") {
                     let id = activeElem.attr('id').split('-');
                     if(id.length > 1) {
-                        $('#remove-id').val(id[1]);
+                        $('#remove-id-{{$id}}').val(id[1]);
                     }
-                    console.log($('#remove-id').val());
+                    console.log($('#remove-id-{{$id}}').val());
                 }
             });
 
             // Close modal
-            $("#close-modal-button").on('click', function () {
-                $("#modal-background, #modal").addClass("hidden");
+            $("#close-modal-button-{{$id}}").on('click', function () {
+                $("#modal-background-{{$id}}, #modal-{{$id}}").addClass("hidden");
             });
         });
     </script>
 @endif
-@if(isset($header) and isset($route))
+@if(isset($header) and isset($route) and isset($id))
 
     <!-- Modal Background -->
-    <div id="modal-background" class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 hidden"></div>
+    <div id="modal-background-{{$id}}" class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 hidden"></div>
 
     <!-- Modal Container -->
-    <div id="modal" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] md:w-2/3 xl:w-1/2 bg-white p-8 rounded shadow-md hidden">
+    <div id="modal-{{$id}}" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] md:w-2/3 xl:w-1/2 bg-white p-8 rounded shadow-md hidden">
         <!-- Modal Header -->
         <div class="mb-6">
             <h2 class="text-xl lg:text-2xl font-medium">{{$header}}</h2>
         </div>
         <div><p>{{$slot}}</p></div>
         <form action="{{ route($route) }}" method="POST">
+            @method('DELETE')
             @csrf
             <div class="flex items-center flex-row justify-center w-full">
                 <div class="flex items-start flex-col w-full text-gray-700">
@@ -49,14 +50,14 @@
                 </div>
             </div>
             <div class="my-6 w-[100%] flex flex-row justify-center items-center">
-                <x-nav-button id="close-modal-button" class="mr-[5%]">
+                <x-nav-button id="close-modal-button-{{$id}}" class="mr-[5%]">
                     {{__('Anuluj')}}
                 </x-nav-button>
-                <x-submit-button id="submit-remove-comp" type="submit" class="ml-[5%] bg-red-600 hover:bg-red-800">
+                <x-submit-button id="submit-remove-{{$id}}" type="submit" class="ml-[5%] bg-red-600 hover:bg-red-800">
                     {{__('Usuń')}}
                 </x-submit-button>
             </div>
-            <input type="text" id="remove-id" name="remove_id" value="" class="hidden">
+            <input type="text" id="remove-id-{{$id}}" name="remove_id" value="" class="hidden">
         </form>
     </div>
 @endif

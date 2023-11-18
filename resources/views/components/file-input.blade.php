@@ -13,7 +13,6 @@
         let dropzoneFile = $('#{{$name}}');
         let nameContainer = $('#{{$name}}-name-container');
         let fileToCopy = $('#{{$name}}-file-to-copy')
-        console.log(fileToCopy.val());
         if(!(dropzoneFile.val() == null || dropzoneFile.val() === '')) {
             $('#{{$name}}-name').text(dropzoneFile.val());
             fileToCopy.val(null);

@@ -1,11 +1,18 @@
 <x-app-layout>
+    @php
+        $class_prefix = 'component';
+        if(!isset($selected_prod_comps)) $selected_prod_comps = null;
+        if(!isset($component_input)) $component_input = null;
+        if(!isset($selected_prod)) $selected_prod = null;
+        if(!isset($selected_prod_instr)) $selected_prod_instr = null;
+    @endphp
     <script type="module">
 
         function getActiveOnLoad(prefix, inputVal) {
             let numbers = inputVal.split('_');
             numbers.forEach(function(val) {
                 if(!isNaN(parseInt(val))) {
-                    let id = '#prodschema-' + val;
+                    let id = '#' + prefix + '-' + val;
                     if($(id).hasClass('hidden')) {
                         $(id).removeClass('hidden').addClass('active-list-elem')
                     }
@@ -51,7 +58,7 @@
             }
         }
         function isActiveProdSchema(elem_id) {
-            let ids = $('#prodschema-input').val().split('_');
+            let ids = $('#{{$class_prefix}}-input').val().split('_');
             return ids.includes(elem_id)
         }
 
@@ -65,7 +72,7 @@
 
         $(document).ready(function() {
             checkIndependent();
-            getActiveOnLoad('prodschema', $('#prodschema-input').val());
+            getActiveOnLoad('{{$class_prefix}}', $('#{{$class_prefix}}-input').val());
             checkActive();
 
             $('.list-element').on('click', function () {
@@ -73,9 +80,9 @@
                 $(this).addClass('active-list-elem');
 
                 let id = $(this).attr('id').split('-')[1];
-                //prodsschema can be unclicked if list of schemas is visible (schema is not chosen)
-                if(!$('#confirm-schema-button').hasClass('hidden')) {
-                    let list_id = '.prodschema-list-' + id;
+                //component can be unclicked if list of components is visible (component is not chosen)
+                if(!$('#confirm-{{$class_prefix}}-button').hasClass('hidden')) {
+                    let list_id = '.{{$class_prefix}}-list-' + id;
                     if($(list_id).hasClass('hidden')) {
                         if (is_active) {
                             if(!$(list_id).hasClass('just-hidden')) {
@@ -93,9 +100,8 @@
             //on click button is rotated and component list appears
             $('.expand-btn').on('click', function () {
                 let id = $(this).attr('id').split('-')[1];
-                var list_id = '.prodschema-list-' + id;
+                let itemsToDisplay = '.{{$class_prefix}}-list-' + id + ', .comp-list-' + id;
 
-                console.log(list_id);
                 if($(this).hasClass('rotate-180')) {
                     $(this).removeClass('rotate-180');
                     $(this).addClass('rotate-0');
@@ -104,43 +110,44 @@
                     $(this).addClass('rotate-180');
                 }
 
-                if($(list_id).hasClass('hidden')) {
-                    $(list_id).removeClass('hidden');
+                if($(itemsToDisplay).hasClass('hidden')) {
+                    $(itemsToDisplay).removeClass('hidden');
                 } else {
-                    $(list_id).addClass('hidden');
-                    $(list_id).addClass('just-hidden');
+                    $(itemsToDisplay).addClass('hidden');
+                    $(itemsToDisplay).addClass('just-hidden');
                 }
+
             });
 
             $('#dropdownSearchButton').on('click', function () {
                 $('.production-standard').addClass('hidden');
 
-                if($('.list-element-prodschema').hasClass('hidden')) {
-                    $('.list-element-prodschema').removeClass('hidden');
+                if($('.list-element-component').hasClass('hidden')) {
+                    $('.list-element-component').removeClass('hidden');
                 }
                 else {
-                    $('.list-element-prodschema').addClass('hidden');
+                    $('.list-element-component').addClass('hidden');
 
                 }
-                if($('.prodschema-toggle').hasClass('hidden')) {
-                    $('.prodschema-toggle').removeClass('hidden');
-                    $('#label-schema').addClass('hidden');
+                if($('.{{$class_prefix}}-toggle').hasClass('hidden')) {
+                    $('.{{$class_prefix}}-toggle').removeClass('hidden');
+                    $('#label-{{$class_prefix}}').addClass('hidden');
 
                 }
                 else {
-                    $('.prodschema-toggle').addClass('hidden');
-                    $('#label-schema').removeClass('hidden');
+                    $('.{{$class_prefix}}-toggle').addClass('hidden');
+                    $('#label-{{$class_prefix}}').removeClass('hidden');
                 }
             });
 
 
-            $('#confirm-schema-button').on('click', function (){
-                if($('#label-schema').hasClass('hidden')) {
-                    $('#label-schema').removeClass('hidden');
-                    $('.prodschema-toggle').addClass('hidden');
-                    $('.list-element-prodschema:not(.active-list-elem)').addClass('hidden');
+            $('#confirm-{{$class_prefix}}-button').on('click', function (){
+                if($('#label-{{$class_prefix}}').hasClass('hidden')) {
+                    $('#label-{{$class_prefix}}').removeClass('hidden');
+                    $('.{{$class_prefix}}-toggle').addClass('hidden');
+                    $('.list-element-component:not(.active-list-elem)').addClass('hidden');
                     let id_string = '';
-                    let chosen_elements = $('.list-element-prodschema.active-list-elem');
+                    let chosen_elements = $('.list-element-component.active-list-elem');
                     let i = 1;
                     chosen_elements.each(function() {
                         let id = $(this).attr('id').split('-')[1];
@@ -149,7 +156,7 @@
                         i++;
                     })
                     id_string = id_string.slice(0, id_string.length - 1)
-                    $('#prodschema-input').val(id_string);
+                    $('#{{$class_prefix}}-input').val(id_string);
 
                     $('.production-standard').each(function () {
                         if($(this).parent().hasClass('active-list-elem')) {
@@ -165,12 +172,6 @@
         });
 
     </script>
-    @php
-        if(!isset($selected_prod_schemas)) $selected_prod_schemas = null;
-        if(!isset($prodschema_input)) $prodschema_input = null;
-        if(!isset($selected_prod)) $selected_prod = null;
-        if(!isset($selected_prod_instr)) $selected_prod_instr = null;
-    @endphp
     <div class="space-x-8 mt-8 flex bg-gray-50 border-gray-300  justify-between">
         <a class ='block w-1/2 pl-3 pr-4 py-2 border-blue-450 border-l-4 lg:border-l-8 lg:py-8 lg:text-3xl text-left text-base font-medium text-gray-800  transition duration-150 ease-in-out'>
             {{ (isset($update) and $update) ? __('Edytuj produkt') : __('Dodaj produkt') }}
@@ -178,9 +179,9 @@
         <div class="py-5 pr-5 flex justify-center align-middle">
         </div>
     </div>
-    @if(isset($insert_error))
+    @if(isset($status))
         <div class="flex justify-center items-center">
-            <x-input-error :messages="$insert_error" class="w-full !text-md lg:text-xl font-medium text-center p-6"/>
+            <x-input-error :messages="$status" class="w-full !text-md lg:text-xl font-medium text-center p-6"/>
         </div>
     @endif
     <section class="gradient-form h-full dark:bg-neutral-700 flex justify-center">
@@ -199,7 +200,7 @@
                                             <!-- Left column container-->
                                             <div class="px-4 md:px-0 lg:w-6/12">
                                                 <div class="md:mx-6 md:p-12">
-                                                    <input type="text" id="component-id" name="component_id" value="{{old('component_id') ? old('component_id') : (empty($selected_prod) ? '' : $selected_prod->id )}}" class="hidden">
+                                                    <input type="text" id="product-id" name="product_id" value="{{old('product_id') ? old('product_id') : (empty($selected_prod) ? '' : $selected_prod->id )}}" class="hidden">
                                                     <div class="mb-6">
                                                         <label for="name" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Nazwa <span class="text-red-700">*</span></label>
                                                         <input type="text" id="name" name="name" value="{{old('name') ? old('name') : (empty($selected_prod) ? '' : $selected_prod->name )}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
@@ -220,11 +221,12 @@
                                                         <x-file-input :name="$input_name" :label="$label" :info="$info" :file="$file_to_copy"></x-file-input>
                                                     </div>
                                                     <div class="mb-6">
-                                                        <label for="material" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Materiał <span class="text-red-700">*</span></label>
+                                                        <label for="material" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Materiał</label>
                                                         <select id="material" name="material" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                                                             @if(isset($material_list) and count($material_list) > 0)
+                                                                <option value=""></option>
                                                                 @foreach($material_list as $mat)
-                                                                    @if($selected_prod instanceof \App\Models\Component and $mat->value == $selected_prod->material)
+                                                                    @if($selected_prod instanceof \App\Models\Product and $mat->value == $selected_prod->material)
                                                                         <option value="{{$mat->value}}" selected>{{$mat->value_full}}</option>
                                                                     @else
                                                                         <option value="{{$mat->value}}">{{$mat->value_full}}</option>
@@ -250,7 +252,7 @@
                                                         @php
                                                             $label = 'Zdjęcie Komponentu';
                                                             $info = 'Format: svg, png, jpg, jpeg, bmp';
-                                                            $input_name = 'comp_photo';
+                                                            $input_name = 'prod_image';
                                                             $file_to_copy = ($selected_prod instanceof \App\Models\Product and !empty($selected_prod->image)) ? $selected_prod->image : '';
                                                         @endphp
                                                         <x-file-input :name="$input_name" :label="$label" :info="$info" :file="$file_to_copy"></x-file-input>
@@ -273,18 +275,18 @@
                                                             type="button"
                                                             data-te-ripple-init
                                                             data-te-ripple-color="light">
-                                                        Schematy produkcji
+                                                        Komponenty
                                                         <svg class="w-2.5 h-2.5 ml-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
                                                             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
                                                         </svg>
                                                     </button>
-                                                    @if(isset($schema_data) and count($schema_data) > 0)
+                                                    @if(isset($comp_data) and count($comp_data) > 0)
                                                         <div class="w-full mt-[5%] mx-auto">
-                                                            <p id="label-schema" class=" w-full text-sm lg:text-lg font-medium text-left text-gray-900 dark:text-white p-2">
-                                                                Wybrane schematy <span class="text-red-700">*</span>
-                                                                <br><span class="text-green-500 text-xs lg:text-sm"><em>Aby dodać komponent przypisz do niego schemat(y) produkcji</em></span>
+                                                            <p id="label-{{$class_prefix}}" class=" w-full text-sm lg:text-lg font-medium text-left text-gray-900 dark:text-white p-2">
+                                                                Wybrane komponenty
+                                                                <br><span class="text-green-500 text-xs lg:text-sm"><em>Jeśli produkt powinien mieć normę produkcji, dodaj komponent(y) z którego(ych) jest wykonany</em></span>
                                                             </p>
-                                                            <x-input-error :messages="$errors->get('prodschema_input')" class="w-full px-2"/>
+                                                            <x-input-error :messages="$errors->get($class_prefix.'_input')" class="w-full px-2"/>
                                                             @if(isset($prod_schema_errors))
                                                                 @foreach($prod_schema_errors as $err)
                                                                     <x-input-error :messages="$err" class="w-full px-2"/>
@@ -292,116 +294,169 @@
                                                             @endif
                                                             <div class="px-4 sm:px-8 bg-white flex justify-start items-center flex-col mt-4">
                                                                 @php
-                                                                    $inputPlaceholder = "Wpisz nazwę schematu...";
-                                                                    $xListElem = "prodschema";
+                                                                    $inputPlaceholder = "Wpisz nazwę komponentu...";
+                                                                    $xListElem = "component";
                                                                 @endphp
-                                                                <div id="search-schema" class="prodschema-toggle w-full hidden">
+                                                                <div id="search-{{$class_prefix}}" class="{{$class_prefix}}-toggle w-full hidden">
                                                                     <x-search-input class="w-full" :inputPlaceholder="$inputPlaceholder" :xListElementUniqueId="$xListElem"></x-search-input>
                                                                 </div>
-                                                                <div id="prodschema-dropdown" class="w-full">
+                                                                <div id="{{$class_prefix}}-dropdown" class="w-full">
                                                                     @php $j = 0; @endphp
-                                                                    @foreach($schema_data as $prod_schema_tasks)
-                                                                        @if(count($prod_schema_tasks) > 0)
-                                                                            <x-list-element class="list-element-{{$xListElem}} list-element w-full hidden flex-col text-md lg:text-lg lg:py-4 my-3" id="prodschema-{{$prod_schema_tasks[0]->prod_schema_id}}">
+                                                                    @foreach($comp_data as $comp_prod_schemas)
+                                                                        @if(count($comp_prod_schemas) > 0)
+                                                                            <x-list-element class="list-element-{{$xListElem}} list-element w-full hidden flex-col text-md lg:text-lg lg:py-4 my-3" id="{{$class_prefix}}-{{$comp_prod_schemas[0]->comp_id}}">
                                                                                 <div class="w-[100%] flex justify-between items-center">
                                                                                     <div class="w-full flex justify-between items-center">
                                                                                         <div class="w-full flex justify-left items-center">
-                                                                                            <p class="inline-block list-element-name ">{{$prod_schema_tasks[0]->prod_schema}}</p>
+                                                                                            <p class="inline-block list-element-name ">{{$comp_prod_schemas[0]->name}}</p>
                                                                                         </div>
                                                                                     </div>
-                                                                                    <div id="expbtn-{{$prod_schema_tasks[0]->prod_schema_id}}" class="expand-btn inline-block bg-gray-800 w-4 h-4 lg:w-6 lg:h-6 md:rounded-md rounded-sm rotate-0 transition-all mr-0">
+                                                                                    <div id="expbtn-{{$comp_prod_schemas[0]->comp_id}}" class="expand-btn inline-block bg-gray-800 w-4 h-4 lg:w-6 lg:h-6 md:rounded-md rounded-sm rotate-0 transition-all mr-0">
                                                                                         <img src="{{asset('storage/expand-down.png') }}">
                                                                                     </div>
                                                                                 </div>
-                                                                                <div class="production-standard mt-4 w-full ml-[3%] hidden">
-                                                                                    <label for="production-standard-{{$prod_schema_tasks[0]->prod_schema_id}}" class="block mb-2 text-sm lg:text-md font-medium text-gray-900 dark:text-white">
-                                                                                        Norma Produkcji
-                                                                                    </label>
-                                                                                    <div id="production-standard-{{$prod_schema_tasks[0]->prod_schema_id}}" class="flex flex-row justify-start items-center w-full xl:w-full">
-                                                                                        <div class="w-[15%] mr-[3%]">
-                                                                                            @php $duration = 'duration_'.$prod_schema_tasks[0]->prod_schema_id @endphp
-                                                                                            <label for="{{$duration}}" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Czas [h] <span class="text-red-700">*</span></label>
-                                                                                            @if(!empty($selected_prod_schemas) and count($selected_prod_schemas) > 0 and $prod_schema_tasks[0]->prod_schema_id == $selected_prod_schemas[$j]->production_schema_id)
-                                                                                                <input type="number" id="{{$duration}}" name="{{$duration}}" value="{{old($duration) ? old($duration) : (empty($selected_prod_schemas[$j]) ? '' : $selected_prod_schemas[$j]->duration_hours )}}"
-                                                                                                       class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
-                                                                                            @else
-                                                                                                <input type="number" id="{{$duration}}" name="{{$duration}}" value="{{old($duration)}}"
-                                                                                                       class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                                                <div class="comp-list-{{$comp_prod_schemas[0]->comp_id}} hidden mt-6 w-full">
+                                                                                    <div class="relative overflow-x-auto shadow-md">
+                                                                                        <table class="w-full text-sm md:text-md text-left text-gray-500 dark:text-gray-400">
+                                                                                            <thead class="text-sm md:text-ms text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                                                                            <tr>
+                                                                                                <th scope="col" class="px-6 py-3">
+                                                                                                    Opis
+                                                                                                </th>
+                                                                                                <th scope="col" class="px-6 py-3"></th>
+                                                                                            </tr>
+                                                                                            </thead>
+                                                                                            <tbody>
+                                                                                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                                                                                <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                                                                    Materiał
+                                                                                                </th>
+                                                                                                <td class="px-6 py-4">
+                                                                                                    {{is_null($comp_prod_schemas[0]->material) ? '' : $comp_prod_schemas[0]->material}}
+                                                                                                </td>
+                                                                                            </tr>
+                                                                                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                                                                                <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                                                                    @php
+                                                                                                        $name = '';
+                                                                                                        $dim = '';
+                                                                                                        if(!is_null($comp_prod_schemas[0]->height)) {
+                                                                                                            $name .= 'wys ';
+                                                                                                            $dim .= $comp_prod_schemas[0]->height.' ';
+                                                                                                        }
+                                                                                                        if(!is_null($comp_prod_schemas[0]->length)) {
+                                                                                                            if(!empty($name)) {
+                                                                                                                $name .= 'x  ';
+                                                                                                                $dim .= 'x  ';
+                                                                                                            }
+                                                                                                            $name .= 'dług ';
+                                                                                                            $dim .= $comp_prod_schemas[0]->length.' ';
+                                                                                                        }
+                                                                                                        if(!is_null($comp_prod_schemas[0]->width)) {
+                                                                                                            if(!empty($name)) {
+                                                                                                                $name .= 'x  ';
+                                                                                                                $dim .= 'x  ';
+                                                                                                            }
+                                                                                                            $name .= 'szer';
+                                                                                                            $dim .= $comp_prod_schemas[0]->width.' ';
+                                                                                                        }
+                                                                                                        $name .= ' [cm]';
+                                                                                                    @endphp
+                                                                                                    {{$name}}
+                                                                                                </th>
+                                                                                                <td class="px-6 py-4">
+                                                                                                    {{$dim}}
+                                                                                                </td>
+                                                                                            </tr>
+                                                                                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                                                                                <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                                                                    Produkowane niezależnie
+                                                                                                </th>
+                                                                                                <td class="px-6 py-4">
+                                                                                                    @if($comp_prod_schemas[0]->independent == 1)
+                                                                                                        tak
+                                                                                                    @else
+                                                                                                        nie
+                                                                                                    @endif
+                                                                                                </td>
+                                                                                            </tr>
+                                                                                            @if(!empty($comp_prod_schemas[0]->description))
+                                                                                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                                                                                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                                                                        Szczegóły
+                                                                                                    </th>
+                                                                                                    <td class="px-6 py-4">
+                                                                                                        {{$comp_prod_schemas[0]->description}}
+                                                                                                    </td>
+                                                                                                </tr>
                                                                                             @endif
-                                                                                        </div>
-                                                                                        <div class="w-[15%] mr-[3%]">
-                                                                                            @php $amount = 'amount_'.$prod_schema_tasks[0]->prod_schema_id @endphp
-                                                                                            <label for="{{$amount}}" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Ilość <span class="text-red-700">*</span></label>
-                                                                                            @if(!empty($selected_prod_schemas) and count($selected_prod_schemas) > 0 and $prod_schema_tasks[0]->prod_schema_id == $selected_prod_schemas[$j]->production_schema_id)
-                                                                                                <input type="number" id="{{$amount}}" name="{{$amount}}" value="{{old($amount) ? old($amount) : (empty($selected_prod_schemas[$j]) ? '' : $selected_prod_schemas[$j]->amount)}}"
-                                                                                                       class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
-                                                                                            @else
-                                                                                                <input type="number" id="{{$amount}}" name="{{$amount}}" value="{{old($amount)}}"
-                                                                                                       class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
-                                                                                            @endif
-                                                                                        </div>
-                                                                                        <div class="w-[30%] mr-[3%]">
-                                                                                            @php $unit_name = 'unit_'.$prod_schema_tasks[0]->prod_schema_id @endphp
-                                                                                            <label for="{{$unit_name}}" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Jednostka <span class="text-red-700">*</span></label>
-                                                                                            <select id="{{$unit_name}}" name="{{$unit_name}}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                                                                                                @if(isset($units) and count($units) > 0)
-                                                                                                    @foreach($units as $u)
-                                                                                                        @if(!empty($selected_prod_schemas)
-                                                                                                                and count($selected_prod_schemas) > 0
-                                                                                                                and $prod_schema_tasks[0]->prod_schema_id == $selected_prod_schemas[$j]->production_schema_id
-                                                                                                                and $u->unit == $selected_prod_schemas[$j]->unit )
-                                                                                                            <option value="{{$u->unit}}" selected>{{$u->unit}}</option>
-                                                                                                        @else
-                                                                                                            <option value="{{$u->unit}}">{{$u->unit}}</option>
-                                                                                                        @endif
-                                                                                                    @endforeach
-                                                                                                @else
-                                                                                                    <option value=""></option>
-                                                                                                @endif
-                                                                                            </select>
-                                                                                        </div>
-                                                                                        <div class="w-[20%] mr-[3%]">
-                                                                                            @php $sequenceno = 'sequenceno_'.$prod_schema_tasks[0]->prod_schema_id @endphp
-                                                                                            <label for="{{$sequenceno}}" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Kolejność wyk <span class="text-red-700">*</span></label>
-                                                                                            @if(!empty($selected_prod_schemas) and count($selected_prod_schemas) > 0 and $prod_schema_tasks[0]->prod_schema_id == $selected_prod_schemas[$j]->production_schema_id)
-                                                                                                <input type="number" id="{{$sequenceno}}" name="{{$sequenceno}}" value="{{old($sequenceno) ? old($sequenceno) : (empty($selected_prod_schemas[$j]) ? '' : $selected_prod_schemas[$j]->sequence_no)}}"
-                                                                                                       class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
-                                                                                                @php if($j + 1 < count($selected_prod_schemas)) $j++ @endphp
-                                                                                            @else
-                                                                                                <input type="number" id="{{$sequenceno}}" name="{{$sequenceno}}" value="{{old($sequenceno)}}"
-                                                                                                       class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
-                                                                                            @endif
-                                                                                        </div>
+                                                                                            </tbody>
+                                                                                        </table>
                                                                                     </div>
                                                                                 </div>
-                                                                                <ul class="prodschema-list-{{$prod_schema_tasks[0]->prod_schema_id}} mt-[3%] ml-[3%] relative m-0 w-full hidden list-none overflow-hidden p-0 transition-[height] duration-200 ease-in-out text-xs md:text-sm lg:text-md">
-                                                                                    @php $i = 1; @endphp
-                                                                                    <h2 class="text-gray-800">Lista zadań:</h2>
-                                                                                    @foreach($prod_schema_tasks as $task)
+                                                                                <ul class="{{$class_prefix}}-list-{{$comp_prod_schemas[0]->comp_id}} mt-[3%] ml-[3%] relative m-0 w-full hidden list-none overflow-hidden p-0 transition-[height] duration-200 ease-in-out text-xs md:text-sm lg:text-md">
+                                                                                    <h2 class="text-gray-800">Lista schematów produkcji:</h2>
+                                                                                    @foreach($comp_prod_schemas as $prod_schema)
                                                                                         <li class="relative h-fit after:absolute after:left-[2.45rem] after:top-[3.6rem] after:mt-px after:h-[calc(100%-2.45rem)] after:w-px after:bg-[#e0e0e0] after:content-[''] dark:after:bg-neutral-600">
                                                                                             <div class="w-full flex cursor-pointer items-center p-6 leading-[1.3rem] no-underline after:bg-[#e0e0e0] after:content-[''] hover:bg-[#f9f9f9] focus:outline-none dark:after:bg-neutral-600 dark:hover:bg-[#3b3b3b]">
-                                                                                <span class="mr-5 flex h-[1.938rem] w-[1.938rem] items-center justify-center rounded-full bg-blue-450 text-sm md:text-md lg:text-lg font-medium text-white">
-                                                                                    {{$i}}
-                                                                                </span>
+                                                                                                <span class="mr-5 flex h-[1.938rem] w-[1.938rem] items-center justify-center rounded-full bg-blue-450 text-sm md:text-md lg:text-lg font-medium text-white">
+                                                                                                    {{$prod_schema->prod_schema_sequence_no}}
+                                                                                                </span>
                                                                                                 <span class="text-gray-800 after:absolute after:flex after:text-[0.8rem] after:content-[data-content] dark:text-neutral-300">
-                                                                                    {{$task->task_name}}
-                                                                                </span>
+                                                                                                    {{$prod_schema->prod_schema}}
+                                                                                                </span>
                                                                                             </div>
                                                                                             <div class="transition-[height, margin-bottom, padding-top, padding-bottom] left-0 overflow-hidden pb-2 pl-[3.75rem] pr-6 duration-300 ease-in-out text-neutral-500 ">
-                                                                                                {{$task->task_desc}}
+                                                                                                {{$prod_schema->prod_schema_desc}}
+                                                                                            </div>
+                                                                                            <div class="transition-[height, margin-bottom, padding-top, padding-bottom] left-0 overflow-hidden mt-6 pb-2 pl-[3.75rem] pr-6 duration-300 ease-in-out text-neutral-500 ">
+                                                                                                <table class="w-full text-sm xl:text-md xl:h-[90%] text-left text-gray-700 dark:text-gray-400">
+                                                                                                    <thead class="text-gray-950 bg-gray-50 dark:bg-gray-700 dark:text-gray-400 font-medium">
+                                                                                                    <tr>
+                                                                                                        <td class="px-6 font-bold">
+                                                                                                            Norma Produkcji
+                                                                                                        </td>
+                                                                                                        <td></td>
+                                                                                                        <td></td>
+                                                                                                    </tr>
+                                                                                                    <tr>
+                                                                                                        <td class="px-6">
+                                                                                                            Czas [h]
+                                                                                                        </td>
+                                                                                                        <td class="px-6">
+                                                                                                            Ilość
+                                                                                                        </td>
+                                                                                                        <td class="px-6">
+                                                                                                            Jednostka
+                                                                                                        </td>
+                                                                                                    </tr>
+                                                                                                    </thead>
+                                                                                                    <tbody>
+                                                                                                    <tr class="text-sm xl:text-md bg-white dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                                                                                        <td class="px-6">
+                                                                                                            {{$prod_schema->prod_std_duration}}
+                                                                                                        </td>
+                                                                                                        <td class="px-6">
+                                                                                                            {{$prod_schema->prod_std_amount}}
+                                                                                                        </td>
+                                                                                                        <td class="px-6">
+                                                                                                            {{$prod_schema->prod_std_unit}}
+                                                                                                        </td>
+                                                                                                    </tr>
+                                                                                                    </tbody>
+                                                                                                </table>
                                                                                             </div>
                                                                                         </li>
-                                                                                        @php $i++; @endphp
                                                                                     @endforeach
                                                                                 </ul>
                                                                             </x-list-element>
                                                                         @endif
                                                                     @endforeach
                                                                 </div>
-                                                                <button type="button" id="confirm-schema-button" class="prodschema-toggle hidden text-white bg-blue-450 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm lg:text-lg px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                                                                <button type="button" id="confirm-{{$class_prefix}}-button" class="{{$class_prefix}}-toggle hidden text-white bg-blue-450 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm lg:text-lg px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                                                                     WYBIERZ
                                                                 </button>
-                                                                <input id="prodschema-input" name="prodschema_input" value="{{old('prodschema_input') ? old('prodschema_input') : (empty($prodschema_input) ? '' : $prodschema_input )}}" type="text" class="hidden"/>
+                                                                <input id="{{$class_prefix}}-input" name="{{$class_prefix}}_input" value="{{old($class_prefix.'_input') ? old($class_prefix.'_input') : (empty($component_input) ? '' : $component_input )}}" type="text" class="hidden"/>
                                                             </div>
                                                         </div>
                                                     @else
@@ -419,15 +474,15 @@
                                                         </svg>
                                                     </button>
                                                     <div class="w-full mt-[5%] mx-auto">
-                                                        <p id="label-schema" class=" w-full text-sm lg:text-lg font-medium text-left text-gray-900 dark:text-white p-2">
+                                                        <p id="label-instruction" class=" w-full text-sm lg:text-lg font-medium text-left text-gray-900 dark:text-white p-2">
                                                             Instrukcje wykonania
                                                             <br><span class="text-green-500 text-xs lg:text-sm"><em>Możesz dodać instrukcję w formacie pdf oraz/lub film</em></span>
                                                         </p>
                                                     </div>
                                                     <div class="mb-6 w-full">
                                                         @php
-                                                            $label = 'Instrukcja wykonania Komponentu';
-                                                            $info = 'Format: pdf, docx';
+                                                            $label = 'Instrukcja wykonania produktu';
+                                                            $info = 'Format: pdf';
                                                             $input_name = 'instr_pdf';
                                                             $file_to_copy = ($selected_prod_instr instanceof \App\Models\Instruction and !empty($selected_prod_instr->instruction_pdf)) ? $selected_prod_instr->instruction_pdf : '';
                                                         @endphp

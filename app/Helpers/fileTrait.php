@@ -42,7 +42,6 @@ trait fileTrait
     public static function deleteFile(string $path,string $file_name): bool
     {
         $user = Auth::user();
-
         try {
             if(File::isDirectory('storage/'.$path)) {
                 if(File::exists('storage/'.$path.'/'.$file_name)) {
@@ -124,8 +123,11 @@ trait fileTrait
 
     }
 
-    public static function fileExists(string $path, string $file_name): bool
+    public static function fileExists(string $path, string|null $file_name): bool
     {
+        if(empty($file_name)) {
+            return false;
+        }
         return File::exists('storage/'.$path.'/'.$file_name);
     }
 }

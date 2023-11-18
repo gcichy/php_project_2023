@@ -178,9 +178,9 @@
         <div class="py-5 pr-5 flex justify-center align-middle">
         </div>
     </div>
-    @if(isset($insert_error))
+    @if(isset($status))
         <div class="flex justify-center items-center">
-            <x-input-error :messages="$insert_error" class="w-full !text-md lg:text-xl font-medium text-center p-6"/>
+            <x-input-error :messages="$status" class="w-full !text-md lg:text-xl font-medium text-center p-6"/>
         </div>
     @endif
     <section class="gradient-form h-full dark:bg-neutral-700 flex justify-center">
