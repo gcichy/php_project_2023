@@ -93,7 +93,6 @@
                         }
                     }
                 }
-
                 checkActive();
             });
 
@@ -172,13 +171,10 @@
         });
 
     </script>
-    <div class="space-x-8 mt-8 flex bg-gray-50 border-gray-300  justify-between">
-        <a class ='block w-1/2 pl-3 pr-4 py-2 border-blue-450 border-l-4 lg:border-l-8 lg:py-8 lg:text-3xl text-left text-base font-medium text-gray-800  transition duration-150 ease-in-out'>
-            {{ (isset($update) and $update) ? __('Edytuj produkt') : __('Dodaj produkt') }}
-        </a>
-        <div class="py-5 pr-5 flex justify-center align-middle">
-        </div>
-    </div>
+    @php
+        $name = (isset($update) and $update) ? 'Edytuj produkt' : 'Dodaj produkt';
+    @endphp
+    <x-information-panel :viewName="$name"></x-information-panel>
     @if(isset($status))
         <div class="flex justify-center items-center">
             <x-input-error :messages="$status" class="w-full !text-md lg:text-xl font-medium text-center p-6"/>
@@ -198,8 +194,8 @@
                                     <div class="block rounded-lg bg-white shadow-lg dark:bg-neutral-800">
                                         <div class="g-0 lg:flex lg:flex-wrap">
                                             <!-- Left column container-->
-                                            <div class="px-4 md:px-0 lg:w-6/12">
-                                                <div class="md:mx-6 md:p-12">
+                                            <div class="flex items-center flex-col justify-start rounded-b-lg w-full xl:w-6/12 xl:rounded-r-lg xl:rounded-bl-none p-2 xl:p-0 bg-white/30">
+                                                <div class="md:mx-6 md:p-12 w-full px-2 py-12 lg:w-[80%] xl:w-full">
                                                     <input type="text" id="product-id" name="product_id" value="{{old('product_id') ? old('product_id') : (empty($selected_prod) ? '' : $selected_prod->id )}}" class="hidden">
                                                     <div class="mb-6">
                                                         <label for="name" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Nazwa <span class="text-red-700">*</span></label>
@@ -269,7 +265,7 @@
                                             </div>
 
                                             <!-- Right column container with background and description-->
-                                            <div class="flex items-center flex-col justify-start rounded-b-lg lg:w-6/12 lg:rounded-r-lg lg:rounded-bl-none p-2 lg:p-0 bg-white/30">
+                                            <div class="flex items-center flex-col justify-start rounded-b-lg w-full xl:w-6/12 xl:rounded-r-lg xl:rounded-bl-none p-2 xl:p-0 bg-white/30">
                                                 <div class="flex items-center flex-col justify-start md:mx-6 md:px-12 w-full">
                                                     <button id="dropdownSearchButton" class="mt-5[%] lg:mt-[7%] text-white bg-blue-450 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-md lg:text-lg px-5 py-2.5 text-center inline-flex items-center justify-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
                                                             type="button"
@@ -292,7 +288,7 @@
                                                                     <x-input-error :messages="$err" class="w-full px-2"/>
                                                                 @endforeach
                                                             @endif
-                                                            <div class="px-4 sm:px-8 bg-white flex justify-start items-center flex-col mt-4">
+                                                            <div class="bg-white flex justify-start items-center flex-col mt-4">
                                                                 @php
                                                                     $inputPlaceholder = "Wpisz nazwę komponentu...";
                                                                     $xListElem = "component";

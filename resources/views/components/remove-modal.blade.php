@@ -25,10 +25,10 @@
 @if(isset($header) and isset($route) and isset($id))
 
     <!-- Modal Background -->
-    <div id="modal-background-{{$id}}" class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 hidden"></div>
+    <div id="modal-background-{{$id}}" class="z-[100] fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 hidden"></div>
 
     <!-- Modal Container -->
-    <div id="modal-{{$id}}" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] md:w-2/3 xl:w-1/2 bg-white p-8 rounded shadow-md hidden">
+    <div id="modal-{{$id}}" class="z-[100] fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] md:w-2/3 xl:w-1/2 bg-white p-8 rounded shadow-md hidden">
         <!-- Modal Header -->
         <div class="mb-6">
             <h2 class="text-xl lg:text-2xl font-medium">{{$header}}</h2>

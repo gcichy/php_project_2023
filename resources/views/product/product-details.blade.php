@@ -88,8 +88,7 @@
     @php
         $viewName = 'Szczegóły produktu';
     @endphp
-    <x-information-panel :viewName="$viewName">
-    </x-information-panel>
+    <x-information-panel :viewName="$viewName"></x-information-panel>
     @if(isset($prod) and isset($data) and isset($instruction))
         <div class="w-full md:w-[90%] md:ml-[5%] mt-4 md:mt-8 bg-white border border-gray-200 rounded-md shadow dark:bg-gray-800 dark:border-gray-700">
             <ul class="flex text-sm md:text-lg lg:text-xl font-medium text-center text-gray-500 divide-x divide-gray-200 rounded-lg  dark:divide-gray-600 dark:text-gray-400" id="fullWidthTab" data-tabs-toggle="#fullWidthTabContent" role="tablist">

@@ -63,6 +63,7 @@ Route::middleware(['auth'])->group(function () {
 
 //components
 Route::middleware(['auth'])->group(function () {
+    Route::get('/komponenty', [ComponentController::class, 'index'])->name('component.index');
     Route::get('/komponenty/{id}', [ComponentController::class, 'componentDetails'])->name('component.details');
     Route::get('/dodaj-komponent', [ComponentController::class, 'addComponent'])->name('component.add');
     Route::post('/dodaj-komponent', [ComponentController::class, 'storeComponent'])->name('component.store');

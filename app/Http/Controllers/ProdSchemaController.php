@@ -28,7 +28,7 @@ use Illuminate\View\View;
 use PhpParser\Node\Expr\Cast\Double;
 use stdClass;
 
-class ComponentController
+class ProdSchemaController
 {
     use HasEnsure;
 
