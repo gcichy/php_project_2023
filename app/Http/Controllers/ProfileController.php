@@ -23,7 +23,7 @@ class ProfileController extends Controller
     public function index(Request $request, string $employeeNo): View
     {
         $status = $request->verified == 1 ? 'Pomyślnie zweryfikowano adres email' : '';
-        $user = User::where('employeeNo',$employeeNo)->get()[0];
+        $user = $this->ensureIsNotNullUser(User::where('employeeNo',$employeeNo)->firstOrFail());
         $userData = getUserData::getUserData($user);
 
         return view('profile.profile', [
@@ -39,7 +39,7 @@ class ProfileController extends Controller
      */
     public function edit(Request $request, string $employeeNo): View
     {
-        $user = $this->ensureIsNotNullUser(User::where('employeeNo',$employeeNo)->get()[0]);
+        $user = $this->ensureIsNotNullUser(User::where('employeeNo',$employeeNo)->firstOrFail());
         $userData = getUserData::getEditUserData();
 
         $currentUser = $this->ensureIsNotNullUser($request->user());
@@ -58,7 +58,7 @@ class ProfileController extends Controller
      */
     public function update(Request $request, string $employeeNo): RedirectResponse
     {
-        $user = $this->ensureIsNotNullUser(User::where('employeeNo',$employeeNo)->get()[0]);
+        $user = $this->ensureIsNotNullUser(User::where('employeeNo',$employeeNo)->firstOrFail());
 
 //        $data = $this->ensureIsArray($request->validated());
 
@@ -84,7 +84,7 @@ class ProfileController extends Controller
         ]);
 
 
-        $user = $this->ensureIsNotNullUser(User::where('employeeNo',$employeeNo)->get()[0]);
+        $user = $this->ensureIsNotNullUser(User::where('employeeNo',$employeeNo)->firstOrFail());
         $user->delete();
 
         return redirect()->route('employee.index')->with('status', 'user-deleted')->with('employeeNo', $employeeNo);
@@ -95,7 +95,7 @@ class ProfileController extends Controller
     private function validateUpdate(Request $request, User $user) {
 
         $request->validate([
-            'firstName' => ['required', 'string',  'max:30','regex:/^[a-zA-ZźżćśńółąęŻŹĆŚŃÓŁĄĘ ]+$/'],
+            '  ' => ['required', 'string',  'max:30','regex:/^[a-zA-ZźżćśńółąęŻŹĆŚŃÓŁĄĘ ]+$/'],
             'lastName' => ['required', 'string',  'max:30', 'regex:/^[a-zA-ZźżćśńółąęŻŹĆŚŃÓŁĄĘ ]+$/'],
             'role' => ['required', 'string', 'in:admin,manager,pracownik'],
             'employeeNo' => ['required', 'string',  'max:255', Rule::unique(User::class)->ignore($user->id)],

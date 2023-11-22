@@ -1,7 +1,7 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100 h-24 flex align-middle justify-between">
+<nav x-data="{ open: false }" class="bg-white border-b border-gray-100 h-24 flex align-middle justify-between mb-6">
     <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl w-3/4 ml-1 px-4 sm:px-6 lg:px-8 border">
-        <div class="flex justify-between h-20 mx-auto border-2">
+    <div class="max-w-7xl w-3/4 ml-1 px-4 text-md lg:text-xl sm:px-6 lg:px-8">
+        <div class="flex justify-between h-20 mx-auto">
 {{--            <div class="flex justify-between h-20 mx-auto border-2">--}}
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
@@ -11,34 +11,34 @@
                 </div>
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-nav-link class="text-2xl" :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Start') }}
-                    </x-nav-link>
-                </div>
-                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-nav-link class="text-2xl" :href="route('profile.index', Auth::user()->employeeNo)" :active="request()->routeIs('profile.index')">
+                    <x-nav-link class="text-md md:text-lg lg:text-xl" :href="route('profile.index', Auth::user()->employeeNo)" :active="request()->routeIs('profile.index')">
                         {{ __('Profil') }}
                     </x-nav-link>
                 </div>
                 @if(request()->user()->role != 'pracownik')
                     <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                        <x-nav-link class="text-2xl" :href="route('employee.index')" :active="request()->routeIs('employee.index')">
+                        <x-nav-link class="text-md md:text-lg lg:text-xl" :href="route('employee.index')" :active="request()->routeIs('employee.index')">
                             {{ __('Pracownicy') }}
                         </x-nav-link>
                     </div>
                 @endif
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-nav-link class="text-2xl" :href="route('production.index')" :active="request()->routeIs('production.index')">
+                    <x-nav-link class="text-md md:text-lg lg:text-xl" :href="route('product.index')" :active="request()->routeIs('product.index')">
+                        {{ __('Produkty') }}
+                    </x-nav-link>
+                </div>
+                <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                    <x-nav-link class="text-md md:text-lg lg:text-xl" :href="route('production.index')" :active="request()->routeIs('production.index')">
                         {{ __('Produkcja') }}
                     </x-nav-link>
                 </div>
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-nav-link class="text-2xl" :href="route('schedule.index')" :active="request()->routeIs('schedule.index')">
+                    <x-nav-link class="text-md md:text-lg lg:text-xl" :href="route('schedule.index')" :active="request()->routeIs('schedule.index')">
                         {{ __('Harmonogram') }}
                     </x-nav-link>
                 </div>
                 <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                    <x-nav-link class="text-2xl" :href="route('stastistics.index')" :active="request()->routeIs('stastistics.index')">
+                    <x-nav-link class="text-md md:text-lg lg:text-xl" :href="route('stastistics.index')" :active="request()->routeIs('stastistics.index')">
                         {{ __('Statystyki') }}
                     </x-nav-link>
                 </div>
@@ -98,7 +98,7 @@
             <form method="POST" action="{{ route('logout') }}" class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                 @csrf
 
-                <x-nav-link class="text-2xl" :href="route('logout')"
+                <x-nav-link class="text-md md:text-lg lg:text-xl" :href="route('logout')"
                             onclick="event.preventDefault();
                                     this.closest('form').submit();">
                     {{ __('Wyloguj') }}
