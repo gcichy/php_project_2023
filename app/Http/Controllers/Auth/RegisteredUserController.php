@@ -35,8 +35,6 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-
-
         $request->validate([
             'firstName' => ['required', 'string',  'max:30','regex:/^[a-zA-ZźżćśńółąęŻŹĆŚŃÓŁĄĘ ]+$/'],
             'lastName' => ['required', 'string',  'max:30', 'regex:/^[a-zA-Z ]+$/'],
@@ -86,10 +84,6 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
         //Auth::login($user);
-
-        return redirect()->action(
-            [EmployeeController::class, 'index'],
-            ['status' => 'Użytkownik '.$request->firstName.' '.$request->lastName.' został zarejestrowany.']
-        );
+        return redirect()->route('employee.index')->with('status', 'Użytkownik '.$request->firstName.' '.$request->lastName.' został zarejestrowany.');
     }
 }

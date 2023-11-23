@@ -22,7 +22,7 @@
         });
     </script>
 @endif
-@if(isset($header) and isset($route) and isset($id))
+@if(isset($route) and isset($id) and isset($name))
 
     <!-- Modal Background -->
     <div id="modal-background-{{$id}}" class="z-[100] fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 hidden"></div>
@@ -31,7 +31,7 @@
     <div id="modal-{{$id}}" class="z-[100] fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] md:w-2/3 xl:w-1/2 bg-white p-8 rounded shadow-md hidden">
         <!-- Modal Header -->
         <div class="mb-6">
-            <h2 class="text-xl lg:text-2xl font-medium">{{$header}}</h2>
+            <h2 class="text-xl lg:text-2xl font-medium">{{__('Usuń ').$name}}</h2>
         </div>
         <div><p>{{$slot}}</p></div>
         <form action="{{ route($route) }}" method="POST">
@@ -40,7 +40,7 @@
             <div class="flex items-center flex-row justify-center w-full">
                 <div class="flex items-start flex-col w-full text-gray-700">
                     <p class="w-full text-md lg:text-xl font-medium pl-2 lg:pl-4 lg:pb-2 text-gray-950">
-                        {{__('Czy na pewno chcesz usunąć komponent?')}}
+                        {{__('Czy na pewno chcesz usunąć ').$name.__('?')}}
                     </p>
                     <p class="w-full text-sm xl:text-md pl-2 lg:pl-4 pb-2">
                         {{__('Wpisz "usuń" aby kontynuować .')}}

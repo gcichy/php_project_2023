@@ -10,6 +10,7 @@ use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -22,6 +23,7 @@ class ProfileController extends Controller
      */
     public function index(Request $request, string $employeeNo): View
     {
+
         $status = $request->verified == 1 ? 'Pomyślnie zweryfikowano adres email' : '';
         $user = $this->ensureIsNotNullUser(User::where('employeeNo',$employeeNo)->firstOrFail());
         $userData = getUserData::getUserData($user);
@@ -77,17 +79,40 @@ class ProfileController extends Controller
     /**
      * Delete the user's account.
      */
-    public function destroy(Request $request, string $employeeNo): RedirectResponse
+    public function destroy(Request $request): RedirectResponse
     {
-        $request->validateWithBag('userDeletion', [
-            'password' => ['required', 'current-password'],
-        ]);
+        $user = Auth::user();
+        try {
+            $request->validate([
+                'password' => ['required', 'current_password'],
+            ], [
+                    'password.required' => 'Aby usunąć użytkownika musisz podać hasło.',
+                    'password.current_password' => 'Nie udało się usunąć użytkownika: błędne hasło.'
+            ]);
+        }
+        catch (Exception $e) {
+            return redirect()->back()->with('status_err', $e->getMessage());
+        }
+
+        try {
+            $user = User::where('employeeNo',$request->remove_id)->first();
+            if(!$user instanceof User) {
+                Log::channel('error')->error('Error deleting user: error occurred in Profile->destroy method. Failed to find user '.$request->remove_id. ' in the database.', [
+                    'employeeNo' => $user->employeeNo,
+                ]);
+                return redirect()->back()->with('status_err', 'Nie udało się usunąć użytkownika: nie znleziono użytkownika w systemie.');
+            }
+            $user->delete();
+        }
+        catch(Exception $e) {
+            Log::channel('error')->error('Error deleting user: error occurred in Profile->destroy method. Failed to delete user '.$request->remove_id. ' from the database.', [
+                'employeeNo' => $user->employeeNo,
+            ]);
+            return redirect()->back()->with('status_err', 'Nie udało się usunąć użytkownika: problem przy usuwaniu z systemu.');
+        }
 
 
-        $user = $this->ensureIsNotNullUser(User::where('employeeNo',$employeeNo)->firstOrFail());
-        $user->delete();
-
-        return redirect()->route('employee.index')->with('status', 'user-deleted')->with('employeeNo', $employeeNo);
+        return redirect()->route('employee.index')->with('status', 'Usunięto użytkownika');
     }
 
 
@@ -95,7 +120,6 @@ class ProfileController extends Controller
     private function validateUpdate(Request $request, User $user) {
 
         $request->validate([
-            '  ' => ['required', 'string',  'max:30','regex:/^[a-zA-ZźżćśńółąęŻŹĆŚŃÓŁĄĘ ]+$/'],
             'lastName' => ['required', 'string',  'max:30', 'regex:/^[a-zA-ZźżćśńółąęŻŹĆŚŃÓŁĄĘ ]+$/'],
             'role' => ['required', 'string', 'in:admin,manager,pracownik'],
             'employeeNo' => ['required', 'string',  'max:255', Rule::unique(User::class)->ignore($user->id)],

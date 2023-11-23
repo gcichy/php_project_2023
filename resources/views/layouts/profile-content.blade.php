@@ -1,7 +1,7 @@
 
 @if(is_null($user->email_verified_at))
     <div class="my-2 flex justify-center">
-        <x-nav-button :href="route('verification.notice', $user->employeeNo)" class="bg-red-700">
+        <x-nav-button :href="route('verification.notice', $user->employeeNo)" class=" my-4 bg-red-700">
             @if(isset($currentUser) and $currentUser->employeeNo != $user->employeeNo)
                 {{ __('Zweryfikuj adres e-mail użytkownika '.$user->employeeNo) }}
             @else
@@ -15,8 +15,8 @@
     $viewName = 'Profil Użytkownika';
 @endphp
 <x-information-panel :viewName="$viewName">
-    <x-nav-button :href="route('profile.edit', $user->employeeNo)">
-        {{ __('Edytuj Profil') }}
+    <x-nav-button :href="route('profile.edit', $user->employeeNo)" class="mr-3 lg:mr-5 bg-orange-500">
+        {{ __('Edytuj') }}
     </x-nav-button>
 </x-information-panel>
 

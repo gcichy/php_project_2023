@@ -39,7 +39,7 @@ Route::middleware('auth')->group(function () {
 //        dd($request);
 //    })->name('profile.update');
     Route::patch('/edytuj-profil/{employeeNo}', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/edytuj-profil/{employeeNo}', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::delete('/usun-profil', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 

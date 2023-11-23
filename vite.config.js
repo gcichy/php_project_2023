@@ -11,14 +11,6 @@ export default defineConfig({
             ],
             refresh: true,
         }),
-        viteStaticCopy({
-            targets: [
-                {
-                    src: 'resources/js/utils.js',
-                    dest: 'js'
-                }
-            ]
-        })
     ],
     resolve: {
         alias: {
