@@ -28,20 +28,10 @@ class EmployeeController extends Controller
             ]);
         }
 
-        if(is_null($request->status)) {
-            return view('employee.dashboard', [
-                'user' => $request->user(),
-                'employees' =>$employees,
-            ]);
-        }
-        else {
-            return view('employee.dashboard', [
-                'user' => $request->user(),
-                'employees' =>$employees,
-                'status' => $request->status,
-            ]);
-        }
-
+        return view('employee.dashboard', [
+            'user' => $request->user(),
+            'employees' =>$employees,
+        ]);
     }
 
     public function details(Request $request, string $employeeNo): View

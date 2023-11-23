@@ -84,20 +84,6 @@
                     $(list_id).addClass('just-hidden');
                 }
             });
-
-
-            $('#remove-prod-modal').on('click', function(){
-                $('.element-remove').addClass('hidden');
-                let activeElem = $('.list-element.active-list-elem');
-                if(typeof activeElem.attr('id') === "string") {
-                    let id = activeElem.attr('id').split('-');
-                    if(id.length > 1) {
-                        id = '#product-remove-' + id[1];
-                        $(id).removeClass('hidden')
-                    }
-                }
-            });
-
         });
     </script>
     @if(isset($user) and $user instanceof \App\Models\User)
@@ -134,22 +120,22 @@
                             {{ __('Edytuj') }}
                         </x-nav-button>
                         @php
-                            $header = 'Usuń produkt';
+                            $name = 'produkt';
                             $route = 'product.destroy';
                             $button_id = 'remove-prod-modal';
                             $id = '2';
                             $remove_elem_class = 'element-remove';
-                            $remove_elem_id = 'product-remove-'
+                            $remove_elem_id = 'product-remove-';
                         @endphp
                         <x-remove-modal-button :name="__('Usuń')" :id="$button_id" :remove_elem_class="$remove_elem_class" :remove_elem_id="$remove_elem_id"></x-remove-modal-button>
-                        <x-remove-modal :header="$header" :buttonId="$button_id" :route="$route" :id="$id">
+                        <x-remove-modal :name="$name" :buttonId="$button_id" :route="$route" :id="$id">
                             @foreach($products as $prod)
                                 <div class="{{$remove_elem_class}} hidden" id="{{$remove_elem_id}}{{$prod->id}}">
                                     <x-list-element class="flex-col">
                                         <div class="w-full flex justify-between items-center">
                                             <div class="w-full flex justify-left items-center">
                                                 <div class="border-2 inline-block w-[50px] h-[50px] md:w-[70px] md:h-[70px] lg:w-[100px] lg:h-[100px]">
-                                                    @if(!empty($comp->image))
+                                                    @if(!empty($prod->image))
                                                         @php $path = isset($storage_path_products) ? $storage_path_products.'/' : ''; @endphp
                                                         <img src="{{asset('storage/'.$path.$prod->image)}}">
                                                     @endif
