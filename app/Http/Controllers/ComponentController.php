@@ -195,6 +195,7 @@ class ComponentController
 
     public function storeComponent(Request $request): RedirectResponse
     {
+        dd($request);
         $this->validateAddComponentForm($request, 'INSERT');
 
         $schema_arr = $this->validateProdSchemas($request);

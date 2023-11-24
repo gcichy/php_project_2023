@@ -37,70 +37,40 @@ class ProdSchemaController
      */
     public function index(Request $request): View
     {
-        $components = Component::all();
+        $prod_schema_tasks = $this->getSchemaData();
 
-        return view('component.component', [
+        return view('prod-schema.prod-schema', [
             'user' => $request->user(),
-            'components' => $components,
+            'schema_data' => $prod_schema_tasks,
             'storage_path_components' => 'components',
             'storage_path_products' => 'products'
         ]);
     }
-    public function componentDetails(Request $request, string $id): View
+    public function schemaDetails(Request $request, string $id): View
     {
-        $component = Component::find($id);
+        $prod_schema = ProductionSchema::where('id',$id)->select('id','production_schema', 'description', 'tasks_count')->first();
+        $prod_schema_tasks = $this->getSchemaData($id);
+        $instruction = DB::select('select
+                                            pst.sequence_no,
+                                            t.id as task_id,
+                                            i.id as instr_id,
+                                            i.name as instruction_name,
+                                            i.instruction_pdf,
+                                            i.video
+                                    from production_schema_task pst
+                                        join task t
+                                            on t.id = pst.task_id
+                                        join instruction i
+                                            on t.id = i.task_id
+                                    where pst.production_schema_id = '. $id .'
+                                    order by pst.sequence_no');
 
-        $instruction = Instruction::where('component_id', $id)->select('name', 'instruction_pdf', 'video')->get();
-        if (count($instruction) > 0) {
-            $instruction = $instruction[0];
-        }
 
-        $prod_standards = DB::select('select  pstd.id,
-                                                    pstd.name,pstd.description,
-                                                    pstd.duration_hours,
-                                                    pstd.amount,
-                                                    u.unit
-                                            from production_standard pstd
-                                            join unit u
-                                                on u.id = pstd.id
-                                            where pstd.component_id = ' . $id
-            . ' order by pstd.production_schema_id asc');
-        $data = DB::select('select
-                                       cps.component_id,
-                                       cps.production_schema_id as prod_schema_id,
-                                       ps.production_schema as prod_schema,
-                                       ps.description as prod_schema_desc,
-                                       pst.task_id,
-                                       pst.sequence_no as task_sequence_no,
-                                       pst.amount_required,
-                                       pst.additional_description,
-                                       t.name as task_name,
-                                       t.description as task_desc,
-                                       pstd.name as prod_std_name,
-                                       pstd.description as prod_std_desc,
-                                       pstd.duration_hours prod_std_duration,
-                                       pstd.amount as prod_std_amount,
-                                       u.unit as prod_std_unit
-                                from component_production_schema cps
-                                join production_schema ps
-                                    on ps.id = cps.production_schema_id
-                                join production_schema_task pst
-                                    on pst.production_schema_id = ps.id
-                                join task t
-                                    on t.id = pst.task_id
-                                left join production_standard pstd
-                                    on pstd.component_id = cps.component_id
-                                    and pstd.production_schema_id = cps.production_schema_id
-                                left join unit u
-                                    on u.id = pstd.unit_id
-                                where cps.component_id = ' . $id .
-            ' order by cps.sequence_no asc, pst.sequence_no asc');
-
-        if (!is_null($component)) {
-            return view('component.component-details', [
-                'comp' => $component,
-                'prod_standards' => $prod_standards,
-                'data' => $data,
+        if (!empty($prod_schema_tasks) and array_key_exists($id, $prod_schema_tasks)) {
+            $prod_schema_tasks = $prod_schema_tasks[$id];
+            return view('prod-schema.prod-schema-details', [
+                'prod_schema' => $prod_schema,
+                'prod_schema_tasks' => $prod_schema_tasks,
                 'instruction' => $instruction,
                 'storage_path_components' => 'components',
                 'storage_path_instructions' => 'instructions',
@@ -108,31 +78,25 @@ class ProdSchemaController
         }
 
         return view('component.component-details', [
-            'error_msg' => 'Brak danych dla komponentu.',
+            'error_msg' => 'Brak danych dla schematu.',
         ]);
 
     }
 
-    public function addComponent(Request $request, ?string $id = null): View
+    public function addSchema(Request $request, ?string $id = null): View
     {
-        $data = $this->getAddComponentData(false);
+        $data = $this->getAddSchemaData();
 
-        $prod_schema_errors = $request->session()->get('prod_schema_errors');
-        $status = $request->session()->get('status');
-        return view('component.component-add', [
-            'prod_schemas' => $data['prod_schemas'],
-            'schema_data' => $data['prod_schema_tasks'],
+        return view('prod-schema.prod-schema-add', [
+            'tasks' => $data['tasks'],
             'units' => $data['units'],
             'material_list' => $data['materials'],
             'user' => $request->user(),
-            'prod_schema_errors' => $prod_schema_errors,
-            'status' => $status,
-
         ]);
 
     }
 
-    public function editComponent(Request $request, string $id): View|RedirectResponse
+    public function editSchema(Request $request, string $id): View|RedirectResponse
     {
         $prod_schema_errors = $request->session()->get('prod_schema_errors');
         $status = $request->session()->get('status');
@@ -145,7 +109,7 @@ class ProdSchemaController
                     ->select('instruction_pdf', 'video')->get();
                 $selected_comp_instr = count($selected_comp_instr) > 0 ? $selected_comp_instr[0] : null;
 
-                $data = $this->getAddComponentData(true, $comp->id);
+                $data = $this->getSchemaData(true, $comp->id);
                 $selected_comp_schemas = DB::select('select
                                         cps.production_schema_id,
                                         ps.production_schema,
@@ -193,8 +157,9 @@ class ProdSchemaController
         return redirect()->route('product.index')->with('status_err', 'Nie znaleziono komponentu');
     }
 
-    public function storeComponent(Request $request): RedirectResponse
+    public function storeSchema(Request $request): RedirectResponse
     {
+        dd($request);
         $this->validateAddComponentForm($request, 'INSERT');
 
         $schema_arr = $this->validateProdSchemas($request);
@@ -284,7 +249,7 @@ class ProdSchemaController
         return redirect()->route('product.index')->with('status', 'Komponent został dodany do systemu.');
     }
 
-    public function storeUpdatedComponent(Request $request): RedirectResponse
+    public function storeUpdatedSchema(Request $request): RedirectResponse
     {
         $this->validateAddComponentForm($request, 'UPDATE');
 
@@ -382,7 +347,7 @@ class ProdSchemaController
     }
 
 
-    public function destroyComponent(Request $request): RedirectResponse
+    public function destroySchema(Request $request): RedirectResponse
     {
         try {
             $request->validate([
@@ -451,49 +416,68 @@ class ProdSchemaController
     ///  PRIVATE METHODS
     ///////////////////////////////////////////////////////////
 
-    private function getAddComponentData(bool $adjusted_to_component, int $component_id = 0): array
+    private function getSchemaData(int $schema_id = 0): array
     {
-        $materials = StaticValue::where('type','material')->get();
-        $units = Unit::select('unit','name')->get();
-        $prod_schemas = ProductionSchema::all();
-        if($adjusted_to_component) {
-            $data = DB::select('select
-                                        psh.id as prod_schema_id,
-                                        cps.sequence_no as prod_schema_sequence_no,
-                                        psh.production_schema as prod_schema,
-                                        psh.description as prod_schema_desc,
-                                        psh.tasks_count,
-                                        psht.task_id,
-                                        psht.sequence_no as task_sequence_no,
-                                        t.name as task_name,
-                                        t.description as task_desc
-                                    from production_schema psh
-                                             left join production_schema_task psht
-                                                on psh.id = psht.production_schema_id
-                                             left join task t
-                                                on t.id = psht.task_id
-                                             left join component_production_schema cps
-                                                on psh.id = cps.production_schema_id
-                                                and cps.component_id = '.$component_id.'
-                                    order by cps.sequence_no, psht.production_schema_id, psht.sequence_no');
-        } else {
-            $data = DB::select('select
-                                        psh.id as prod_schema_id,
-                                        psh.production_schema as prod_schema,
-                                        psh.description as prod_schema_desc,
-                                        psh.tasks_count,
-                                        psht.task_id,
-                                        psht.sequence_no as task_sequence_no,
-                                        t.name as task_name,
-                                        t.description as task_desc
-                                    from production_schema psh
-                                             left join production_schema_task psht
-                                                  on psh.id = psht.production_schema_id
-                                             left join task t
-                                                  on t.id = psht.task_id
-                                    order by production_schema_id, task_sequence_no');
-        }
 
+        if($schema_id > 0) {
+            $data = DB::select('select
+                                       ps.id as prod_schema_id,
+                                       ps.production_schema as prod_schema,
+                                       ps.description as prod_schema_desc,
+                                       pst.task_id,
+                                       pst.sequence_no as task_sequence_no,
+                                       pst.amount_required,
+                                       pst.additional_description,
+                                       t.name as task_name,
+                                       t.description as task_desc,
+                                       pstd.id as prod_std_id,
+                                       pstd.name as prod_std_name,
+                                       pstd.description as prod_std_desc,
+                                       pstd.duration_hours prod_std_duration,
+                                       pstd.amount as prod_std_amount,
+                                       u.unit as prod_std_unit
+                                from production_schema ps
+                                join production_schema_task pst
+                                    on pst.production_schema_id = ps.id
+                                join task t
+                                    on t.id = pst.task_id
+                                left join production_standard pstd
+                                       on pstd.production_schema_id = ps.id
+                                        and pstd.component_id is null
+                                left join unit u
+                                    on u.id = pstd.unit_id
+                                where ps.id = ' . $schema_id .
+                ' order by ps.id, pst.sequence_no');
+        }
+        else{
+            $data = DB::select('select
+                                    ps.id as prod_schema_id,
+                                    ps.production_schema as prod_schema,
+                                    ps.description as prod_schema_desc,
+                                    pst.task_id,
+                                    pst.sequence_no as task_sequence_no,
+                                    pst.amount_required,
+                                    pst.additional_description,
+                                    t.name as task_name,
+                                    t.description as task_desc,
+                                    pstd.id as prod_std_id,
+                                    pstd.name as prod_std_name,
+                                    pstd.description as prod_std_desc,
+                                    pstd.duration_hours prod_std_duration,
+                                    pstd.amount as prod_std_amount,
+                                    u.unit as prod_std_unit
+                                from production_schema ps
+                                         join production_schema_task pst
+                                              on pst.production_schema_id = ps.id
+                                         join task t
+                                              on t.id = pst.task_id
+                                         left join production_standard pstd
+                                              on pstd.production_schema_id = ps.id
+                                              and pstd.component_id is null
+                                         left join unit u
+                                              on u.id = pstd.unit_id
+                                order by ps.id, pst.sequence_no');
+        }
 
         $prod_schema_tasks = array();
         if(count($data) > 0) {
@@ -511,10 +495,77 @@ class ProdSchemaController
             $prod_schema_tasks[$curr_schema_id] = $temp;
         }
 
-        return array('materials' => $materials,
-            'units' => $units,
-            'prod_schema_tasks' => $prod_schema_tasks,
-            'prod_schemas' => $prod_schemas
+        return $prod_schema_tasks;
+    }
+
+    private function getAddSchemaData(int $schema_id = 0): array
+    {
+        $materials = StaticValue::where('type','material')->get();
+        $units = Unit::select('unit','name')->get();
+
+        if($schema_id > 0) {
+            $data = DB::select('select
+                                       ps.id as prod_schema_id,
+                                       ps.production_schema as prod_schema,
+                                       ps.description as prod_schema_desc,
+                                       pst.task_id,
+                                       pst.sequence_no as task_sequence_no,
+                                       pst.amount_required,
+                                       pst.additional_description,
+                                       t.name as task_name,
+                                       t.description as task_desc,
+                                       pstd.id as prod_std_id,
+                                       pstd.name as prod_std_name,
+                                       pstd.description as prod_std_desc,
+                                       pstd.duration_hours prod_std_duration,
+                                       pstd.amount as prod_std_amount,
+                                       u.unit as prod_std_unit
+                                from production_schema ps
+                                join production_schema_task pst
+                                    on pst.production_schema_id = ps.id
+                                join task t
+                                    on t.id = pst.task_id
+                                left join production_standard pstd
+                                       on pstd.production_schema_id = ps.id
+                                        and pstd.component_id is null
+                                left join unit u
+                                    on u.id = pstd.unit_id
+                                where ps.id = ' . $schema_id .
+                ' order by ps.id, pst.sequence_no');
+        }
+        else{
+            $data = DB::select('select
+                                        t.id as task_id,
+                                        t.name as task_name,
+                                        t.description as task_desc,
+                                        i.instruction_pdf,
+                                        i.video
+                                    from task t
+                                        left join instruction i
+                                            on t.id = i.task_id
+                                    order by t.id');
+        }
+
+//        $prod_schema_tasks = array();
+//        if(count($data) > 0) {
+//            $curr_schema_id = $data[0]->prod_schema_id;
+//            $temp = [];
+//
+//            foreach ($data as $row) {
+//                if ($row->prod_schema_id != $curr_schema_id) {
+//                    $prod_schema_tasks[$curr_schema_id] = $temp;
+//                    $curr_schema_id = $row->prod_schema_id;
+//                    $temp = [];
+//                }
+//                $temp[] = $row;
+//            }
+//            $prod_schema_tasks[$curr_schema_id] = $temp;
+//        }
+
+        return array(
+            'tasks' => $data,
+            'materials' => $materials,
+            'units' => $units
         );
     }
     private function validateProdSchemas(Request $request): array

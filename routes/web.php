@@ -4,6 +4,7 @@ use App\Http\Controllers\ComponentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeStatisticsController;
+use App\Http\Controllers\ProdSchemaController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\ProfileController;
@@ -71,6 +72,18 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/edytuj-komponent/{id}', [ComponentController::class, 'editComponent'])->name('component.edit');
     Route::post('/edytuj-komponent', [ComponentController::class, 'storeUpdatedComponent'])->name('component.update');
     Route::delete('/usun-komponent', [ComponentController::class, 'destroyComponent'])->name('component.destroy');
+});
+
+//production_schemas
+Route::middleware(['auth'])->group(function () {
+    Route::get('/schematy', [ProdSchemaController::class, 'index'])->name('schema.index');
+    Route::get('/schematy/{id}', [ProdSchemaController::class, 'schemaDetails'])->name('schema.details');
+    Route::get('/dodaj-schemat', [ProdSchemaController::class, 'addSchema'])->name('schema.add');
+    Route::post('/dodaj-schemat', [ProdSchemaController::class, 'storeSchema'])->name('schema.store');
+    Route::get('/dodaj-schemat/{id}', [ProdSchemaController::class, 'editSchema'])->name('schema.add-similar');
+    Route::get('/edytuj-schemat/{id}', [ProdSchemaController::class, 'editSchema'])->name('schema.edit');
+    Route::post('/edytuj-schemat', [ProdSchemaController::class, 'storeUpdatedSchema'])->name('schema.update');
+    Route::delete('/usun-schemat', [ProdSchemaController::class, 'destroySchema'])->name('schema.destroy');
 });
 
 //production

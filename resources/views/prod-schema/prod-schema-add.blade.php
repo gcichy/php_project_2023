@@ -1,9 +1,9 @@
 <x-app-layout>
     @php
-        if(!isset($selected_comp_schemas)) $selected_comp_schemas = null;
-        if(!isset($prodschema_input)) $prodschema_input = null;
-        if(!isset($selected_comp)) $selected_comp = null;
-        if(!isset($selected_comp_instr)) $selected_comp_instr = null;
+        if(!isset($selected_schem_tasks)) $selected_schem_tasks = null;
+        if(!isset($task_input)) $task_input = null;
+        if(!isset($selected_schem)) $selected_schem = null;
+        if(!isset($selected_schem_instr)) $selected_schem_instr = null;
     @endphp
     <script type="module">
 
@@ -11,14 +11,14 @@
             let numbers = inputVal.split('_');
             numbers.forEach(function(val) {
                 if(!isNaN(parseInt(val))) {
-                    let id = '#prodschema-' + val;
+                    let id = '#task-' + val;
                     if($(id).hasClass('hidden')) {
                         $(id).removeClass('hidden').addClass('active-list-elem')
                     }
                 }
             });
 
-            $('.production-standard').each(function () {
+            $('.sequence-no').each(function () {
                 if($(this).parent().hasClass('active-list-elem')) {
                     $(this).removeClass('hidden');
                 }
@@ -57,21 +57,13 @@
             }
         }
         function isActiveProdSchema(elem_id) {
-            let ids = $('#prodschema-input').val().split('_');
+            let ids = $('#task-input').val().split('_');
             return ids.includes(elem_id)
         }
 
-        function checkIndependent() {
-            if($('#independent').val()) {
-                $('#independent').prop('checked', true);
-            } else {
-                $('#independent').prop('checked', false);
-            }
-        }
 
         $(document).ready(function() {
-            checkIndependent();
-            getActiveOnLoad('prodschema', $('#prodschema-input').val());
+            //getActiveOnLoad('task', $('#task-input').val());
             checkActive();
 
             $('.list-element').on('click', function () {
@@ -79,9 +71,11 @@
                 $(this).addClass('active-list-elem');
 
                 let id = $(this).attr('id').split('-')[1];
+
                 //prodsschema can be unclicked if list of schemas is visible (schema is not chosen)
                 if(!$('#confirm-schema-button').hasClass('hidden')) {
-                    let list_id = '.prodschema-list-' + id;
+                    let list_id = '.task-list-' + id;
+                    console.log($(list_id));
                     if($(list_id).hasClass('hidden')) {
                         if (is_active) {
                             if(!$(list_id).hasClass('just-hidden')) {
@@ -96,12 +90,23 @@
                 checkActive();
             });
 
+            $('#dropdown-prodstd-button').on('click',function (){
+                console.log('halo')
+                let prodStd = $('#production-standard')
+                if(prodStd.hasClass('hidden')) {
+                    prodStd.removeClass('hidden');
+                } else {
+                    prodStd.addClass('hidden');
+                    $('#duration').val(null);
+                    $('#amount').val(null);
+                }
+            });
+
             //on click button is rotated and component list appears
             $('.expand-btn').on('click', function () {
                 let id = $(this).attr('id').split('-')[1];
-                var list_id = '.prodschema-list-' + id;
+                var list_id = '.task-list-' + id;
 
-                console.log(list_id);
                 if($(this).hasClass('rotate-180')) {
                     $(this).removeClass('rotate-180');
                     $(this).addClass('rotate-0');
@@ -118,24 +123,66 @@
                 }
             });
 
-            $('#dropdownSearchButton').on('click', function () {
-                $('.production-standard').addClass('hidden');
+            $('#dropdown-search-button').on('click', function () {
+                $('.sequence-no').addClass('hidden');
 
-                if($('.list-element-prodschema').hasClass('hidden')) {
-                    $('.list-element-prodschema').removeClass('hidden');
+                if($('.list-element-task').hasClass('hidden')) {
+                    $('.list-element-task').removeClass('hidden');
                 }
                 else {
-                    $('.list-element-prodschema').addClass('hidden');
+                    $('.list-element-task').addClass('hidden');
 
                 }
-                if($('.prodschema-toggle').hasClass('hidden')) {
-                    $('.prodschema-toggle').removeClass('hidden');
+                if($('.task-toggle').hasClass('hidden')) {
+                    $('.task-toggle').removeClass('hidden');
                     $('#label-schema').addClass('hidden');
 
                 }
                 else {
-                    $('.prodschema-toggle').addClass('hidden');
+                    $('.task-toggle').addClass('hidden');
                     $('#label-schema').removeClass('hidden');
+                }
+            });
+
+            $('#new-task-button').on('click', function () {
+                let counter = $('#new-counter');
+                counter.val(parseInt(counter.val())+1)
+
+                let newTask = $('#new-task-ghost').clone();
+                let id = 'new-task-'+counter.val()
+                newTask.attr('id',id).addClass('active-list-elem list-element list-element-task');
+
+                newTask.find('.new-sequence-no')
+                    .attr('id','new-sequence-no-'+counter.val())
+                    .attr('name','new_sequence_no_'+counter.val());
+
+                newTask.find('.new-desc')
+                    .attr('id','new-desc-'+counter.val())
+                    .attr('name','new_desc_'+counter.val());
+
+                newTask.find('.new-name')
+                    .attr('id','new-name-'+counter.val())
+                    .attr('name','new_name_'+counter.val());
+
+                console.log(newTask.find('.new-name'));
+                newTask.removeClass('hidden');
+                $('#new-dropdown').append(newTask);
+                if($('#remove-new-button').hasClass('hidden')) {
+                    $('#remove-new-button').removeClass('hidden');
+                }
+                else if(parseInt(counter.val()) === 0){
+                    $('#remove-new-button').addClass('hidden');
+                }
+            });
+
+            $('#remove-new-button').on('click', function () {
+                let counter = $('#new-counter');
+                let highestId = '#new-task-' + counter.val();
+                if($(highestId).length) {
+                    $(highestId).remove();
+                    if(!$(highestId).length) {
+                        counter.val(parseInt(counter.val())-1)
+                    }
                 }
             });
 
@@ -143,10 +190,10 @@
             $('#confirm-schema-button').on('click', function (){
                 if($('#label-schema').hasClass('hidden')) {
                     $('#label-schema').removeClass('hidden');
-                    $('.prodschema-toggle').addClass('hidden');
-                    $('.list-element-prodschema:not(.active-list-elem)').addClass('hidden');
+                    $('.task-toggle').addClass('hidden');
+                    $('.list-element-task:not(.active-list-elem)').addClass('hidden');
                     let id_string = '';
-                    let chosen_elements = $('.list-element-prodschema.active-list-elem');
+                    let chosen_elements = $('.list-element-task.active-list-elem:not(.new-list-elem)');
                     let i = 1;
                     chosen_elements.each(function() {
                         let id = $(this).attr('id').split('-')[1];
@@ -155,9 +202,9 @@
                         i++;
                     })
                     id_string = id_string.slice(0, id_string.length - 1)
-                    $('#prodschema-input').val(id_string);
+                    $('#task-input').val(id_string);
 
-                    $('.production-standard').each(function () {
+                    $('.sequence-no').each(function () {
                         if($(this).parent().hasClass('active-list-elem')) {
                             $(this).removeClass('hidden');
                         }
@@ -172,7 +219,7 @@
 
     </script>
     @php
-        $name = (isset($update) and $update) ? 'Edytuj komponent' : 'Dodaj komponent';
+        $name = (isset($update) and $update) ? 'Edytuj schemat' : 'Dodaj schemat';
     @endphp
     <x-information-panel :viewName="$name"></x-information-panel>
     @if(isset($status))
@@ -186,83 +233,85 @@
                 <div class="w-full">
 
                     @if(isset($update) and $update)
-                        <form method="POST" action="{{ route('component.update') }}" enctype="multipart/form-data">
+                        <form method="POST" action="{{ route('schema.update') }}" enctype="multipart/form-data">
                     @else
-                        <form method="POST" action="{{ route('component.store') }}" enctype="multipart/form-data">
+                        <form method="POST" action="{{ route('schema.store') }}" enctype="multipart/form-data">
                     @endif
                         @csrf
                         <div class="block rounded-lg bg-white shadow-lg dark:bg-neutral-800">
                             <div class="g-0 lg:flex lg:flex-wrap">
                                 <!-- Left column container-->
                                 <div class="flex items-center flex-col justify-start rounded-b-lg w-full xl:w-6/12 xl:rounded-r-lg xl:rounded-bl-none p-2 xl:p-0 bg-white/30">
-                                    <div class="md:mx-6 md:p-12 px-2 py-12 lg:w-[80%] xl:w-full">
-                                        <input type="text" id="component-id" name="component_id" value="{{old('component_id') ? old('component_id') : (empty($selected_comp) ? '' : $selected_comp->id )}}" class="hidden">
+                                    <div class="md:mx-6 md:p-12 px-2 py-6 w-full">
+                                        <input type="text" id="schema-id" name="schema_id" value="{{old('schema_id') ? old('schema_id') : (empty($selected_schem) ? '' : $selected_schem->id )}}" class="hidden">
                                         <div class="mb-6">
-                                            <label for="name" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Nazwa <span class="text-red-700">*</span></label>
-                                            <input type="text" id="name" name="name" value="{{old('name') ? old('name') : (empty($selected_comp) ? '' : $selected_comp->name )}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                            <label for="name" class="block mb-2 text-sm lg:text-md xl:text-lg font-medium text-gray-900 dark:text-white">Nazwa <span class="text-red-700">*</span></label>
+                                            <input type="text" id="name" name="name" value="{{old('name') ? old('name') : (empty($selected_schem) ? '' : $selected_schem->name )}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
                                             <x-input-error :messages="$errors->get('name')" class="mt-2" />
                                         </div>
-                                        <div class="mb-6">
-                                            <label for="material" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Materiał <span class="text-red-700">*</span></label>
-                                            <select id="material" name="material" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                                                @if(isset($material_list) and count($material_list) > 0)
-                                                    @foreach($material_list as $mat)
-                                                        @if($selected_comp instanceof \App\Models\Component and $mat->value == $selected_comp->material)
-                                                            <option value="{{$mat->value}}" selected>{{$mat->value_full}}</option>
-                                                        @else
-                                                            <option value="{{$mat->value}}">{{$mat->value_full}}</option>
-                                                        @endif
-                                                    @endforeach
-                                                @else
-                                                    <option value=""></option>
-                                                @endif
-                                            </select>
-                                            <x-input-error :messages="$errors->get('material')" class="mt-2" />
-                                        </div>
-                                        <div class="mb-6">
-                                            <label for="independent" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Produkowany Niezależnie</label>
-                                            <label class="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" id="independent" name="independent" value="{{old('independent') ? old('independent') : (empty($selected_comp) ? '' : $selected_comp->independent )}}" class="sr-only peer">
-                                                <div class="w-11 h-6 bg-gray-200 rounded-full peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                                                <x-input-error :messages="$errors->get('independent')" class="mt-2" />
-                                            </label>
-                                        </div>
-                                        <div class="mb-6">
-                                            <label for="dimension" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Wymiary</label>
-                                            <div id="dimension" class="flex flex-row justify-start items-center w-full xl:w-[60%]">
-                                                <div class="w-[30%] mr-[3%]">
-                                                    <label for="height" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Wysokość</label>
-                                                    <input type="number" id="height" name="height" value="{{old('height') ? old('height') : (empty($selected_comp) || empty($selected_comp->height) ? 0 : $selected_comp->height )}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
-                                                </div>
-                                                <div class="w-[30%] mr-[3%]">
-                                                    <label for="length" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Długość</label>
-                                                    <input type="number" id="length" name="length" value="{{old('length') ? old('length') : (empty($selected_comp) || empty($selected_comp->length) ? 0 : $selected_comp->length )}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
-                                                </div>
-                                                <div class="w-[30%] mr-[3%]">
-                                                    <label for="width" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Szerokość</label>
-                                                    <input type="number" id="width" name="width" value="{{old('width') ? old('width') : (empty($selected_comp) || empty($selected_comp->width) ? 0 : $selected_comp->width )}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
-                                                </div>
-                                            </div>
-                                            <x-input-error :messages="$errors->get('height')" />
-                                            <x-input-error :messages="$errors->get('length')" />
-                                            <x-input-error :messages="$errors->get('width')" />
-                                        </div>
-                                        <div class="mb-6">
-                                            @php
-                                                $label = 'Zdjęcie Komponentu';
-                                                $info = 'Format: svg, png, jpg, jpeg, bmp';
-                                                $input_name = 'comp_photo';
-                                                $file_to_copy = ($selected_comp instanceof \App\Models\Component and !empty($selected_comp->image)) ? $selected_comp->image : '';
-                                            @endphp
-                                            <x-file-input :name="$input_name" :label="$label" :info="$info" :file="$file_to_copy"></x-file-input>
-                                        </div>
-                                        <div class="mb-6">
-                                            <label for="description" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Opis komponentu</label>
-{{--                                            <input type="textarea" id="description" name="description" value="{{old('description') ? old('description') : (empty($selected_comp) ? '' : $selected_comp->description )}}" class="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs lg:text-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">--}}
-                                                <textarea id="description" name="description" rows="4" class="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs lg:text-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-{{old('description') ? old('description') : (empty($selected_comp) ? '' : $selected_comp->description )}}
+                                        <div class="">
+                                            <label for="description" class="block mb-2 text-sm lg:text-md xl:text-lg font-medium text-gray-900 dark:text-white">Opis schematu</label>
+                                            {{--                                            <input type="textarea" id="description" name="description" value="{{old('description') ? old('description') : (empty($selected_schem) ? '' : $selected_schem->description )}}" class="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs lg:text-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">--}}
+                                            <textarea id="description" name="description" rows="4" class="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs lg:text-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+{{old('description') ? old('description') : (empty($selected_schem) ? '' : $selected_schem->description )}}
                                                 </textarea>
                                             <x-input-error :messages="$errors->get('description')" class="mt-2" />
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center flex-col justify-start mt-[2%] mb-[5%] md:mx-6 md:px-12 w-full">
+                                        <button id="dropdown-prodstd-button" class="text-white bg-blue-450 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-md lg:text-lg px-5 py-2.5 text-center inline-flex items-center justify-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                                                type="button"
+                                                data-te-ripple-init
+                                                data-te-ripple-color="light">
+                                            Norma produkcji
+                                            <svg class="w-2.5 h-2.5 ml-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+                                            </svg>
+                                        </button>
+                                        <div class="w-full mx-auto">
+                                            <p id="" class=" w-full text-sm lg:text-lg font-medium text-left text-gray-900 dark:text-white p-2">
+                                                <span class="text-green-500 text-xs lg:text-sm"><em>Jeśli schemat nie jest wykorzystywany do wytwarzania komponentów, można dodać mu własną normę produkcji.</em></span>
+                                            </p>
+                                        </div>
+                                        <div id="production-standard" class="production-standard mt-4 w-full ml-[3%] hidden">
+                                            <div id="production-standard" class="flex flex-row justify-start items-center w-full xl:w-full">
+                                                <div class="w-[20%] mr-[3%]">
+                                                    <label for="duration" class="block mb-2 text-sm lg:text-md xl:text-lg font-medium text-gray-900 dark:text-white">Czas[h]</label>
+                                                    @if(!empty($selected_schem))
+                                                        <input type="number" id="duration" name="duration" value="{{old('duration') ? old('duration') : (empty($selected_schem->duration_hours) ? '' : $selected_schem->duration_hours )}}"
+                                                               class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                    @else
+                                                        <input type="number" id="duration" name="duration" value="{{old('duration')}}"
+                                                               class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                    @endif
+                                                </div>
+                                                <div class="w-[20%] mr-[3%]">
+                                                    <label for="amount" class="block mb-2 text-sm lg:text-md xl:text-lg font-medium text-gray-900 dark:text-white">Ilość</label>
+                                                    @if(!empty($selected_schem))
+                                                        <input type="number" id="amount" name="amount" value="{{old('amount') ? old('amount') : (empty($selected_schem->amount) ? '' : $selected_schem->amount)}}"
+                                                               class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                    @else
+                                                        <input type="number" id="amount" name="amount" value="{{old('amount')}}"
+                                                               class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                    @endif
+                                                </div>
+                                                <div class="w-[35%] mr-[3%]">
+                                                    <label for="unit" class="block mb-2 text-sm lg:text-md xl:text-lg font-medium text-gray-900 dark:text-white">Jednostka</label>
+                                                    <select id="unit" name="unit" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                                        @if(isset($units) and count($units) > 0)
+                                                            @foreach($units as $u)
+                                                                @if(!empty($selected_schem) and $u->unit == $selected_schem->unit )
+                                                                    <option value="{{$u->unit}}" selected>{{$u->unit}}</option>
+                                                                @else
+                                                                    <option value="{{$u->unit}}">{{$u->unit}}</option>
+                                                                @endif
+                                                            @endforeach
+                                                        @else
+                                                            <option value=""></option>
+                                                        @endif
+                                                    </select>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -270,178 +319,122 @@
                                 <!-- Right column container with background and description-->
                                 <div class="flex items-center flex-col justify-start rounded-b-lg xl:w-6/12 xl:rounded-r-lg xl:rounded-bl-none p-2 xl:p-0 bg-white/30">
                                     <div class="flex items-center flex-col justify-start md:mx-6 md:px-12 w-full">
-                                        <button id="dropdownSearchButton" class="mt-5[%] lg:mt-[7%] text-white bg-blue-450 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-md lg:text-lg px-5 py-2.5 text-center inline-flex items-center justify-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                                        <button id="dropdown-search-button" class="mt-5[%] lg:mt-[7%] text-white bg-blue-450 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-md lg:text-lg px-5 py-2.5 text-center inline-flex items-center justify-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
                                                 type="button"
                                                 data-te-ripple-init
                                                 data-te-ripple-color="light">
-                                            Schematy produkcji
+                                            Zadania
                                             <svg class="w-2.5 h-2.5 ml-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
                                                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
                                             </svg>
                                         </button>
-                                        @if(isset($schema_data) and count($schema_data) > 0)
+                                        @if(isset($tasks) and count($tasks) > 0)
                                             <div class="w-full mt-[5%] mx-auto">
                                                 <p id="label-schema" class=" w-full text-sm lg:text-lg font-medium text-left text-gray-900 dark:text-white p-2">
-                                                    Wybrane schematy <span class="text-red-700">*</span>
-                                                    <br><span class="text-green-500 text-xs lg:text-sm"><em>Aby dodać komponent przypisz do niego schemat(y) produkcji</em></span>
+                                                    Wybrane zadania <span class="text-red-700">*</span>
+                                                    <br><span class="text-green-500 text-xs lg:text-sm"><em>Aby dodać schemat przypisz do niego minimum 1 zadanie</em></span>
                                                 </p>
-                                                <x-input-error :messages="$errors->get('prodschema_input')" class="w-full px-2"/>
-                                                @if(isset($prod_schema_errors))
-                                                    @foreach($prod_schema_errors as $err)
+                                                <x-input-error :messages="$errors->get('task_input')" class="w-full px-2"/>
+                                                @if(isset($task_errors))
+                                                    @foreach($task_errors as $err)
                                                         <x-input-error :messages="$err" class="w-full px-2"/>
                                                     @endforeach
                                                 @endif
                                                 <div class="bg-white flex justify-start items-center flex-col mt-4">
                                                     @php
-                                                        $inputPlaceholder = "Wpisz nazwę schematu...";
-                                                        $xListElem = "prodschema";
+                                                        $inputPlaceholder = "Wpisz nazwę zadania...";
+                                                        $xListElem = "task";
                                                     @endphp
-                                                    <div id="search-schema" class="prodschema-toggle w-full hidden">
+                                                    <div id="search-schema" class="task-toggle w-full hidden">
                                                         <x-search-input class="w-full" :inputPlaceholder="$inputPlaceholder" :xListElementUniqueId="$xListElem"></x-search-input>
                                                     </div>
-                                                    <div id="prodschema-dropdown" class="w-full">
+                                                    <div id="task-dropdown" class="w-full">
                                                         @php $j = 0; @endphp
-                                                        @foreach($schema_data as $prod_schema_tasks)
-                                                            @if(count($prod_schema_tasks) > 0)
-                                                                <x-list-element class="list-element-{{$xListElem}} list-element w-full hidden flex-col text-md lg:text-lg lg:py-4 my-3" id="prodschema-{{$prod_schema_tasks[0]->prod_schema_id}}">
-                                                                    <div class="w-[100%] flex justify-between items-center">
-                                                                        <div class="w-full flex justify-between items-center">
-                                                                            <div class="w-full flex justify-left items-center">
-                                                                                <p class="inline-block list-element-name ">{{$prod_schema_tasks[0]->prod_schema}}</p>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div id="expbtn-{{$prod_schema_tasks[0]->prod_schema_id}}" class="expand-btn inline-block bg-gray-800 w-4 h-4 lg:w-6 lg:h-6 md:rounded-md rounded-sm rotate-0 transition-all mr-0">
-                                                                            <img src="{{asset('storage/expand-down.png') }}">
+                                                        @foreach($tasks as $task)
+                                                            <x-list-element class="list-element-{{$xListElem}} list-element w-full hidden flex-col text-md lg:text-lg lg:py-4 my-3" id="task-{{$task->task_id}}">
+                                                                <div class="w-[100%] flex justify-between items-center">
+                                                                    <div class="w-full flex justify-between items-center">
+                                                                        <div class="w-full flex justify-left items-center">
+                                                                            <p class="inline-block list-element-name text-md xl:text-lg">{{$task->task_name}}</p>
                                                                         </div>
                                                                     </div>
-                                                                    <div class="production-standard mt-4 w-full ml-[3%] hidden">
-                                                                        <label for="production-standard-{{$prod_schema_tasks[0]->prod_schema_id}}" class="block mb-2 text-sm lg:text-md font-medium text-gray-900 dark:text-white">
-                                                                            Norma Produkcji
-                                                                        </label>
-                                                                        <div id="production-standard-{{$prod_schema_tasks[0]->prod_schema_id}}" class="flex flex-row justify-start items-center w-full xl:w-full">
-                                                                            <div class="w-[15%] mr-[3%]">
-                                                                                @php $duration = 'duration_'.$prod_schema_tasks[0]->prod_schema_id @endphp
-                                                                                <label for="{{$duration}}" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Czas[h]<span class="text-red-700">*</span></label>
-                                                                                @if(!empty($selected_comp_schemas) and count($selected_comp_schemas) > 0 and $prod_schema_tasks[0]->prod_schema_id == $selected_comp_schemas[$j]->production_schema_id)
-                                                                                    <input type="number" id="{{$duration}}" name="{{$duration}}" value="{{old($duration) ? old($duration) : (empty($selected_comp_schemas[$j]) ? '' : $selected_comp_schemas[$j]->duration_hours )}}"
-                                                                                           class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
-                                                                                @else
-                                                                                    <input type="number" id="{{$duration}}" name="{{$duration}}" value="{{old($duration)}}"
-                                                                                           class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
-                                                                                @endif
-                                                                            </div>
-                                                                            <div class="w-[15%] mr-[3%]">
-                                                                                @php $amount = 'amount_'.$prod_schema_tasks[0]->prod_schema_id @endphp
-                                                                                <label for="{{$amount}}" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Ilość <span class="text-red-700">*</span></label>
-                                                                                @if(!empty($selected_comp_schemas) and count($selected_comp_schemas) > 0 and $prod_schema_tasks[0]->prod_schema_id == $selected_comp_schemas[$j]->production_schema_id)
-                                                                                    <input type="number" id="{{$amount}}" name="{{$amount}}" value="{{old($amount) ? old($amount) : (empty($selected_comp_schemas[$j]) ? '' : $selected_comp_schemas[$j]->amount)}}"
-                                                                                           class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
-                                                                                @else
-                                                                                    <input type="number" id="{{$amount}}" name="{{$amount}}" value="{{old($amount)}}"
-                                                                                           class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
-                                                                                @endif
-                                                                            </div>
-                                                                            <div class="w-[30%] mr-[3%]">
-                                                                                @php $unit_name = 'unit_'.$prod_schema_tasks[0]->prod_schema_id @endphp
-                                                                                <label for="{{$unit_name}}" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Jednostka<span class="text-red-700">*</span></label>
-                                                                                <select id="{{$unit_name}}" name="{{$unit_name}}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                                                                                    @if(isset($units) and count($units) > 0)
-                                                                                        @foreach($units as $u)
-                                                                                            @if(!empty($selected_comp_schemas)
-                                                                                                    and count($selected_comp_schemas) > 0
-                                                                                                    and $prod_schema_tasks[0]->prod_schema_id == $selected_comp_schemas[$j]->production_schema_id
-                                                                                                    and $u->unit == $selected_comp_schemas[$j]->unit )
-                                                                                                <option value="{{$u->unit}}" selected>{{$u->unit}}</option>
-                                                                                            @else
-                                                                                                <option value="{{$u->unit}}">{{$u->unit}}</option>
-                                                                                            @endif
-                                                                                        @endforeach
-                                                                                    @else
-                                                                                        <option value=""></option>
-                                                                                    @endif
-                                                                                </select>
-                                                                            </div>
-                                                                            <div class="w-[20%] mr-[3%]">
-                                                                                @php $sequenceno = 'sequenceno_'.$prod_schema_tasks[0]->prod_schema_id @endphp
-                                                                                <label for="{{$sequenceno}}" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Kol wyk<span class="text-red-700">*</span></label>
-                                                                                @if(!empty($selected_comp_schemas) and count($selected_comp_schemas) > 0 and $prod_schema_tasks[0]->prod_schema_id == $selected_comp_schemas[$j]->production_schema_id)
-                                                                                    <input type="number" id="{{$sequenceno}}" name="{{$sequenceno}}" value="{{old($sequenceno) ? old($sequenceno) : (empty($selected_comp_schemas[$j]) ? '' : $selected_comp_schemas[$j]->sequence_no)}}"
-                                                                                           class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
-                                                                                    @php if($j + 1 < count($selected_comp_schemas)) $j++ @endphp
-                                                                                @else
-                                                                                    <input type="number" id="{{$sequenceno}}" name="{{$sequenceno}}" value="{{old($sequenceno)}}"
-                                                                                           class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
-                                                                                @endif
-                                                                            </div>
+                                                                    <div id="expbtn-{{$task->task_id}}" class="expand-btn inline-block bg-gray-800 w-4 h-4 lg:w-6 lg:h-6 md:rounded-md rounded-sm rotate-0 transition-all mr-0">
+                                                                        <img src="{{asset('storage/expand-down.png') }}">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="task-list-{{$task->task_id}} w-full hidden my-4 text-xs lg:text-sm text-left ml-2 text-gray-600">
+                                                                    <p>{{$task->task_desc}}</p>
+                                                                </div>
+                                                                <div class="sequence-no mt-4 w-full ml-[3%] hidden">
+                                                                    <div id="sequence-no-{{$task->task_id}}" class="flex flex-row justify-start items-center w-full xl:w-full">
+                                                                        <div class="w-[40%] mr-[3%]">
+                                                                            @php $sequenceno = 'sequenceno_'.$task->task_id @endphp
+                                                                            <label for="{{$sequenceno}}" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Kolejność wykonania<span class="text-red-700">*</span></label>
+                                                                            @if(!empty($selected_schem_tasks) and count($selected_schem_tasks) > 0 and $task->task_id == $selected_schem_tasks[$j]->production_schema_id)
+                                                                                <input type="number" id="{{$sequenceno}}" name="{{$sequenceno}}" value="{{old($sequenceno) ? old($sequenceno) : (empty($selected_schem_tasks[$j]) ? '' : $selected_schem_tasks[$j]->sequence_no)}}"
+                                                                                       class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                                                @php if($j + 1 < count($selected_schem_tasks)) $j++ @endphp
+                                                                            @else
+                                                                                <input type="number" id="{{$sequenceno}}" name="{{$sequenceno}}" value="{{old($sequenceno)}}"
+                                                                                       class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                                            @endif
                                                                         </div>
                                                                     </div>
-                                                                    <ul class="prodschema-list-{{$prod_schema_tasks[0]->prod_schema_id}} mt-[3%] ml-[3%] relative m-0 w-full hidden list-none overflow-hidden p-0 transition-[height] duration-200 ease-in-out text-xs md:text-sm lg:text-md">
-                                                                        @php $i = 1; @endphp
-                                                                        <h2 class="text-gray-800">Lista zadań:</h2>
-                                                                        @foreach($prod_schema_tasks as $task)
-                                                                            <li class="relative h-fit after:absolute after:left-[2.45rem] after:top-[3.6rem] after:mt-px after:h-[calc(100%-2.45rem)] after:w-px after:bg-[#e0e0e0] after:content-[''] dark:after:bg-neutral-600">
-                                                                                <div class="w-full flex cursor-pointer items-center p-6 leading-[1.3rem] no-underline after:bg-[#e0e0e0] after:content-[''] hover:bg-[#f9f9f9] focus:outline-none dark:after:bg-neutral-600 dark:hover:bg-[#3b3b3b]">
-                                                                                <span class="mr-5 flex h-[1.938rem] w-[1.938rem] items-center justify-center rounded-full bg-blue-450 text-sm md:text-md lg:text-lg font-medium text-white">
-                                                                                    {{$i}}
-                                                                                </span>
-                                                                                    <span class="text-gray-800 after:absolute after:flex after:text-[0.8rem] after:content-[data-content] dark:text-neutral-300">
-                                                                                    {{$task->task_name}}
-                                                                                </span>
-                                                                                </div>
-                                                                                <div class="transition-[height, margin-bottom, padding-top, padding-bottom] left-0 overflow-hidden pb-2 pl-[3.75rem] pr-6 duration-300 ease-in-out text-neutral-500 ">
-                                                                                    {{$task->task_desc}}
-                                                                                </div>
-                                                                            </li>
-                                                                            @php $i++; @endphp
-                                                                        @endforeach
-                                                                    </ul>
-                                                                </x-list-element>
-                                                            @endif
+                                                                </div>
+                                                            </x-list-element>
                                                         @endforeach
                                                     </div>
-                                                    <button type="button" id="confirm-schema-button" class="prodschema-toggle hidden text-white bg-blue-450 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm lg:text-lg px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                                                    <button type="button" id="confirm-schema-button" class="task-toggle hidden mb-3 text-white bg-blue-450 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm lg:text-lg px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                                                         WYBIERZ
                                                     </button>
-                                                    <input id="prodschema-input" name="prodschema_input" value="{{old('prodschema_input') ? old('prodschema_input') : (empty($prodschema_input) ? '' : $prodschema_input )}}" type="text" class="hidden"/>
+                                                    <input id="task-input" name="task_input" value="{{old('task_input') ? old('task_input') : (empty($task_input) ? '' : $task_input )}}" type="text" class="hidden"/>
                                                 </div>
                                             </div>
                                         @else
                                             <p class="w-full text-center text-red-700 text-lg mt-6">Brak danych.</p>
                                         @endif
-                                    </div>
-                                    <div class="flex items-center flex-col justify-start mt-[5%] md:mx-6 md:px-12 w-full">
-                                        <button id="dropdownInstructionButton" class="text-white bg-blue-450 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-md lg:text-lg px-5 py-2.5 text-center inline-flex items-center justify-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                                        <button id="new-task-button" class="mt-5[%] lg:mt-[7%] text-white bg-blue-450 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-md lg:text-lg px-5 py-2.5 text-center inline-flex items-center justify-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
                                                 type="button"
                                                 data-te-ripple-init
                                                 data-te-ripple-color="light">
-                                            Instrukcje
-                                            <svg class="w-2.5 h-2.5 ml-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+                                            Nowe zadanie
+                                            <svg class="w-4 h-4 ml-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <path d="M4 12H20M12 4V20" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
                                             </svg>
                                         </button>
                                         <div class="w-full mt-[5%] mx-auto">
-                                            <p id="label-schema" class=" w-full text-sm lg:text-lg font-medium text-left text-gray-900 dark:text-white p-2">
-                                                Instrukcje wykonania
-                                                <br><span class="text-green-500 text-xs lg:text-sm"><em>Możesz dodać instrukcję w formacie pdf oraz/lub film</em></span>
-                                            </p>
-                                        </div>
-                                        <div class="mb-6 w-full">
-                                            @php
-                                                $label = 'Instrukcja wykonania Komponentu';
-                                                $info = 'Format: pdf, docx';
-                                                $input_name = 'instr_pdf';
-                                                $file_to_copy = ($selected_comp_instr instanceof \App\Models\Instruction and !empty($selected_comp_instr->instruction_pdf)) ? $selected_comp_instr->instruction_pdf : '';
-                                            @endphp
-                                            <x-file-input :name="$input_name" :label="$label" :info="$info" :file="$file_to_copy"></x-file-input>
-                                        </div>
-                                        <div class="mb-6 w-full">
-                                            @php
-                                                $label = 'Film instruktażowy';
-                                                $info = 'Format: mp4, mov, wmv, mkv';
-                                                $input_name = 'instr_video';
-                                                $file_to_copy = ($selected_comp_instr instanceof \App\Models\Instruction and !empty($selected_comp_instr->video)) ? $selected_comp_instr->video : '';
-                                            @endphp
-                                            <x-file-input :name="$input_name" :label="$label" :info="$info" :file="$file_to_copy"></x-file-input>
+                                            <div class="bg-white flex justify-start items-center flex-col">
+                                                <div id="new-dropdown" class="w-full">
+                                                    <input type="number" id="new-counter" name="new_counter" value="0" class="hidden">
+                                                    <x-list-element class="new-list-elem w-full hidden flex-col text-md lg:text-lg lg:py-4 my-3" id="new-task-ghost">
+                                                        <div class="w-full">
+                                                            <input type="text" id="schema-id" name="schema_id" value="{{old('schema_id') ? old('schema_id') : (empty($selected_schem) ? '' : $selected_schem->id )}}" class="hidden">
+                                                            <div class="">
+                                                                <label for="name" class="block mb-1 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Nazwa zadania<span class="text-red-700">*</span></label>
+                                                                <input type="text" id="name" name="name" value="{{old('name') ? old('name') : (empty($selected_schem) ? '' : $selected_schem->name )}}"
+                                                                       class="new-name shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-xs lg:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                                <x-input-error :messages="$errors->get('name')" class="mt-2" />
+                                                            </div>
+                                                            <div class="">
+                                                                <label for="" class="block mt-2 mb-1 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Opis zadania</label>
+                                                                {{--                                            <input type="textarea" id="description" name="description" value="{{old('description') ? old('description') : (empty($selected_schem) ? '' : $selected_schem->description )}}" class="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs lg:text-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">--}}
+                                                                <textarea id="" name="" rows="2" class="new-desc block w-full p-1 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs lg:text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                                                    {{old('description') ? old('description') : (empty($selected_schem) ? '' : $selected_schem->description )}}
+                                                                </textarea>
+                                                                <x-input-error :messages="$errors->get('description')" class="mt-2" />
+                                                            </div>
+                                                            <div class="w-[40%] mr-[3%]">
+                                                                <label for="" class="block mt-2 mb-1 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Kolejność wykonania<span class="text-red-700">*</span></label>
+                                                                <input type="number" id="" name="" value=""
+                                                                       class="new-sequence-no shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                            </div>
+                                                        </div>
+                                                    </x-list-element>
+                                                </div>
+                                                <button type="button" id="remove-new-button" class="hidden mb-3 text-white bg-blue-450 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm lg:text-lg px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                                                    USUŃ
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
