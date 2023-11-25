@@ -100,42 +100,31 @@
                                 <p class="w-full text-center text-red-700 text-lg mt-6">Brak danych.</p>
                             @endif
                         </div>
-                        <div class="hidden p-4 bg-white rounded-lg lg:p-8 dark:bg-gray-800 flex flex-col justify-center items-center" id="manual" role="tabpanel" aria-labelledby="manual-tab">
-                            @if(!empty($instruction))
-                                @php
-                                    $inputPlaceholder = "Wpisz nazwę zadania...";
-                                    $xListElem = "prodschema";
-                                @endphp
-                                <div id="search-schema" class="prodschema-toggle w-full lg:w-[60%] mb-3">
-                                    <x-search-input class="w-full" :inputPlaceholder="$inputPlaceholder" :xListElementUniqueId="$xListElem"></x-search-input>
-                                </div>
-                                @foreach($instruction as $instr)
-                                    @if(!is_null($instr->instr_id))
-                                        <div class="list-element-{{$xListElem}} w-full">
-                                            <div class="w-full flex flex-col justify-center items-center mb-4 mt-4">
-                                                <p class="list-element-name w-full lg:w-[80%] mb-8 text-md xl:text-lg font-medium pl-2 lg:pl-4 lg:pb-2 text-gray-950 border-l-4 border-blue-450">
-                                                    {{$instr->sequence_no}}. {{$instr->instruction_name}}
-                                                </p>
-                                                @php $path = isset($storage_path_instructions) ? $storage_path_instructions.'/' : ''; @endphp
-                                                @if(!is_null($instr->video))
-                                                    <video class="w-full lg:w-[90%]" width="320" height="240" controls>
-                                                        <source src="{{asset('storage/'.$path.$instr->video)}}" type="video/mp4">
-                                                        Your browser does not support the video tag.
-                                                    </video>
-                                                @else
-                                                    <p class="w-full text-center text-red-700 text-sm xl:text-md">Brak filmu instruktażowego.</p>
-                                                @endif
-                                            </div>
-                                            @if(!is_null($instr->instruction_pdf))
-                                                <div class="w-full flex flex-col justify-center items-center mt-8">
-                                                    <embed class="w-full lg:w-[80%] h-[400px] lg:h-[600px] xl:h-[800px]" src="{{asset('storage/'.$path.$instruction->instruction_pdf)}}" width="800px" height="800px"/>
-                                                </div>
+                        <div class="p-4 bg-white rounded-lg lg:p-8 dark:bg-gray-800 flex flex-col justify-center items-center" id="manual" role="tabpanel" aria-labelledby="manual-tab">
+                            @if($instruction instanceof \App\Models\Instruction)
+                                    @if(!is_null($instruction->id))
+                                        <div class="w-full flex flex-col justify-center items-center mb-4 mt-4">
+                                            <p class="list-element-name w-full lg:w-[80%] mb-8 text-md xl:text-lg font-medium pl-2 lg:pl-4 lg:pb-2 text-gray-950 border-l-4 border-blue-450">
+                                                {{$instruction->name}}
+                                            </p>
+                                            @php $path = isset($storage_path_instructions) ? $storage_path_instructions.'/' : ''; @endphp
+                                            @if(!is_null($instruction->video))
+                                                <video class="w-full lg:w-[90%]" width="320" height="240" controls>
+                                                    <source src="{{asset('storage/'.$path.$instruction->video)}}" type="video/mp4">
+                                                    Your browser does not support the video tag.
+                                                </video>
                                             @else
-                                                <p class="w-full text-center text-red-700 text-sm xl:text-md">Brak instrukcji tekstowej.</p>
+                                                <p class="w-full text-center text-red-700 text-sm xl:text-md">Brak filmu instruktażowego.</p>
                                             @endif
                                         </div>
+                                        @if(!is_null($instruction->instruction_pdf))
+                                            <div class="w-full flex flex-col justify-center items-center mt-8">
+                                                <embed class="w-full lg:w-[80%] h-[400px] lg:h-[600px] xl:h-[800px]" src="{{asset('storage/'.$path.$instruction->instruction_pdf)}}" width="800px" height="800px"/>
+                                            </div>
+                                        @else
+                                            <p class="w-full text-center text-red-700 text-sm xl:text-md">Brak instrukcji tekstowej.</p>
+                                        @endif
                                     @endif
-                                @endforeach
                             @else
                                 <p class="w-full text-center text-red-700 text-sm xl:text-md">Brak instrukcji.</p>
                             @endif

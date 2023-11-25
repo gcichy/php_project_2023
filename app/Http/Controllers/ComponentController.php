@@ -66,35 +66,32 @@ class ComponentController
                                             where pstd.component_id = ' . $id
             . ' order by pstd.production_schema_id asc');
         $data = DB::select('select
-                                       cps.component_id,
-                                       cps.production_schema_id as prod_schema_id,
-                                       ps.production_schema as prod_schema,
-                                       ps.description as prod_schema_desc,
-                                       pst.task_id,
-                                       pst.sequence_no as task_sequence_no,
-                                       pst.amount_required,
-                                       pst.additional_description,
-                                       t.name as task_name,
-                                       t.description as task_desc,
-                                       pstd.name as prod_std_name,
-                                       pstd.description as prod_std_desc,
-                                       pstd.duration_hours prod_std_duration,
-                                       pstd.amount as prod_std_amount,
-                                       u.unit as prod_std_unit
+                                    cps.component_id,
+                                    cps.production_schema_id as prod_schema_id,
+                                    ps.production_schema as prod_schema,
+                                    ps.description as prod_schema_desc,
+                                    t.id as task_id,
+                                    t.sequence_no as task_sequence_no,
+                                    t.amount_required,
+                                    t.name as task_name,
+                                    t.description as task_desc,
+                                    pstd.name as prod_std_name,
+                                    pstd.description as prod_std_desc,
+                                    pstd.duration_hours prod_std_duration,
+                                    pstd.amount as prod_std_amount,
+                                    u.unit as prod_std_unit
                                 from component_production_schema cps
-                                join production_schema ps
-                                    on ps.id = cps.production_schema_id
-                                join production_schema_task pst
-                                    on pst.production_schema_id = ps.id
-                                join task t
-                                    on t.id = pst.task_id
-                                left join production_standard pstd
-                                    on pstd.component_id = cps.component_id
-                                    and pstd.production_schema_id = cps.production_schema_id
-                                left join unit u
-                                    on u.id = pstd.unit_id
+                                         join production_schema ps
+                                              on ps.id = cps.production_schema_id
+                                         join task t
+                                              on t.production_schema_id = ps.id
+                                         left join production_standard pstd
+                                                   on pstd.component_id = cps.component_id
+                                                       and pstd.production_schema_id = cps.production_schema_id
+                                         left join unit u
+                                                   on u.id = pstd.unit_id
                                 where cps.component_id = ' . $id .
-            ' order by cps.sequence_no asc, pst.sequence_no asc');
+            ' order by cps.sequence_no asc, t.sequence_no asc');
 
         if (!is_null($component)) {
             return view('component.component-details', [
@@ -464,35 +461,31 @@ class ComponentController
                                         psh.production_schema as prod_schema,
                                         psh.description as prod_schema_desc,
                                         psh.tasks_count,
-                                        psht.task_id,
-                                        psht.sequence_no as task_sequence_no,
+                                        t.id as task_id,
+                                        t.sequence_no as task_sequence_no,
                                         t.name as task_name,
                                         t.description as task_desc
                                     from production_schema psh
-                                             left join production_schema_task psht
-                                                on psh.id = psht.production_schema_id
                                              left join task t
-                                                on t.id = psht.task_id
+                                                       on t.production_schema_id = psh.id
                                              left join component_production_schema cps
-                                                on psh.id = cps.production_schema_id
-                                                and cps.component_id = '.$component_id.'
-                                    order by cps.sequence_no, psht.production_schema_id, psht.sequence_no');
+                                                       on psh.id = cps.production_schema_id
+                                                           and cps.component_id = '.$component_id.'
+                                    order by cps.sequence_no, t.production_schema_id, t.sequence_no');
         } else {
             $data = DB::select('select
                                         psh.id as prod_schema_id,
                                         psh.production_schema as prod_schema,
                                         psh.description as prod_schema_desc,
                                         psh.tasks_count,
-                                        psht.task_id,
-                                        psht.sequence_no as task_sequence_no,
+                                        t.id as task_id,
+                                        t.sequence_no as task_sequence_no,
                                         t.name as task_name,
                                         t.description as task_desc
                                     from production_schema psh
-                                             left join production_schema_task psht
-                                                  on psh.id = psht.production_schema_id
-                                             left join task t
-                                                  on t.id = psht.task_id
-                                    order by production_schema_id, task_sequence_no');
+                                         left join task t
+                                             on t.production_schema_id = psh.id
+                                    order by t.production_schema_id, t.sequence_no');
         }
 
 

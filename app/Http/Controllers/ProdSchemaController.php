@@ -50,20 +50,7 @@ class ProdSchemaController
     {
         $prod_schema = ProductionSchema::where('id',$id)->select('id','production_schema', 'description', 'tasks_count')->first();
         $prod_schema_tasks = $this->getSchemaData($id);
-        $instruction = DB::select('select
-                                            pst.sequence_no,
-                                            t.id as task_id,
-                                            i.id as instr_id,
-                                            i.name as instruction_name,
-                                            i.instruction_pdf,
-                                            i.video
-                                    from production_schema_task pst
-                                        join task t
-                                            on t.id = pst.task_id
-                                        join instruction i
-                                            on t.id = i.task_id
-                                    where pst.production_schema_id = '. $id .'
-                                    order by pst.sequence_no');
+        $instruction = Instruction::where('production_schema_id', $id)->select('id','name','instruction_pdf','video')->first();
 
 
         if (!empty($prod_schema_tasks) and array_key_exists($id, $prod_schema_tasks)) {
@@ -424,10 +411,9 @@ class ProdSchemaController
                                        ps.id as prod_schema_id,
                                        ps.production_schema as prod_schema,
                                        ps.description as prod_schema_desc,
-                                       pst.task_id,
-                                       pst.sequence_no as task_sequence_no,
-                                       pst.amount_required,
-                                       pst.additional_description,
+                                       t.id as task_id,
+                                       t.sequence_no as sequence_no,
+                                       t.amount_required,
                                        t.name as task_name,
                                        t.description as task_desc,
                                        pstd.id as prod_std_id,
@@ -437,27 +423,24 @@ class ProdSchemaController
                                        pstd.amount as prod_std_amount,
                                        u.unit as prod_std_unit
                                 from production_schema ps
-                                join production_schema_task pst
-                                    on pst.production_schema_id = ps.id
                                 join task t
-                                    on t.id = pst.task_id
+                                    on t.production_schema_id = ps.id
                                 left join production_standard pstd
                                        on pstd.production_schema_id = ps.id
                                         and pstd.component_id is null
                                 left join unit u
                                     on u.id = pstd.unit_id
                                 where ps.id = ' . $schema_id .
-                ' order by ps.id, pst.sequence_no');
+                ' order by ps.id, t.sequence_no');
         }
         else{
             $data = DB::select('select
                                     ps.id as prod_schema_id,
                                     ps.production_schema as prod_schema,
                                     ps.description as prod_schema_desc,
-                                    pst.task_id,
-                                    pst.sequence_no as task_sequence_no,
-                                    pst.amount_required,
-                                    pst.additional_description,
+                                    t.id as task_id,
+                                    t.sequence_no as sequence_no,
+                                    t.amount_required,
                                     t.name as task_name,
                                     t.description as task_desc,
                                     pstd.id as prod_std_id,
@@ -467,16 +450,14 @@ class ProdSchemaController
                                     pstd.amount as prod_std_amount,
                                     u.unit as prod_std_unit
                                 from production_schema ps
-                                         join production_schema_task pst
-                                              on pst.production_schema_id = ps.id
                                          join task t
-                                              on t.id = pst.task_id
+                                              on t.production_schema_id = ps.id
                                          left join production_standard pstd
                                               on pstd.production_schema_id = ps.id
                                               and pstd.component_id is null
                                          left join unit u
                                               on u.id = pstd.unit_id
-                                order by ps.id, pst.sequence_no');
+                                order by ps.id, t.sequence_no');
         }
 
         $prod_schema_tasks = array();
@@ -508,10 +489,9 @@ class ProdSchemaController
                                        ps.id as prod_schema_id,
                                        ps.production_schema as prod_schema,
                                        ps.description as prod_schema_desc,
-                                       pst.task_id,
-                                       pst.sequence_no as task_sequence_no,
-                                       pst.amount_required,
-                                       pst.additional_description,
+                                       t.id as task_id,
+                                       t.sequence_no as task_sequence_no,
+                                       t.amount_required,
                                        t.name as task_name,
                                        t.description as task_desc,
                                        pstd.id as prod_std_id,
@@ -521,29 +501,24 @@ class ProdSchemaController
                                        pstd.amount as prod_std_amount,
                                        u.unit as prod_std_unit
                                 from production_schema ps
-                                join production_schema_task pst
-                                    on pst.production_schema_id = ps.id
                                 join task t
-                                    on t.id = pst.task_id
+                                    on t.production_schema_id = ps.id
                                 left join production_standard pstd
                                        on pstd.production_schema_id = ps.id
                                         and pstd.component_id is null
                                 left join unit u
                                     on u.id = pstd.unit_id
                                 where ps.id = ' . $schema_id .
-                ' order by ps.id, pst.sequence_no');
+                ' order by ps.id, t.sequence_no');
         }
         else{
             $data = DB::select('select
-                                        t.id as task_id,
-                                        t.name as task_name,
-                                        t.description as task_desc,
-                                        i.instruction_pdf,
-                                        i.video
-                                    from task t
-                                        left join instruction i
-                                            on t.id = i.task_id
-                                    order by t.id');
+                                       min(t.id) as task_id,
+                                       t.name as task_name,
+                                       t.description as task_desc
+                                from task t
+                                group by t.name, t.description
+                                order by task_id');
         }
 
 //        $prod_schema_tasks = array();

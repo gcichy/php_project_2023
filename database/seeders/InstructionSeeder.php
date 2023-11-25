@@ -16,8 +16,8 @@ class InstructionSeeder extends Seeder
     public function run()
     {
         DB::table('instruction')->insert([
-            'task_id' => 1,
-            'name' => 'Instrukcja zadania: piła - formatowanie deski do szerokości',
+            'production_schema_id' => 1,
+            'name' => 'Instrukcja schematu: pakowanie produktu',
             'created_by' => 'system',
             'updated_by' => 'system',
             'created_at' => date('y-m-d h:i:s'),

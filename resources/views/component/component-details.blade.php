@@ -243,12 +243,16 @@
                                     <source src="{{asset('storage/'.$path.$instruction->video)}}" type="video/mp4">
                                     Your browser does not support the video tag.
                                 </video>
+                            @else
+                                <p class="w-full text-center text-red-700 text-sm xl:text-md">Brak filmu instruktażowego.</p>
                             @endif
                         </div>
                         @if(!is_null($instruction->instruction_pdf))
                             <div class="w-full flex flex-col justify-center items-center">
                                 <embed class="w-full lg:w-[80%] h-[400px] lg:h-[600px] xl:h-[800px]" src="{{asset('storage/'.$path.$instruction->instruction_pdf)}}" width="800px" height="800px"/>
                             </div>
+                        @else
+                            <p class="w-full text-center text-red-700 text-sm xl:text-md">Brak instrukcji tekstowej.</p>
                         @endif
                     @else
                         <p class="w-full text-center text-red-700 text-lg mt-6">Brak instrukcji.</p>

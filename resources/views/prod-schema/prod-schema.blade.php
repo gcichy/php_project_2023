@@ -148,8 +148,8 @@
                     </x-remove-modal>
                 @endif
             </x-information-panel>
-            <div class="max-w-7xl mt-[3%] mx-auto sm:px-6 lg:px-8 space-y-6 flex justify-center">
-                <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg flex justify-start items-center flex-col w-full lg:w-[90%] xl:w-[70%]">
+            <div class="max-w-7xl  mt-[3%] mx-auto sm:px-6 lg:px-8 space-y-6 flex justify-center">
+                <div class="p-4 xl:w-[80%] sm:p-8 bg-white shadow sm:rounded-lg flex justify-start items-center flex-col w-full lg:w-[90%] xl:w-[70%]">
                     @php
                         $inputPlaceholder = "Wpisz nazwę schematu...";
                         $xListElem = "prodschema";

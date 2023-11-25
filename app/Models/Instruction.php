@@ -16,7 +16,7 @@ class Instruction extends Model
     protected $fillable = [
         'product_id',                       //if provided instruction is made for product
         'component_id',                     //if provided instruction is made for component
-        'task_id',                          //if provided instruction is made for task
+        'production_schema_id',                          //if provided instruction is made for production_schema
         'name',
         'instruction_pdf',                //pdf file name of instruction
         'video',

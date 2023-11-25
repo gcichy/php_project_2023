@@ -14,7 +14,10 @@ class Task extends Model
      * @var array<int, string,>
      */
     protected $fillable = [
+        'production_schema_id',                  //id of production schema that the task is assigned to
         'name',
+        'sequence_no',                          //determines execution order within production schema
+        'amount_required',                      //determines is amount must be supplied when reporting task
         'description',
    ];
 

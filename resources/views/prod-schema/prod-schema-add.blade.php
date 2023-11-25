@@ -75,7 +75,6 @@
                 //prodsschema can be unclicked if list of schemas is visible (schema is not chosen)
                 if(!$('#confirm-schema-button').hasClass('hidden')) {
                     let list_id = '.task-list-' + id;
-                    console.log($(list_id));
                     if($(list_id).hasClass('hidden')) {
                         if (is_active) {
                             if(!$(list_id).hasClass('just-hidden')) {
@@ -91,7 +90,6 @@
             });
 
             $('#dropdown-prodstd-button').on('click',function (){
-                console.log('halo')
                 let prodStd = $('#production-standard')
                 if(prodStd.hasClass('hidden')) {
                     prodStd.removeClass('hidden');
@@ -163,8 +161,10 @@
                 newTask.find('.new-name')
                     .attr('id','new-name-'+counter.val())
                     .attr('name','new_name_'+counter.val());
+                newTask.find('.new-amount-required')
+                    .attr('id','new-amount-required-'+counter.val())
+                    .attr('name','new_amount_required_'+counter.val());
 
-                console.log(newTask.find('.new-name'));
                 newTask.removeClass('hidden');
                 $('#new-dropdown').append(newTask);
                 if($('#remove-new-button').hasClass('hidden')) {
@@ -212,8 +212,10 @@
                 }
             });
 
-            $('#independent').on('click', function () {
-                $(this).val($(this).prop("checked") ? 1 : 0);
+            $('.amount-required').on('click', function () {
+                console.log($(this).find('.amount-required-input'));
+
+
             });
         });
 
@@ -317,7 +319,7 @@
                                 </div>
 
                                 <!-- Right column container with background and description-->
-                                <div class="flex items-center flex-col justify-start rounded-b-lg xl:w-6/12 xl:rounded-r-lg xl:rounded-bl-none p-2 xl:p-0 bg-white/30">
+                                <div class="flex items-center flex-col justify-start rounded-b-lg w-full xl:w-6/12 xl:rounded-r-lg xl:rounded-bl-none p-2 xl:p-0 bg-white/30">
                                     <div class="flex items-center flex-col justify-start md:mx-6 md:px-12 w-full">
                                         <button id="dropdown-search-button" class="mt-5[%] lg:mt-[7%] text-white bg-blue-450 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-md lg:text-lg px-5 py-2.5 text-center inline-flex items-center justify-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
                                                 type="button"
@@ -380,6 +382,17 @@
                                                                             @endif
                                                                         </div>
                                                                     </div>
+                                                                    <div class="mt-4">
+                                                                        <label for="amount-required-{{$task->task_id}}" class="block text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Ilość wymagana</label>
+                                                                        <p class="label-amount-required w-full text-sm lg:text-lg font-medium text-left text-gray-900 dark:text-white p-2">
+                                                                            <span class="text-green-500 text-xs lg:text-sm"><em>Określa, czy wykonując zadanie, należy wprowadzić ilość sztuk. Najczęściej jest to konieczne dla ostatniego zadania w schemacie.</em></span>
+                                                                        </p>
+                                                                        <label class="amount-required relative inline-flex items-center cursor-pointer">
+                                                                            <input type="checkbox" id="amount-required-{{$task->task_id}}" name="amount_required-{{$task->task_id}}" value="{{old('amount_required-'.$task->task_id) ? old('amount_required-'.$task->task_id) : (empty($selected_schem) ? '' : $selected_schem->independent )}}" class="amount-required-input sr-only peer">
+                                                                            <div class="w-11 h-6 bg-gray-200 rounded-full peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                                                            <x-input-error :messages="$errors->get('amount_required-'.$task->task_id)" class="mt-2" />
+                                                                        </label>
+                                                                    </div>
                                                                 </div>
                                                             </x-list-element>
                                                         @endforeach
@@ -427,6 +440,16 @@
                                                                 <label for="" class="block mt-2 mb-1 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Kolejność wykonania<span class="text-red-700">*</span></label>
                                                                 <input type="number" id="" name="" value=""
                                                                        class="new-sequence-no shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                            </div>
+                                                            <div class="mt-4">
+                                                                <label for="" class="block text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Ilość wymagana</label>
+                                                                <p class="w-full text-sm lg:text-lg font-medium text-left text-gray-900 dark:text-white p-2">
+                                                                    <span class="text-green-500 text-xs lg:text-sm"><em>Określa, czy wykonując zadanie, należy wprowadzić ilość sztuk. Najczęściej jest to konieczne dla ostatniego zadania w schemacie.</em></span>
+                                                                </p>
+                                                                <label class="amount-required relative inline-flex items-center cursor-pointer">
+                                                                    <input type="checkbox" id="" name="" value="" class="new-amount-required amount-required-input sr-only peer">
+                                                                    <div class="w-11 h-6 bg-gray-200 rounded-full peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                                                </label>
                                                             </div>
                                                         </div>
                                                     </x-list-element>
