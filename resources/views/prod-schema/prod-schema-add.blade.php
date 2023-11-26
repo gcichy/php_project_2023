@@ -161,6 +161,7 @@
                 newTask.find('.new-name')
                     .attr('id','new-name-'+counter.val())
                     .attr('name','new_name_'+counter.val());
+
                 newTask.find('.new-amount-required')
                     .attr('id','new-amount-required-'+counter.val())
                     .attr('name','new_amount_required_'+counter.val());
@@ -212,11 +213,6 @@
                 }
             });
 
-            $('.amount-required').on('click', function () {
-                console.log($(this).find('.amount-required-input'));
-
-
-            });
         });
 
     </script>
@@ -247,9 +243,9 @@
                                     <div class="md:mx-6 md:p-12 px-2 py-6 w-full">
                                         <input type="text" id="schema-id" name="schema_id" value="{{old('schema_id') ? old('schema_id') : (empty($selected_schem) ? '' : $selected_schem->id )}}" class="hidden">
                                         <div class="mb-6">
-                                            <label for="name" class="block mb-2 text-sm lg:text-md xl:text-lg font-medium text-gray-900 dark:text-white">Nazwa <span class="text-red-700">*</span></label>
-                                            <input type="text" id="name" name="name" value="{{old('name') ? old('name') : (empty($selected_schem) ? '' : $selected_schem->name )}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
-                                            <x-input-error :messages="$errors->get('name')" class="mt-2" />
+                                            <label for="production-schema" class="block mb-2 text-sm lg:text-md xl:text-lg font-medium text-gray-900 dark:text-white">Nazwa <span class="text-red-700">*</span></label>
+                                            <input type="text" id="production-schema" name="production_schema" value="{{old('production_schema')}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                            <x-input-error :messages="$errors->get('production_schema')" class="mt-2" />
                                         </div>
                                         <div class="">
                                             <label for="description" class="block mb-2 text-sm lg:text-md xl:text-lg font-medium text-gray-900 dark:text-white">Opis schematu</label>
@@ -258,6 +254,41 @@
 {{old('description') ? old('description') : (empty($selected_schem) ? '' : $selected_schem->description )}}
                                                 </textarea>
                                             <x-input-error :messages="$errors->get('description')" class="mt-2" />
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center flex-col justify-start mt-[5%] md:mx-6 md:px-12 w-full">
+                                        <button id="dropdownInstructionButton" class="text-white bg-blue-450 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-md lg:text-lg px-5 py-2.5 text-center inline-flex items-center justify-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                                                type="button"
+                                                data-te-ripple-init
+                                                data-te-ripple-color="light">
+                                            Instrukcje
+                                            <svg class="w-2.5 h-2.5 ml-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+                                            </svg>
+                                        </button>
+                                        <div class="w-full mt-[5%] mx-auto">
+                                            <p id="label-schema" class=" w-full text-sm lg:text-lg font-medium text-left text-gray-900 dark:text-white p-2">
+                                                Instrukcje wykonania
+                                                <br><span class="text-green-500 text-xs lg:text-sm"><em>Możesz dodać instrukcję w formacie pdf oraz/lub film</em></span>
+                                            </p>
+                                        </div>
+                                        <div class="mb-6 w-full">
+                                            @php
+                                                $label = 'Instrukcja wykonania schematu';
+                                                $info = 'Format: pdf, docx';
+                                                $input_name = 'instr_pdf';
+                                                $file_to_copy = ($selected_schem_instr instanceof \App\Models\Instruction and !empty($selected_schem_instr->instruction_pdf)) ? $selected_schem_instr->instruction_pdf : '';
+                                            @endphp
+                                            <x-file-input :name="$input_name" :label="$label" :info="$info" :file="$file_to_copy"></x-file-input>
+                                        </div>
+                                        <div class="mb-6 w-full">
+                                            @php
+                                                $label = 'Film instruktażowy';
+                                                $info = 'Format: mp4, mov, wmv, mkv';
+                                                $input_name = 'instr_video';
+                                                $file_to_copy = ($selected_schem_instr instanceof \App\Models\Instruction and !empty($selected_schem_instr->video)) ? $selected_schem_instr->video : '';
+                                            @endphp
+                                            <x-file-input :name="$input_name" :label="$label" :info="$info" :file="$file_to_copy"></x-file-input>
                                         </div>
                                     </div>
                                     <div class="flex items-center flex-col justify-start mt-[2%] mb-[5%] md:mx-6 md:px-12 w-full">
@@ -315,6 +346,11 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <div class="w-full">
+                                            <x-input-error :messages="$errors->get('amount')" />
+                                            <x-input-error :messages="$errors->get('duration')" />
+                                            <x-input-error :messages="$errors->get('unit')" />
+                                        </div>
                                     </div>
                                 </div>
 
@@ -336,6 +372,11 @@
                                                     Wybrane zadania <span class="text-red-700">*</span>
                                                     <br><span class="text-green-500 text-xs lg:text-sm"><em>Aby dodać schemat przypisz do niego minimum 1 zadanie</em></span>
                                                 </p>
+                                                @if(session('task_errors'))
+                                                    @foreach(session('task_errors') as $err)
+                                                        <x-input-error :messages="$err" class="w-full px-2"/>
+                                                    @endforeach
+                                                @endif
                                                 <x-input-error :messages="$errors->get('task_input')" class="w-full px-2"/>
                                                 @if(isset($task_errors))
                                                     @foreach($task_errors as $err)
@@ -387,11 +428,15 @@
                                                                         <p class="label-amount-required w-full text-sm lg:text-lg font-medium text-left text-gray-900 dark:text-white p-2">
                                                                             <span class="text-green-500 text-xs lg:text-sm"><em>Określa, czy wykonując zadanie, należy wprowadzić ilość sztuk. Najczęściej jest to konieczne dla ostatniego zadania w schemacie.</em></span>
                                                                         </p>
-                                                                        <label class="amount-required relative inline-flex items-center cursor-pointer">
-                                                                            <input type="checkbox" id="amount-required-{{$task->task_id}}" name="amount_required-{{$task->task_id}}" value="{{old('amount_required-'.$task->task_id) ? old('amount_required-'.$task->task_id) : (empty($selected_schem) ? '' : $selected_schem->independent )}}" class="amount-required-input sr-only peer">
-                                                                            <div class="w-11 h-6 bg-gray-200 rounded-full peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                                                                            <x-input-error :messages="$errors->get('amount_required-'.$task->task_id)" class="mt-2" />
-                                                                        </label>
+{{--                                                                        <label class="amount-required relative inline-flex items-center cursor-pointer">--}}
+{{--                                                                            <input type="checkbox" id="amount-required-{{$task->task_id}}" name="amount_required-{{$task->task_id}}" value="{{old('amount_required-'.$task->task_id) ? old('amount_required-'.$task->task_id) : (empty($selected_schem) ? '' : $selected_schem->independent )}}" class="amount-required-input sr-only peer">--}}
+{{--                                                                            <div class="w-11 h-6 bg-gray-200 rounded-full peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>--}}
+{{--                                                                            <x-input-error :messages="$errors->get('amount_required-'.$task->task_id)" class="mt-2" />--}}
+{{--                                                                        </label>--}}
+                                                                        <input
+                                                                            class="new-amount-required amount-required-input mr-2 mt-[0.3rem] h-3.5 w-8 appearance-none rounded-[0.4375rem] bg-neutral-300 before:pointer-events-none before:absolute before:h-3.5 before:w-3.5 before:rounded-full before:bg-transparent before:content-[''] after:absolute after:z-[2] after:-mt-[0.1875rem] after:h-5 after:w-5 after:rounded-full after:border-none after:bg-neutral-100 after:shadow-[0_0px_3px_0_rgb(0_0_0_/_7%),_0_2px_2px_0_rgb(0_0_0_/_4%)] after:transition-[background-color_0.2s,transform_0.2s] after:content-[''] checked:bg-primary checked:after:absolute checked:after:z-[2] checked:after:-mt-[3px] checked:after:ml-[1.0625rem] checked:after:h-5 checked:after:w-5 checked:after:rounded-full checked:after:border-none checked:after:bg-primary checked:after:shadow-[0_3px_1px_-2px_rgba(0,0,0,0.2),_0_2px_2px_0_rgba(0,0,0,0.14),_0_1px_5px_0_rgba(0,0,0,0.12)] checked:after:transition-[background-color_0.2s,transform_0.2s] checked:after:content-[''] hover:cursor-pointer focus:outline-none focus:ring-0 focus:before:scale-100 focus:before:opacity-[0.12] focus:before:shadow-[3px_-1px_0px_13px_rgba(0,0,0,0.6)] focus:before:transition-[box-shadow_0.2s,transform_0.2s] focus:after:absolute focus:after:z-[1] focus:after:block focus:after:h-5 focus:after:w-5 focus:after:rounded-full focus:after:content-[''] checked:focus:border-primary checked:focus:bg-primary checked:focus:before:ml-[1.0625rem] checked:focus:before:scale-100 checked:focus:before:shadow-[3px_-1px_0px_13px_#3b71ca] checked:focus:before:transition-[box-shadow_0.2s,transform_0.2s] dark:bg-neutral-600 dark:after:bg-neutral-400 dark:checked:bg-primary dark:checked:after:bg-primary dark:focus:before:shadow-[3px_-1px_0px_13px_rgba(255,255,255,0.4)] dark:checked:focus:before:shadow-[3px_-1px_0px_13px_#3b71ca]"
+                                                                            type="checkbox" role="switch" id="amount-required-{{$task->task_id}}" name="amount_required_{{$task->task_id}}"/>
+                                                                        <x-input-error :messages="$errors->get('amount_required-'.$task->task_id)" class="mt-2" />
                                                                     </div>
                                                                 </div>
                                                             </x-list-element>
@@ -423,8 +468,8 @@
                                                         <div class="w-full">
                                                             <input type="text" id="schema-id" name="schema_id" value="{{old('schema_id') ? old('schema_id') : (empty($selected_schem) ? '' : $selected_schem->id )}}" class="hidden">
                                                             <div class="">
-                                                                <label for="name" class="block mb-1 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Nazwa zadania<span class="text-red-700">*</span></label>
-                                                                <input type="text" id="name" name="name" value="{{old('name') ? old('name') : (empty($selected_schem) ? '' : $selected_schem->name )}}"
+                                                                <label for="task-name" class="block mb-1 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Nazwa zadania<span class="text-red-700">*</span></label>
+                                                                <input type="text" id="" name="" value="{{old('name') ? old('name') : (empty($selected_schem) ? '' : $selected_schem->name )}}"
                                                                        class="new-name shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-xs lg:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
                                                                 <x-input-error :messages="$errors->get('name')" class="mt-2" />
                                                             </div>
@@ -446,10 +491,13 @@
                                                                 <p class="w-full text-sm lg:text-lg font-medium text-left text-gray-900 dark:text-white p-2">
                                                                     <span class="text-green-500 text-xs lg:text-sm"><em>Określa, czy wykonując zadanie, należy wprowadzić ilość sztuk. Najczęściej jest to konieczne dla ostatniego zadania w schemacie.</em></span>
                                                                 </p>
-                                                                <label class="amount-required relative inline-flex items-center cursor-pointer">
-                                                                    <input type="checkbox" id="" name="" value="" class="new-amount-required amount-required-input sr-only peer">
-                                                                    <div class="w-11 h-6 bg-gray-200 rounded-full peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                                                                </label>
+                                                                <input
+                                                                    class="new-amount-required amount-required-input mr-2 mt-[0.3rem] h-3.5 w-8 appearance-none rounded-[0.4375rem] bg-neutral-300 before:pointer-events-none before:absolute before:h-3.5 before:w-3.5 before:rounded-full before:bg-transparent before:content-[''] after:absolute after:z-[2] after:-mt-[0.1875rem] after:h-5 after:w-5 after:rounded-full after:border-none after:bg-neutral-100 after:shadow-[0_0px_3px_0_rgb(0_0_0_/_7%),_0_2px_2px_0_rgb(0_0_0_/_4%)] after:transition-[background-color_0.2s,transform_0.2s] after:content-[''] checked:bg-primary checked:after:absolute checked:after:z-[2] checked:after:-mt-[3px] checked:after:ml-[1.0625rem] checked:after:h-5 checked:after:w-5 checked:after:rounded-full checked:after:border-none checked:after:bg-primary checked:after:shadow-[0_3px_1px_-2px_rgba(0,0,0,0.2),_0_2px_2px_0_rgba(0,0,0,0.14),_0_1px_5px_0_rgba(0,0,0,0.12)] checked:after:transition-[background-color_0.2s,transform_0.2s] checked:after:content-[''] hover:cursor-pointer focus:outline-none focus:ring-0 focus:before:scale-100 focus:before:opacity-[0.12] focus:before:shadow-[3px_-1px_0px_13px_rgba(0,0,0,0.6)] focus:before:transition-[box-shadow_0.2s,transform_0.2s] focus:after:absolute focus:after:z-[1] focus:after:block focus:after:h-5 focus:after:w-5 focus:after:rounded-full focus:after:content-[''] checked:focus:border-primary checked:focus:bg-primary checked:focus:before:ml-[1.0625rem] checked:focus:before:scale-100 checked:focus:before:shadow-[3px_-1px_0px_13px_#3b71ca] checked:focus:before:transition-[box-shadow_0.2s,transform_0.2s] dark:bg-neutral-600 dark:after:bg-neutral-400 dark:checked:bg-primary dark:checked:after:bg-primary dark:focus:before:shadow-[3px_-1px_0px_13px_rgba(255,255,255,0.4)] dark:checked:focus:before:shadow-[3px_-1px_0px_13px_#3b71ca]"
+                                                                    type="checkbox" role="switch" id="" name=""/>
+{{--                                                                <label class="amount-required relative inline-flex items-center cursor-pointer">--}}
+{{--                                                                    <input type="checkbox" id="" name="" value="" class="new-amount-required amount-required-input sr-only peer">--}}
+{{--                                                                    <div class="w-11 h-6 bg-gray-200 rounded-full peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>--}}
+{{--                                                                </label>--}}
                                                             </div>
                                                         </div>
                                                     </x-list-element>

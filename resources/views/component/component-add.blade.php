@@ -101,7 +101,6 @@
                 let id = $(this).attr('id').split('-')[1];
                 var list_id = '.prodschema-list-' + id;
 
-                console.log(list_id);
                 if($(this).hasClass('rotate-180')) {
                     $(this).removeClass('rotate-180');
                     $(this).addClass('rotate-0');

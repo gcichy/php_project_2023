@@ -13,6 +13,7 @@ use App\Models\ProductComponent;
 use App\Models\ProductionSchema;
 use App\Models\ProductionStandard;
 use App\Models\StaticValue;
+use App\Models\Task;
 use App\Models\Unit;
 use App\Models\User;
 use Exception;
@@ -146,19 +147,21 @@ class ProdSchemaController
 
     public function storeSchema(Request $request): RedirectResponse
     {
-        dd($request);
-        $this->validateAddComponentForm($request, 'INSERT');
 
-        $schema_arr = $this->validateProdSchemas($request);
+        $this->validateAddSchemaForm($request, 'INSERT');
+
+        $schema_arr = $this->validateTasks($request);
+
         if (array_key_exists('ERROR', $schema_arr)) {
             $schema_arr = $schema_arr['ERROR'];
-            return back()->with('prod_schema_errors', $schema_arr)->withInput();
+            return back()->with('task_errors', $schema_arr)->withInput();
         } else if (array_key_exists('INSERT', $schema_arr)) {
             $schema_arr = $schema_arr['INSERT'];
         }
 
+        //na tym etapie jestem
         $user = Auth::user();
-        $independent = $request->independent == null ? 0 : $request->independent;
+        dd($request);
         $desc = empty($request->description) ? '' : $request->description;
         $height = doubleval($request->height);
         $length = doubleval($request->length);
@@ -238,9 +241,9 @@ class ProdSchemaController
 
     public function storeUpdatedSchema(Request $request): RedirectResponse
     {
-        $this->validateAddComponentForm($request, 'UPDATE');
+        $this->validateAddSchemaForm($request, 'UPDATE');
 
-        $schema_arr = $this->validateProdSchemas($request);
+        $schema_arr = $this->validateTasks($request);
         if (array_key_exists('ERROR', $schema_arr)) {
             $schema_arr = $schema_arr['ERROR'];
             return back()->with('prod_schema_errors', $schema_arr)->withInput();
@@ -521,72 +524,73 @@ class ProdSchemaController
                                 order by task_id');
         }
 
-//        $prod_schema_tasks = array();
-//        if(count($data) > 0) {
-//            $curr_schema_id = $data[0]->prod_schema_id;
-//            $temp = [];
-//
-//            foreach ($data as $row) {
-//                if ($row->prod_schema_id != $curr_schema_id) {
-//                    $prod_schema_tasks[$curr_schema_id] = $temp;
-//                    $curr_schema_id = $row->prod_schema_id;
-//                    $temp = [];
-//                }
-//                $temp[] = $row;
-//            }
-//            $prod_schema_tasks[$curr_schema_id] = $temp;
-//        }
-
         return array(
             'tasks' => $data,
             'materials' => $materials,
             'units' => $units
         );
     }
-    private function validateProdSchemas(Request $request): array
+    private function validateTasks(Request $request): array
     {
-        $units = DB::select('select unit from unit');
-        //CAST DB::select result to simple array
-        $units = collect($units)->map(function (stdClass $arr) { return $arr->unit; })->toArray();
-
-        //errors to be displayed on page are stored here
         $error_arr = [];
         $insert_arr = [];
-        $schemas = explode('_',$request->prodschema_input);
+        if(is_null($request->task_input) and ($request->new_counter == 0 or is_null($request->new_counter))) {
+            $error_arr[] = 'Schemat musi mieć przypisane minimum 1 zadanie.';
+            return array('ERROR' => $error_arr);
+        }
 
-        //each prod schema values validation
-        $sequence_no_arr = array_map(function($x) { return $x; }, range(1, count($schemas)));
-        foreach ($schemas as $schema) {
-            $schema_id = intval($schema);
-            if($schema_id > 0) {
-                $duration = 'duration_'.$schema_id;
-                $amount = 'amount_'.$schema_id;
-                $unit = 'unit_'.$schema_id;
-                $sequence_no = 'sequenceno_'.$schema_id;
+        $new_task_count = intval($request->new_counter);
+        $new_task_id_arr = array_map(function($x) { return $x; }, range(1, $new_task_count));
 
-                if($request->$duration == null or $request->$duration <= 0) {
-                    $error_arr[] = 'Niepoprawna wartość Czas [h] dla jednego ze schematów produkcji.';
-                }
-                if($request->$amount == null or $request->$amount <= 0) {
-                    $error_arr[] = 'Niepoprawna wartość Ilość dla jednego ze schematów produkcji.';
-                }
-                if($request->$unit == null or !in_array($request->$unit, $units)) {
-                    $error_arr[] = 'Niepoprawna wartość Jednostka dla jednego ze schematów produkcji.';
-                }
+        $tasks = is_null($request->task_input) ? [] : explode('_', $request->task_input);
+        $sequence_no_count = empty($tasks) ? $new_task_count : count($tasks) + $new_task_count;
+        $sequence_no_arr = array_map(function($x) { return $x; }, range(1, $sequence_no_count));
+
+        foreach ($new_task_id_arr  as $new_task_id) {
+            if($new_task_id > 0) {
+                $sequence_no = 'new_sequence_no_'.$new_task_id;
+                $amount_required = 'new_amount_required_'.$new_task_id;
+                $name = 'new_name_'.$new_task_id;
+                $desc = 'new_desc_'.$new_task_id;
+
                 if($request->$sequence_no == null or !in_array($request->$sequence_no, $sequence_no_arr)) {
-                    $error_arr[] = 'Niepoprawne wartości Kolejność wyk. Schematy powinny zawierać liczby od 1 do '.count($schemas).' (w dowolnej kolejności).';
+                    $error_arr[] = 'Niepoprawne wartości Kolejność wyk. Schematy powinny zawierać liczby od 1 do '.$sequence_no_count.' (w dowolnej kolejności).';
                 } else {
                     array_splice($sequence_no_arr,array_search($request->$sequence_no, $sequence_no_arr),1);
                 }
 
                 $error_arr = array_unique($error_arr);
                 if(count($error_arr) == 0) {
-                    $insert_arr[$schema_id] = array(
-                        "duration" => $request->$duration,
-                        "amount" => $request->$amount,
-                        "unit" => $request->$unit,
-                        "sequence_no" => $request->$sequence_no
+                    $insert_arr['new_'.$new_task_id] = array(
+                        "name" => $request->$name,
+                        "sequence_no" => $request->$sequence_no,
+                        "description" => $request->$desc,
+                        "amount_required" => $request->$amount_required,
                     );
+                }
+            }
+        }
+
+        if(!empty($tasks)) {
+            //case when there are tasks existing tasks selected
+            foreach ($tasks as $task) {
+                $task_id = intval($task);
+                if($task_id > 0) {
+                    $sequence_no = 'sequenceno_'.$task_id;
+                    $amount_required = 'amount_required_'.$task_id;
+                    if($request->$sequence_no == null or !in_array($request->$sequence_no, $sequence_no_arr)) {
+                        $error_arr[] = 'Niepoprawne wartości Kolejność wyk. Schematy powinny zawierać liczby od 1 do '.$sequence_no_count.' (w dowolnej kolejności).';
+                    } else {
+                        array_splice($sequence_no_arr,array_search($request->$sequence_no, $sequence_no_arr),1);
+                    }
+
+                    $error_arr = array_unique($error_arr);
+                    if(count($error_arr) == 0) {
+                        $insert_arr[$task_id] = array(
+                            "sequence_no" => $request->$sequence_no,
+                            "amount_required" => $request->$amount_required,
+                        );
+                    }
                 }
             }
         }
@@ -595,7 +599,6 @@ class ProdSchemaController
             return array('ERROR' => $error_arr);
         }
         return array('INSERT' => $insert_arr);
-
     }
 
     private function insertComponent(string $employee_no, string $name, string $material, string $description, int $independent,
@@ -1018,56 +1021,52 @@ class ProdSchemaController
         }
     }
 
-    private function validateAddComponentForm(Request $request, string $action) : void
+    private function validateAddSchemaForm(Request $request, string $action) : void
     {
-        $materials = StaticValue::where('type','material')->select('value', 'value_full')->get();
+        $units = Unit::all();
 
         $err_mess = '';
-        $mat_in = 'in:';
-        foreach ($materials as $mat) {
-            $mat_in .= $mat->value.',';
-            $err_mess .= $mat->value_full.' ,';
+        $unit_in = 'in:';
+        foreach ($units as $unit) {
+            $unit_in .= $unit->unit.',';
+            $err_mess .= $unit->unit.' ,';
         }
-        $mat_in = rtrim($mat_in,',');
+        $unit_in = rtrim($unit_in,',');
         $err_mess = rtrim($err_mess,',');
 
-        $ext_comp_photo = empty($request->file('comp_photo')) ? '' : $request->file('comp_photo')->extension();
+
         $ext_instr_pdf = empty($request->file('instr_pdf')) ? '' : $request->file('instr_pdf')->extension();
         $ext_instr_video = empty($request->file('instr_video')) ? '' : $request->file('instr_video')->extension();
 
-        $name_rules = ['required', 'string',  'min:1','max:100'];
+        $prod_schema_rules = ['required', 'string',  'min:1','max:100'];
         if($action == 'INSERT') {
-            $name_rules[] =  'unique:'.Component::class;
+            $prod_schema_rules[] =  'unique:'.ProductionSchema::class;
         }
+
         $request->validate([
-            'name' => $name_rules,
-            'material' => ['required', 'string',  $mat_in],
-            'comp_photo' => ['mimes:jpeg,gif,bmp,png,jpg,svg', 'max:16384'],
+            'production_schema' => $prod_schema_rules,
+            'amount' => ['nullable', 'gte:0'],
+            'duration' => ['nullable', 'gte:0'],
+            'unit' => ['nullable', $unit_in],
             'instr_pdf' => ['mimes:pdf,docx', 'max:16384'],
             'instr_video' => ['mimes:mp4,mov,mkv,wmv', 'max:51300'],
-            'height' => ['gt:-1'],
-            'length' => ['gt:-1'],
-            'width' => ['gt:-1'],
             'description' => ['max:200'],
-            'prodschema_input' => ['required'],
         ],
             [
                 'name.unique' => 'Nazwa komponentu musi być unikalna.',
-                'material.in' => 'Wybierz jeden z materiałów: '.$err_mess.'.',
-                'comp_photo.mimes' => 'Przesłany plik powinien mieć rozszerzenie: jpeg,bmp,png,jpg,svg. Rozszerzenie pliku: '.$ext_comp_photo.'.',
-                'instr_pdf.mimes' => 'Przesłany plik powinien mieć rozszerzenie: pdf,docx. Rozszerzenie pliku: '.$ext_instr_video.'.',
-                'instr_video.mimes' => 'Przesłany plik powinien mieć rozszerzenie: mp4,mov,mkv,wmv. Rozszerzenie pliku: '.$ext_instr_pdf.'.',
-                'comp_photo.max' => 'Przesłany plik jest za duży. Maksymalny rozmiar pliku: 16 MB.',
+                'amount.gte' => 'Ilość nie może być ujemna',
+                'duration.gte' => 'Czas trwania nie może być ujemny',
+                'unit.in' => 'Niepoprawna jednostka. Wybierz jedną z: '.$err_mess,
+                'instr_pdf.mimes' => 'Przesłany plik powinien mieć rozszerzenie: pdf. Rozszerzenie pliku: '.$ext_instr_pdf.'.',
+                'instr_video.mimes' => 'Przesłany plik powinien mieć rozszerzenie: mp4,mov,mkv,wmv. Rozszerzenie pliku: '.$ext_instr_video.'.',
                 'instr_pdf.max' => 'Przesłany plik jest za duży. Maksymalny rozmiar pliku: 16 MB.',
                 'instr_video.max' => 'Przesłany plik jest za duży. Maksymalny rozmiar pliku: 50 MB.',
-                'height.gt' => 'Wysokość nie może być ujemna.',
-                'length.gt' => 'Długość nie może być ujemna.',
-                'width.gt' => 'Szerokość nie może być ujemna.',
-                'prodschema_input.required' => 'Wybierz przynajmniej jeden schemat produkcji.',
                 'required' => 'To pole jest wymagane.',
                 'max' => 'Wpisany tekst ma za dużo znaków.',
                 'min' => 'Wpisany tekst ma za mało znaków.',
             ]);
+
+
 
 
     }
