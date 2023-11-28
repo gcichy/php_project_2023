@@ -199,7 +199,6 @@ class ProductController
 
         $user = Auth::user();
         $price = floatval($request->price);
-        $desc = empty($request->description) ? '' : $request->description;
         $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
         $saved_files = [];
 
@@ -210,7 +209,7 @@ class ProductController
             $prod_image = !empty($request->file('prod_image')) ? $request->file('prod_image') : $request->prod_image_file_to_copy;
             $barcode_image = !empty($request->file('prod_barcode')) ? $request->file('prod_barcode') : $request->prod_barcode_file_to_copy;
             $insert_result = $this->insertProduct($employee_no, $request->name, $request->gtin, $request->material, $request->color,
-                                $price, $desc, $prod_image, $barcode_image);
+                                $price, $request->description, $prod_image, $barcode_image);
 
             if (array_key_exists('SAVED_FILES', $insert_result)) {
                 $saved_files['products'] = $insert_result['SAVED_FILES'];
@@ -300,7 +299,6 @@ class ProductController
 
         $prod_id = $request->product_id;
         $price = floatval($request->price);
-        $desc = empty($request->description) ? '' : $request->description;
         $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
         $saved_files = [];
 
@@ -311,7 +309,7 @@ class ProductController
             $prod_image = !empty($request->file('prod_image')) ? $request->file('prod_image') : $request->prod_image_file_to_copy;
             $barcode_image = !empty($request->file('prod_barcode')) ? $request->file('prod_barcode') : $request->prod_barcode_file_to_copy;
             $update_result = $this->updateProduct($prod_id, $employee_no, $request->name, $request->gtin, $request->material,
-                                                  $request->color, $price, $desc, $prod_image, $barcode_image);
+                                                  $request->color, $price, $request->description, $prod_image, $barcode_image);
 
             if (array_key_exists('SAVED_FILES', $update_result)) {
                 $saved_files['products'] = $update_result['SAVED_FILES'];
@@ -495,7 +493,7 @@ class ProductController
     }
 
     private function insertProduct(string $employee_no, string $name, string|null $gtin, string|null $material, string|null $color,
-                                   float $price, string $description, $prod_image, $barcode_image ): array
+                                   float|null $price, string|null $description, $prod_image, $barcode_image ): array
     {
 
         $prod_id = DB::table('product')->insertGetId([
@@ -580,7 +578,7 @@ class ProductController
 
 
     private function updateProduct(int $prod_id, string $employee_no, string $name, string|null $gtin, string|null $material, string|null $color,
-                                   float $price, string $description, $prod_image, $barcode_image ): array
+                                   float|null $price, string|null $description, $prod_image, $barcode_image ): array
     {
         $prod_old = Product::find($prod_id);
         if($prod_old instanceof Product) {

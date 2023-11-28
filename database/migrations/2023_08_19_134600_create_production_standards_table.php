@@ -25,7 +25,7 @@ return new class extends Migration
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
             $table->string('name');
-            $table->integer('duration_hours');
+            $table->double('duration_hours');
             $table->double('amount');
             $table->foreignId('unit_id')
                 ->constrained('unit')

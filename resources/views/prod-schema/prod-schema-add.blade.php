@@ -4,6 +4,7 @@
         if(!isset($task_input)) $task_input = null;
         if(!isset($selected_schem)) $selected_schem = null;
         if(!isset($selected_schem_instr)) $selected_schem_instr = null;
+        if(!isset($selected_schem_prod_std)) $selected_schem_prod_std = null;
     @endphp
     <script type="module">
 
@@ -11,7 +12,7 @@
             let numbers = inputVal.split('_');
             numbers.forEach(function(val) {
                 if(!isNaN(parseInt(val))) {
-                    let id = '#task-' + val;
+                    let id = '#' + prefix + '-' + val;
                     if($(id).hasClass('hidden')) {
                         $(id).removeClass('hidden').addClass('active-list-elem')
                     }
@@ -63,7 +64,7 @@
 
 
         $(document).ready(function() {
-            //getActiveOnLoad('task', $('#task-input').val());
+            getActiveOnLoad('task', $('#task-input').val());
             checkActive();
 
             $('.list-element').on('click', function () {
@@ -97,6 +98,12 @@
                     prodStd.addClass('hidden');
                     $('#duration').val(null);
                     $('#amount').val(null);
+                }
+                let removeProdStdBtn = $('#remove-prodstd-button');
+                if(removeProdStdBtn.hasClass('hidden')) {
+                    removeProdStdBtn.removeClass('hidden');
+                } else {
+                    removeProdStdBtn.addClass('hidden')
                 }
             });
 
@@ -187,6 +194,10 @@
                 }
             });
 
+            $('#remove-prodstd-button').on('click', function(){
+                $('#amount').val(null);
+                $('#duration').val(null)
+            });
 
             $('#confirm-schema-button').on('click', function (){
                 if($('#label-schema').hasClass('hidden')) {
@@ -220,9 +231,9 @@
         $name = (isset($update) and $update) ? 'Edytuj schemat' : 'Dodaj schemat';
     @endphp
     <x-information-panel :viewName="$name"></x-information-panel>
-    @if(isset($status))
+    @if(session('status'))
         <div class="flex justify-center items-center">
-            <x-input-error :messages="$status" class="w-full !text-md lg:text-xl font-medium text-center p-6"/>
+            <x-input-error :messages="session('status')" class="w-full !text-md lg:text-xl font-medium text-center p-6"/>
         </div>
     @endif
     <section class="gradient-form h-full dark:bg-neutral-700 flex justify-center">
@@ -241,10 +252,13 @@
                                 <!-- Left column container-->
                                 <div class="flex items-center flex-col justify-start rounded-b-lg w-full xl:w-6/12 xl:rounded-r-lg xl:rounded-bl-none p-2 xl:p-0 bg-white/30">
                                     <div class="md:mx-6 md:p-12 px-2 py-6 w-full">
-                                        <input type="text" id="schema-id" name="schema_id" value="{{old('schema_id') ? old('schema_id') : (empty($selected_schem) ? '' : $selected_schem->id )}}" class="hidden">
+                                        <input type="text" id="schema-id" name="schema_id" class="hidden"
+                                               value="{{old('schema_id') ? old('schema_id') : (empty($selected_schem) ? '' : $selected_schem->id )}}">
                                         <div class="mb-6">
                                             <label for="production-schema" class="block mb-2 text-sm lg:text-md xl:text-lg font-medium text-gray-900 dark:text-white">Nazwa <span class="text-red-700">*</span></label>
-                                            <input type="text" id="production-schema" name="production_schema" value="{{old('production_schema')}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                            <input type="text" id="production-schema" name="production_schema"
+                                                   value="{{old('production_schema') ? old('production_schema') : (empty($selected_schem) ? '' : $selected_schem->production_schema )}}"
+                                                   class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
                                             <x-input-error :messages="$errors->get('production_schema')" class="mt-2" />
                                         </div>
                                         <div class="">
@@ -306,12 +320,13 @@
                                                 <span class="text-green-500 text-xs lg:text-sm"><em>Jeśli schemat nie jest wykorzystywany do wytwarzania komponentów, można dodać mu własną normę produkcji.</em></span>
                                             </p>
                                         </div>
-                                        <div id="production-standard" class="production-standard mt-4 w-full ml-[3%] hidden">
+                                        <div id="production-standard" class="production-standard mt-4 w-full ml-[3%] {{(old('duration') or !empty($selected_schem_prod_std))? '' : 'hidden'}} ">
                                             <div id="production-standard" class="flex flex-row justify-start items-center w-full xl:w-full">
                                                 <div class="w-[20%] mr-[3%]">
                                                     <label for="duration" class="block mb-2 text-sm lg:text-md xl:text-lg font-medium text-gray-900 dark:text-white">Czas[h]</label>
-                                                    @if(!empty($selected_schem))
-                                                        <input type="number" id="duration" name="duration" value="{{old('duration') ? old('duration') : (empty($selected_schem->duration_hours) ? '' : $selected_schem->duration_hours )}}"
+                                                    @if(!empty($selected_schem_prod_std))
+                                                        <input type="number" id="duration" name="duration"
+                                                               value="{{old('duration') ? old('duration') : (empty($selected_schem_prod_std->duration_hours) ? '' : $selected_schem_prod_std->duration_hours )}}"
                                                                class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
                                                     @else
                                                         <input type="number" id="duration" name="duration" value="{{old('duration')}}"
@@ -320,8 +335,9 @@
                                                 </div>
                                                 <div class="w-[20%] mr-[3%]">
                                                     <label for="amount" class="block mb-2 text-sm lg:text-md xl:text-lg font-medium text-gray-900 dark:text-white">Ilość</label>
-                                                    @if(!empty($selected_schem))
-                                                        <input type="number" id="amount" name="amount" value="{{old('amount') ? old('amount') : (empty($selected_schem->amount) ? '' : $selected_schem->amount)}}"
+                                                    @if(!empty($selected_schem_prod_std))
+                                                        <input type="number" id="amount" name="amount"
+                                                               value="{{old('amount') ? old('amount') : (empty($selected_schem_prod_std->amount) ? '' : $selected_schem_prod_std->amount)}}"
                                                                class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
                                                     @else
                                                         <input type="number" id="amount" name="amount" value="{{old('amount')}}"
@@ -333,7 +349,7 @@
                                                     <select id="unit" name="unit" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                                                         @if(isset($units) and count($units) > 0)
                                                             @foreach($units as $u)
-                                                                @if(!empty($selected_schem) and $u->unit == $selected_schem->unit )
+                                                                @if(!empty($selected_schem_prod_std) and $u->unit == $selected_schem_prod_std->unit )
                                                                     <option value="{{$u->unit}}" selected>{{$u->unit}}</option>
                                                                 @else
                                                                     <option value="{{$u->unit}}">{{$u->unit}}</option>
@@ -351,6 +367,9 @@
                                             <x-input-error :messages="$errors->get('duration')" />
                                             <x-input-error :messages="$errors->get('unit')" />
                                         </div>
+                                        <button type="button" id="remove-prodstd-button" class="my-5 text-white bg-blue-450 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm lg:text-lg px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                                            USUŃ
+                                        </button>
                                     </div>
                                 </div>
 
@@ -394,7 +413,8 @@
                                                     <div id="task-dropdown" class="w-full">
                                                         @php $j = 0; @endphp
                                                         @foreach($tasks as $task)
-                                                            <x-list-element class="list-element-{{$xListElem}} list-element w-full hidden flex-col text-md lg:text-lg lg:py-4 my-3" id="task-{{$task->task_id}}">
+                                                            <x-list-element class="list-element-{{$xListElem}} list-element w-full hidden flex-col text-md lg:text-lg lg:py-4 my-3"
+                                                                            id="task-{{$task->task_id}}">
                                                                 <div class="w-[100%] flex justify-between items-center">
                                                                     <div class="w-full flex justify-between items-center">
                                                                         <div class="w-full flex justify-left items-center">
@@ -413,10 +433,9 @@
                                                                         <div class="w-[40%] mr-[3%]">
                                                                             @php $sequenceno = 'sequenceno_'.$task->task_id @endphp
                                                                             <label for="{{$sequenceno}}" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Kolejność wykonania<span class="text-red-700">*</span></label>
-                                                                            @if(!empty($selected_schem_tasks) and count($selected_schem_tasks) > 0 and $task->task_id == $selected_schem_tasks[$j]->production_schema_id)
-                                                                                <input type="number" id="{{$sequenceno}}" name="{{$sequenceno}}" value="{{old($sequenceno) ? old($sequenceno) : (empty($selected_schem_tasks[$j]) ? '' : $selected_schem_tasks[$j]->sequence_no)}}"
+                                                                            @if(!empty($selected_schem_tasks) and count($selected_schem_tasks) > 0 and $task->task_name == $selected_schem_tasks[$j]->task_name)
+                                                                                <input type="number" id="{{$sequenceno}}" name="{{$sequenceno}}" value="{{old($sequenceno) ? old($sequenceno) : (empty($selected_schem_tasks[$j]) ? '' : $selected_schem_tasks[$j]->task_sequence_no)}}"
                                                                                        class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
-                                                                                @php if($j + 1 < count($selected_schem_tasks)) $j++ @endphp
                                                                             @else
                                                                                 <input type="number" id="{{$sequenceno}}" name="{{$sequenceno}}" value="{{old($sequenceno)}}"
                                                                                        class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
@@ -428,15 +447,13 @@
                                                                         <p class="label-amount-required w-full text-sm lg:text-lg font-medium text-left text-gray-900 dark:text-white p-2">
                                                                             <span class="text-green-500 text-xs lg:text-sm"><em>Określa, czy wykonując zadanie, należy wprowadzić ilość sztuk. Najczęściej jest to konieczne dla ostatniego zadania w schemacie.</em></span>
                                                                         </p>
-{{--                                                                        <label class="amount-required relative inline-flex items-center cursor-pointer">--}}
-{{--                                                                            <input type="checkbox" id="amount-required-{{$task->task_id}}" name="amount_required-{{$task->task_id}}" value="{{old('amount_required-'.$task->task_id) ? old('amount_required-'.$task->task_id) : (empty($selected_schem) ? '' : $selected_schem->independent )}}" class="amount-required-input sr-only peer">--}}
-{{--                                                                            <div class="w-11 h-6 bg-gray-200 rounded-full peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>--}}
-{{--                                                                            <x-input-error :messages="$errors->get('amount_required-'.$task->task_id)" class="mt-2" />--}}
-{{--                                                                        </label>--}}
                                                                         <input
                                                                             class="new-amount-required amount-required-input mr-2 mt-[0.3rem] h-3.5 w-8 appearance-none rounded-[0.4375rem] bg-neutral-300 before:pointer-events-none before:absolute before:h-3.5 before:w-3.5 before:rounded-full before:bg-transparent before:content-[''] after:absolute after:z-[2] after:-mt-[0.1875rem] after:h-5 after:w-5 after:rounded-full after:border-none after:bg-neutral-100 after:shadow-[0_0px_3px_0_rgb(0_0_0_/_7%),_0_2px_2px_0_rgb(0_0_0_/_4%)] after:transition-[background-color_0.2s,transform_0.2s] after:content-[''] checked:bg-primary checked:after:absolute checked:after:z-[2] checked:after:-mt-[3px] checked:after:ml-[1.0625rem] checked:after:h-5 checked:after:w-5 checked:after:rounded-full checked:after:border-none checked:after:bg-primary checked:after:shadow-[0_3px_1px_-2px_rgba(0,0,0,0.2),_0_2px_2px_0_rgba(0,0,0,0.14),_0_1px_5px_0_rgba(0,0,0,0.12)] checked:after:transition-[background-color_0.2s,transform_0.2s] checked:after:content-[''] hover:cursor-pointer focus:outline-none focus:ring-0 focus:before:scale-100 focus:before:opacity-[0.12] focus:before:shadow-[3px_-1px_0px_13px_rgba(0,0,0,0.6)] focus:before:transition-[box-shadow_0.2s,transform_0.2s] focus:after:absolute focus:after:z-[1] focus:after:block focus:after:h-5 focus:after:w-5 focus:after:rounded-full focus:after:content-[''] checked:focus:border-primary checked:focus:bg-primary checked:focus:before:ml-[1.0625rem] checked:focus:before:scale-100 checked:focus:before:shadow-[3px_-1px_0px_13px_#3b71ca] checked:focus:before:transition-[box-shadow_0.2s,transform_0.2s] dark:bg-neutral-600 dark:after:bg-neutral-400 dark:checked:bg-primary dark:checked:after:bg-primary dark:focus:before:shadow-[3px_-1px_0px_13px_rgba(255,255,255,0.4)] dark:checked:focus:before:shadow-[3px_-1px_0px_13px_#3b71ca]"
-                                                                            type="checkbox" role="switch" id="amount-required-{{$task->task_id}}" name="amount_required_{{$task->task_id}}"/>
-                                                                        <x-input-error :messages="$errors->get('amount_required-'.$task->task_id)" class="mt-2" />
+                                                                            type="checkbox" role="switch" id="amount-required-{{$task->task_id}}" name="amount_required_{{$task->task_id}}"
+                                                                            @if(!empty($selected_schem_tasks) and count($selected_schem_tasks) > 0 and $task->task_name == $selected_schem_tasks[$j]->task_name)
+                                                                                {{($selected_schem_tasks[$j]->amount_required == 1) ? 'checked' : ''}}
+                                                                                @php if($j + 1 < count($selected_schem_tasks)) $j++ @endphp
+                                                                            @endif/>
                                                                     </div>
                                                                 </div>
                                                             </x-list-element>
