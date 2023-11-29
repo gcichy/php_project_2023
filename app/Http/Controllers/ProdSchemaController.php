@@ -194,6 +194,7 @@ class ProdSchemaController
                 $this->insertProdSchemaProdStd($schema_id, $amount,$duration, $request->unit, $employee_no);
             }
 
+            $this->insertTasks($schema_id, $schema_arr, $employee_no);
 
             $instr_pdf = !empty($request->file('instr_pdf')) ? $request->file('instr_pdf') : $request->instr_pdf_file_to_copy;
             $instr_video = !empty($request->file('instr_video')) ? $request->file('instr_video') : $request->instr_video_file_to_copy;
@@ -210,7 +211,6 @@ class ProdSchemaController
     Error message: ' . $insert_result['ERROR']);
             }
 
-            $insert_result = $this->insertTasks($schema_id, $schema_arr, $employee_no);
             DB::commit();
             //DB::rollBack();
 
@@ -243,7 +243,6 @@ class ProdSchemaController
 
     public function storeUpdatedSchema(Request $request): RedirectResponse
     {
-
         $this->validateAddSchemaForm($request, 'UPDATE');
         $schema_arr = $this->validateTasks($request);
 
@@ -253,7 +252,6 @@ class ProdSchemaController
         } else if (array_key_exists('INSERT', $schema_arr)) {
             $schema_arr = $schema_arr['INSERT'];
         }
-
             $user = Auth::user();
             $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
 
@@ -274,37 +272,32 @@ class ProdSchemaController
             $saved_files = [];
 
             try {
-
                 DB::beginTransaction();
 
-                dd($request);
                 $this->updateProdSchema($schema_id, $employee_no, $request->production_schema,
                     $request->description, count($schema_arr));
 
-                //tu jestem
-                if(!in_array(null,array($request->amount,$request->duration, $request->unit))) {
-                    $amount = floatval($request->amount);
-                    $duration = floatval($request->duration);
-                    $this->insertProdSchemaProdStd($schema_id, $amount,$duration, $request->unit, $employee_no);
-                }
+                $this->updateProdSchemaProdStd($schema_id, $request->amount,$request->duration, $request->unit, $employee_no);
+
+                $this->updateTasks($schema_id, $schema_arr, $employee_no);
 
                 $instr_pdf = !empty($request->file('instr_pdf')) ? $request->file('instr_pdf') : $request->instr_pdf_file_to_copy;
                 $instr_video = !empty($request->file('instr_video')) ? $request->file('instr_video') : $request->instr_video_file_to_copy;
-                $instr_name = 'Instrukcja wykonania komponentu: ' . $request->name;
-                $update_result = InstructionController::updateInstruction($schema_id, 'product_id', $instr_name, $employee_no, $instr_pdf, $instr_video);
+                $instr_name = 'Instrukcja wykonania schematu: ' . $request->name;
+                $update_result = InstructionController::updateInstruction($schema_id, 'production_schema_id', $instr_name, $employee_no, $instr_pdf, $instr_video);
                 if (array_key_exists('SAVED_FILES', $update_result)) {
                     $saved_files['instructions'] = $update_result['SAVED_FILES'];
-
                 }
                 if (array_key_exists('ERROR', $update_result)) {
-                    throw new Exception('Error updating component: error occurred in Component->insertInstruction method.
+                    throw new Exception('Error updating production_schema: error occurred in ProdSchema->updateInstruction method.
     Error message: ' . $update_result['ERROR']);
                 }
+
                 DB::commit();
                 //DB::rollBack();
 
             } catch (Exception $e) {
-                Log::channel('error')->error('Error updating component: ' . $e->getMessage(), [
+                Log::channel('error')->error('Error updating production_schema: ' . $e->getMessage(), [
                     'employeeNo' => $employee_no,
                 ]);
                 DB::rollBack();
@@ -323,19 +316,20 @@ class ProdSchemaController
                     return back()->with('status', $update_result['ERROR'])
                         ->withInput();
                 }
-                return back()->with('status', 'Komponent nie został edytowany: błąd przy wprowadzaniu danych do systemu.')
+                return back()->with('status', 'Schemat nie został edytowany: błąd przy wprowadzaniu danych do systemu.')
                     ->withInput();
             }
-            return redirect()->route('schema.index')->with('status', 'Edytowano komponent.');
+            return redirect()->route('schema.index')->with('status', 'Edytowano schemat.');
         }
 
 
 
     public function destroySchema(Request $request): RedirectResponse
     {
+
         try {
             $request->validate([
-                'confirmation' => ['regex:(usuń|usun)'],
+                'confirmation' => ['regex:/^(usuń|usun)$/i'],
             ],
                 [
                     'confirmation.regex' => 'Nie można usunąć komponentu: niepoprawna wartość. Wpisz "usuń".',
@@ -345,26 +339,26 @@ class ProdSchemaController
             return redirect()->back()->with('status_err', $e->getMessage());
         }
 
+
         $user = Auth::user();
         $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
-        $comp_id = $request->remove_id;
-        $comp = Component::find($comp_id);
-        if($comp instanceof Component) {
+        $schema_id = $request->remove_id;
+        $schema = ProductionSchema::find($schema_id);
+        if($schema instanceof ProductionSchema) {
             try {
 
                 DB::beginTransaction();
 
-                ProductComponent::where('component_id', $comp_id)->delete();
-                ComponentProductionSchema::where('component_id', $comp_id)->delete();
-                ProductionStandard::where('component_id', $comp_id)->delete();
+                Task::where('production_schema_id', $schema_id)->delete();
+                ProductionStandard::where('production_schema_id', $schema_id)->delete();
 
-                $instr= Instruction::where('component_id',$comp_id)
+                $instr= Instruction::where('production_schema_id',$schema_id)
                     ->select('instruction_pdf','video')
                     ->get();
                 $instr = count($instr) == 1 ? $instr[0] : null;
 
-                Instruction::where('component_id', $comp_id)->delete();
-                Component::where('id', $comp_id)->delete();
+                Instruction::where('production_schema_id', $schema_id)->delete();
+                ProductionSchema::where('id', $schema_id)->delete();
 
                 if($instr instanceof Instruction) {
                     if(fileTrait::fileExists('instructions', $instr->instruction_pdf)) {
@@ -374,26 +368,28 @@ class ProdSchemaController
                         fileTrait::deleteFile('instructions', $instr->video);
                     }
                 }
-                if(fileTrait::fileExists('components', $comp->image)) {
-                    fileTrait::deleteFile('components', $comp->image);
-                }
 
                 DB::commit();
 
             } catch (Exception $e) {
-                Log::channel('error')->error('Error deleting component: ' . $e->getMessage(), [
+                Log::channel('error')->error('Error deleting production_schema: ' . $e->getMessage(), [
                     'employeeNo' => $employee_no,
                 ]);
                 DB::rollBack();
 
-                return back()->with('status_err', 'Komponent nie został usunięty: błąd przy usuwaniu danych z systemu.')
+                return back()->with('status_err', 'Schemat nie został usunięty: błąd przy usuwaniu danych z systemu.')
                     ->withInput();
             }
+
+            return  redirect()->route('schema.index')
+                ->with('status', 'Usunięto schemat: '.$schema->production_schema.'.')
+                ->withInput();
         }
 
-        return  redirect()->route('product.index')
-            ->with('status', 'Usunięto komponent: '.$comp->name.'.')
+        return  redirect()->route('schema.index')
+            ->with('status_err', 'Schemat nie został usunięty: nie znaleziono schematu.')
             ->withInput();
+
     }
 
     ///////////////////////////////////////////////////////////
@@ -648,7 +644,7 @@ class ProdSchemaController
     /**
      * @throws Exception
      */
-    private function insertTasks(int $schema_id, array $schema_arr, string $employee_no): array
+    private function insertTasks(int $schema_id, array $schema_arr, string $employee_no): void
     {
 
         foreach ($schema_arr as $key => $schema) {
@@ -678,10 +674,95 @@ class ProdSchemaController
                 'updated_at' => date('y-m-d h:i:s'),
             ]);
         }
-
-        return [];
     }
 
+    /**
+     * @throws Exception
+     */
+    private function updateTasks(int $schema_id, array $task_arr, string $employee_no): void
+    {
+
+        $ids = DB::select("select t.id as task_id, task_distinct.task_id as task_distinct_id
+                                    from task t
+                                        join (select
+                                               min(t.id) as task_id,
+                                               t.name as task_name,
+                                               t.description as task_desc
+                                           from task t
+                                           group by t.name, t.description) task_distinct
+                                             on task_distinct.task_name = t.name
+                                                 and IFNULL(task_distinct.task_desc,'') = IFNULL(t.description,'')
+                                    where t.production_schema_id = ".$schema_id.";");
+        //array contains real task_id mapped with id from task section
+        $id_map = array();
+        foreach ($ids as $row) {
+            $id_map[$row->task_id] = $row->task_distinct_id;
+        }
+
+        foreach ($task_arr as $key => $task) {
+
+            $am_req = !empty($task['amount_required']);
+            //if key is int then task may be added or updated if it is existing one
+            if(is_int($key)) {
+                //if task_id is in id_map array then update
+                if(in_array($key, $id_map)) {
+                    $real_task_id = array_search($key, $id_map);
+
+                    DB::table('task')
+                        ->where('id',$real_task_id)
+                        ->update([
+                            'sequence_no' => $task['sequence_no'],
+                            'amount_required' => $am_req,
+                            'updated_by' => $employee_no,
+                            'updated_at' => date('y-m-d h:i:s'),
+                        ]);
+                    unset($id_map[$real_task_id]);
+                }
+                //if task_id isn't in id_map then it is inserted
+                else {
+                    $t = Task::where('id',$key)->select('name', 'description')->first();
+                    if($t instanceof Task) {
+                        $task['name'] = $t->name;
+                        $task['description'] = $t->description;
+                    }
+                    else {
+                        throw new Exception('Error updating production_schema: error occurred in ProdSchema->updateTasks method. Selected task not found in database.');
+                    }
+                    DB::table('task')->insert([
+                        'production_schema_id' => $schema_id,
+                        'name' => $task['name'],
+                        'description' => $task['description'],
+                        'sequence_no' => $task['sequence_no'],
+                        'amount_required' => $am_req,
+                        'created_by' => $employee_no,
+                        'updated_by' => $employee_no,
+                        'created_at' => date('y-m-d h:i:s'),
+                        'updated_at' => date('y-m-d h:i:s'),
+                    ]);
+                }
+            }
+            else if(is_string($key) and str_contains($key, 'new')) {
+                DB::table('task')->insert([
+                    'production_schema_id' => $schema_id,
+                    'name' => $task['name'],
+                    'description' => $task['description'],
+                    'sequence_no' => $task['sequence_no'],
+                    'amount_required' => $am_req,
+                    'created_by' => $employee_no,
+                    'updated_by' => $employee_no,
+                    'created_at' => date('y-m-d h:i:s'),
+                    'updated_at' => date('y-m-d h:i:s'),
+                ]);
+            }
+            else {
+                throw new Exception('Error updating production_schema: error occurred in ProdSchema->updateTasks method. Incorrect key occurred in $task_arr array.');
+            }
+        }
+
+        foreach ($id_map as $real_task_id => $distinct_task_id) {
+            Task::where('id', $real_task_id)->delete();
+        }
+    }
     /**
      * @throws Exception
      */
@@ -711,7 +792,7 @@ class ProdSchemaController
     /**
      * @throws Exception
      */
-    private function updateProdSchemaProdStd(int $schema_id, float $amount, float $duration, string $unit, string $employee_no ): void
+    private function updateProdSchemaProdStd(int $schema_id, float|null $amount,float|null $duration,string|null $unit, $employee_no ): void
     {
         $unit_id = Unit::where('unit',$unit)->select('id')->first();
         if($unit_id instanceof Unit) {
@@ -720,17 +801,37 @@ class ProdSchemaController
         else {
             throw new Exception('Error inserting production_schema: error occurred in ProdSchema->insertProdSchemaProdStd method. Id not found for provided unit.');
         }
-        DB::table('production_standard')->insert([
-            'production_schema_id' => $schema_id,
-            'name' => '',
-            'duration_hours' => $duration,
-            'amount' =>$amount,
-            'unit_id' => $unit_id,
-            'created_by' => $employee_no,
-            'updated_by' => $employee_no,
-            'created_at' => date('y-m-d h:i:s'),
-            'updated_at' => date('y-m-d h:i:s'),
-        ]);
+
+        if(is_null($duration) and is_null($amount)) {
+            if(ProductionStandard::where('production_schema_id', $schema_id)->first() instanceof ProductionStandard) {
+                ProductionStandard::where('production_schema_id', $schema_id)->delete();
+            }
+        } else {
+            $duration = floatval($duration);
+            $amount = floatval($amount);
+            if(ProductionStandard::where('production_schema_id', $schema_id)->first() instanceof ProductionStandard) {
+                DB::table('production_standard')
+                    ->where('production_schema_id', $schema_id)
+                    ->update([
+                    'duration_hours' => $duration,
+                    'amount' =>$amount,
+                    'unit_id' => $unit_id,
+                    'updated_by' => $employee_no,
+                    'updated_at' => date('y-m-d h:i:s'),
+                ]);
+            } else {
+                DB::table('production_standard')->insert([
+                    'production_schema_id' => $schema_id,
+                    'duration_hours' => $duration,
+                    'amount' =>$amount,
+                    'unit_id' => $unit_id,
+                    'created_by' => $employee_no,
+                    'updated_by' => $employee_no,
+                    'created_at' => date('y-m-d h:i:s'),
+                    'updated_at' => date('y-m-d h:i:s'),
+                ]);
+            }
+        }
     }
 
     private function updateCompProdSchemaAndProdStd(int $comp_id, array $schema_arr, string $employee_no ): void

@@ -14,6 +14,7 @@ class Task extends Model
      * @var array<int, string,>
      */
     protected $fillable = [
+        'id',
         'production_schema_id',                  //id of production schema that the task is assigned to
         'name',
         'sequence_no',                          //determines execution order within production schema
@@ -21,14 +22,6 @@ class Task extends Model
         'description',
    ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int>
-     */
-    protected $hidden = [
-        'id',
-    ];
 
     /**
      * The table associated with the model.

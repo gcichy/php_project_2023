@@ -24,7 +24,7 @@ return new class extends Migration
                 ->constrained('component')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
-            $table->string('name');
+            $table->string('name')->nullable();
             $table->double('duration_hours');
             $table->double('amount');
             $table->foreignId('unit_id')
