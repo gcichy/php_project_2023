@@ -11,7 +11,7 @@
             let numbers = inputVal.split('_');
             numbers.forEach(function(val) {
                 if(!isNaN(parseInt(val))) {
-                    let id = '#prodschema-' + val;
+                    let id = '#' + prefix + '-' + val;
                     if($(id).hasClass('hidden')) {
                         $(id).removeClass('hidden').addClass('active-list-elem')
                     }
@@ -101,7 +101,6 @@
                 let id = $(this).attr('id').split('-')[1];
                 var list_id = '.prodschema-list-' + id;
 
-                console.log(list_id);
                 if($(this).hasClass('rotate-180')) {
                     $(this).removeClass('rotate-180');
                     $(this).addClass('rotate-0');

@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('production_schema', function (Blueprint $table) {
             $table->id();
             $table->string('production_schema');
-            $table->string('description');
+            $table->string('description')->nullable();
             $table->integer('tasks_count');
             $table->foreignId('parent_id')
                 ->nullable()

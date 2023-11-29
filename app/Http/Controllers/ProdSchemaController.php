@@ -13,6 +13,7 @@ use App\Models\ProductComponent;
 use App\Models\ProductionSchema;
 use App\Models\ProductionStandard;
 use App\Models\StaticValue;
+use App\Models\Task;
 use App\Models\Unit;
 use App\Models\User;
 use Exception;
@@ -37,70 +38,27 @@ class ProdSchemaController
      */
     public function index(Request $request): View
     {
-        $components = Component::all();
+        $prod_schema_tasks = $this->getSchemaData();
 
-        return view('component.component', [
+        return view('prod-schema.prod-schema', [
             'user' => $request->user(),
-            'components' => $components,
+            'schema_data' => $prod_schema_tasks,
             'storage_path_components' => 'components',
             'storage_path_products' => 'products'
         ]);
     }
-    public function componentDetails(Request $request, string $id): View
+    public function schemaDetails(Request $request, string $id): View
     {
-        $component = Component::find($id);
+        $prod_schema = ProductionSchema::where('id',$id)->select('id','production_schema', 'description', 'tasks_count')->first();
+        $prod_schema_tasks = $this->getSchemaData($id);
+        $instruction = Instruction::where('production_schema_id', $id)->select('id','name','instruction_pdf','video')->first();
 
-        $instruction = Instruction::where('component_id', $id)->select('name', 'instruction_pdf', 'video')->get();
-        if (count($instruction) > 0) {
-            $instruction = $instruction[0];
-        }
 
-        $prod_standards = DB::select('select  pstd.id,
-                                                    pstd.name,pstd.description,
-                                                    pstd.duration_hours,
-                                                    pstd.amount,
-                                                    u.unit
-                                            from production_standard pstd
-                                            join unit u
-                                                on u.id = pstd.id
-                                            where pstd.component_id = ' . $id
-            . ' order by pstd.production_schema_id asc');
-        $data = DB::select('select
-                                       cps.component_id,
-                                       cps.production_schema_id as prod_schema_id,
-                                       ps.production_schema as prod_schema,
-                                       ps.description as prod_schema_desc,
-                                       pst.task_id,
-                                       pst.sequence_no as task_sequence_no,
-                                       pst.amount_required,
-                                       pst.additional_description,
-                                       t.name as task_name,
-                                       t.description as task_desc,
-                                       pstd.name as prod_std_name,
-                                       pstd.description as prod_std_desc,
-                                       pstd.duration_hours prod_std_duration,
-                                       pstd.amount as prod_std_amount,
-                                       u.unit as prod_std_unit
-                                from component_production_schema cps
-                                join production_schema ps
-                                    on ps.id = cps.production_schema_id
-                                join production_schema_task pst
-                                    on pst.production_schema_id = ps.id
-                                join task t
-                                    on t.id = pst.task_id
-                                left join production_standard pstd
-                                    on pstd.component_id = cps.component_id
-                                    and pstd.production_schema_id = cps.production_schema_id
-                                left join unit u
-                                    on u.id = pstd.unit_id
-                                where cps.component_id = ' . $id .
-            ' order by cps.sequence_no asc, pst.sequence_no asc');
-
-        if (!is_null($component)) {
-            return view('component.component-details', [
-                'comp' => $component,
-                'prod_standards' => $prod_standards,
-                'data' => $data,
+        if (!empty($prod_schema_tasks) and array_key_exists($id, $prod_schema_tasks)) {
+            $prod_schema_tasks = $prod_schema_tasks[$id];
+            return view('prod-schema.prod-schema-details', [
+                'prod_schema' => $prod_schema,
+                'prod_schema_tasks' => $prod_schema_tasks,
                 'instruction' => $instruction,
                 'storage_path_components' => 'components',
                 'storage_path_instructions' => 'instructions',
@@ -108,84 +66,85 @@ class ProdSchemaController
         }
 
         return view('component.component-details', [
-            'error_msg' => 'Brak danych dla komponentu.',
+            'error_msg' => 'Brak danych dla schematu.',
         ]);
 
     }
 
-    public function addComponent(Request $request, ?string $id = null): View
+    public function addSchema(Request $request, ?string $id = null): View
     {
-        $data = $this->getAddComponentData(false);
+        $data = $this->getAddSchemaData();
 
-        $prod_schema_errors = $request->session()->get('prod_schema_errors');
-        $status = $request->session()->get('status');
-        return view('component.component-add', [
-            'prod_schemas' => $data['prod_schemas'],
-            'schema_data' => $data['prod_schema_tasks'],
+        return view('prod-schema.prod-schema-add', [
+            'tasks' => $data['tasks'],
             'units' => $data['units'],
             'material_list' => $data['materials'],
             'user' => $request->user(),
-            'prod_schema_errors' => $prod_schema_errors,
-            'status' => $status,
-
         ]);
 
     }
 
-    public function editComponent(Request $request, string $id): View|RedirectResponse
+    public function editSchema(Request $request, string $id): View|RedirectResponse
     {
-        $prod_schema_errors = $request->session()->get('prod_schema_errors');
-        $status = $request->session()->get('status');
 
         if ($id != null) {
-            $comp = Component::find($id);
-            if ($comp instanceof Component) {
+            $schema = ProductionSchema::where('id',$id)->select('id','production_schema', 'description', 'tasks_count')->first();
+            if ($schema instanceof ProductionSchema) {
+                $data = $this->getAddSchemaData();
+                $selected_schem_tasks = $this->getAddSchemaData($id);
+                $selected_schem_tasks = $selected_schem_tasks['tasks'];
+                $selected_schem_instr = Instruction::where('production_schema_id', $id)->select('id','name','instruction_pdf','video')->first();
+                $selected_schem_prod_std = DB::select('select
+                                                                pstd.id as production_standard_id,
+                                                                pstd.amount,
+                                                                pstd.duration_hours,
+                                                                u.unit
+                                                            from production_schema psh
+                                                                join production_standard pstd
+                                                                    on psh.id = pstd.production_schema_id
+                                                                join unit u
+                                                                    on pstd.unit_id = u.id
+                                                            where psh.id = '.$id.'
+                                                                    and pstd.component_id is null');
+                $selected_schem_prod_std = count($selected_schem_prod_std) == 1? $selected_schem_prod_std[0] : null;
 
-                $selected_comp_instr = Instruction::where('component_id', $comp->id)
-                    ->select('instruction_pdf', 'video')->get();
-                $selected_comp_instr = count($selected_comp_instr) > 0 ? $selected_comp_instr[0] : null;
-
-                $data = $this->getAddComponentData(true, $comp->id);
-                $selected_comp_schemas = DB::select('select
-                                        cps.production_schema_id,
-                                        ps.production_schema,
-                                        pstd.duration_hours,
-                                        pstd.amount,
-                                        u.unit,
-                                        cps.sequence_no
-                                    from component_production_schema cps
-                                    join production_schema ps
-                                        on cps.production_schema_id = ps.id
-                                    left join production_standard pstd
-                                        on ps.id = pstd.production_schema_id
-                                        and pstd.component_id = ' . $comp->id . '
-                                    left join unit u
-                                        on u.id = pstd.unit_id
-                                    where cps.component_id = ' . $comp->id . '
-                                    order by cps.sequence_no');
-
-                $prodschema_input = '';
-                foreach ($selected_comp_schemas as $schema) {
-                    $prodschema_input .= $schema->production_schema_id . '_';
+                $task_input = '';
+                foreach ($selected_schem_tasks as $task) {
+                    $task_input .= $task->task_id . '_';
                 }
-                $prodschema_input = substr($prodschema_input, 0, strlen($prodschema_input) - 1);
+                $task_input = substr($task_input, 0, strlen($task_input) - 1);
 
                 $update = str_contains($request->url(), 'edytuj');
 
-                return view('component.component-add', [
-                    'prod_schemas' => $data['prod_schemas'],
-                    'schema_data' => $data['prod_schema_tasks'],
+
+
+                return view('prod-schema.prod-schema-add', [
+                    'tasks' => $data['tasks'],
                     'units' => $data['units'],
                     'material_list' => $data['materials'],
                     'user' => $request->user(),
-                    'prod_schema_errors' => $prod_schema_errors,
-                    'status' => $status,
-                    'selected_comp' => $comp,
-                    'selected_comp_schemas' => $selected_comp_schemas,
-                    'selected_comp_instr' => $selected_comp_instr,
-                    'prodschema_input' => $prodschema_input,
+                    'selected_schem' => $schema,
+                    'selected_schem_tasks' => $selected_schem_tasks,
+                    'selected_schem_instr' => $selected_schem_instr,
+                    'selected_schem_prod_std' => $selected_schem_prod_std,
+                    'task_input' => $task_input,
                     'update' => $update,
                 ]);
+
+//                return view('component.component-add', [
+//                    'prod_schemas' => $data['prod_schemas'],
+//                    'schema_data' => $data['prod_schema_tasks'],
+//                    'units' => $data['units'],
+//                    'material_list' => $data['materials'],
+//                    'user' => $request->user(),
+//                    'prod_schema_errors' => $prod_schema_errors,
+//                    'status' => $status,
+//                    'selected_schem' => $schema,
+//                    'selected_schem_tasks' => $selected_schem_tasks,
+//                    'selected_schem_instr' => $selected_schem_instr,
+//                    'task_input' => $task_input,
+//                    'update' => $update,
+//                ]);
             }
         }
 
@@ -193,24 +152,23 @@ class ProdSchemaController
         return redirect()->route('product.index')->with('status_err', 'Nie znaleziono komponentu');
     }
 
-    public function storeComponent(Request $request): RedirectResponse
+    public function storeSchema(Request $request): RedirectResponse
     {
-        $this->validateAddComponentForm($request, 'INSERT');
+        $this->validateAddSchemaForm($request, 'INSERT');
+        if((is_null($request->amount) and !is_null($request->duration)) or (!is_null($request->amount) and is_null($request->duration))) {
+            return back()->withErrors(['amount' => 'Aby dodać normę produkcji dla schematu należy podać czas trwania oraz ilość.'])->withInput();
+        }
 
-        $schema_arr = $this->validateProdSchemas($request);
+        $schema_arr = $this->validateTasks($request);
+
         if (array_key_exists('ERROR', $schema_arr)) {
             $schema_arr = $schema_arr['ERROR'];
-            return back()->with('prod_schema_errors', $schema_arr)->withInput();
+            return back()->with('task_errors', $schema_arr)->withInput();
         } else if (array_key_exists('INSERT', $schema_arr)) {
             $schema_arr = $schema_arr['INSERT'];
         }
 
         $user = Auth::user();
-        $independent = $request->independent == null ? 0 : $request->independent;
-        $desc = empty($request->description) ? '' : $request->description;
-        $height = doubleval($request->height);
-        $length = doubleval($request->length);
-        $width = doubleval($request->width);
         $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
         $saved_files = [];
 
@@ -218,47 +176,46 @@ class ProdSchemaController
 
             DB::beginTransaction();
 
-            $comp_image = !empty($request->file('comp_photo')) ? $request->file('comp_photo') : $request->comp_photo_file_to_copy;
-            $insert_result = $this->insertComponent($employee_no, $request->name, $request->material, $desc, $independent,
-                $height, $length, $width, $comp_image);
-
-            if (array_key_exists('SAVED_FILES', $insert_result)) {
-                $saved_files['components'] = [$insert_result['SAVED_FILES']];
-            }
-
+            $insert_result = $this->insertProdSchema($employee_no, $request->production_schema, $request->description, count($schema_arr));
             if (array_key_exists('ERROR', $insert_result)) {
-                throw new Exception('Error inserting component: error occurred in Component->insertComponent method.
+                throw new Exception('Error inserting production_schema: error occurred in ProdSchema->insertProdSchema method.
     Error message: ' . $insert_result['ERROR']);
             }
 
-
-            $comp_id = array_key_exists('ID', $insert_result) ? $insert_result['ID'] : 0;
-            if ($comp_id == 0) {
-                throw new Exception('Error inserting component: after insert to component table. Failed to evaluate id of inserted component.');
+            $schema_id = array_key_exists('ID', $insert_result) ? $insert_result['ID'] : 0;
+            if ($schema_id == 0) {
+                throw new Exception('Error inserting production_schema: after insert to production_schema table. Failed to evaluate id of inserted production_schema.');
 
             }
 
-            $this->insertCompProdSchemaAndProdStd($comp_id, $schema_arr, $employee_no);
+            if(!in_array(null,array($request->amount,$request->duration, $request->unit))) {
+                $amount = floatval($request->amount);
+                $duration = floatval($request->duration);
+                $this->insertProdSchemaProdStd($schema_id, $amount,$duration, $request->unit, $employee_no);
+            }
+
+            $this->insertTasks($schema_id, $schema_arr, $employee_no);
 
             $instr_pdf = !empty($request->file('instr_pdf')) ? $request->file('instr_pdf') : $request->instr_pdf_file_to_copy;
             $instr_video = !empty($request->file('instr_video')) ? $request->file('instr_video') : $request->instr_video_file_to_copy;
 
-            $instr_name = 'Instrukcja wykonania komponentu: '.$request->name;
-            $insert_result = InstructionController::insertInstruction($comp_id, 'component_id', $instr_name ,$employee_no, $instr_pdf, $instr_video);
+            $instr_name = 'Instrukcja wykonania schematu: '.$request->name;
+            $insert_result = InstructionController::insertInstruction($schema_id, 'production_schema_id', $instr_name ,$employee_no, $instr_pdf, $instr_video);
 
             if (array_key_exists('SAVED_FILES', $insert_result)) {
                     $saved_files['instructions'] = $insert_result['SAVED_FILES'];
             }
 
             if (array_key_exists('ERROR', $insert_result)) {
-                throw new Exception('Error inserting component: error occurred in Component->insertInstruction method.
+                throw new Exception('Error inserting production_schema: error occurred in Instruction->insertInstruction method.
     Error message: ' . $insert_result['ERROR']);
             }
+
             DB::commit();
             //DB::rollBack();
 
         } catch (Exception $e) {
-            Log::channel('error')->error('Error inserting component: ' . $e->getMessage(), [
+            Log::channel('error')->error('Error inserting production_schema: ' . $e->getMessage(), [
                 'employeeNo' => $employee_no,
             ]);
             DB::rollBack();
@@ -278,115 +235,101 @@ class ProdSchemaController
                 return back()->with('status', $insert_result['ERROR'])
                     ->withInput();
             }
-            return back()->with('status', 'Nowy komponent nie został dodany: błąd przy wprowadzaniu danych do systemu.')
+            return back()->with('status', 'Nowy schemat produkcji nie został dodany: błąd przy wprowadzaniu danych do systemu.')
                 ->withInput();
         }
-        return redirect()->route('product.index')->with('status', 'Komponent został dodany do systemu.');
+        return redirect()->route('schema.index')->with('status', 'Schemat produkcji został dodany do systemu.');
     }
 
-    public function storeUpdatedComponent(Request $request): RedirectResponse
+    public function storeUpdatedSchema(Request $request): RedirectResponse
     {
-        $this->validateAddComponentForm($request, 'UPDATE');
+        $this->validateAddSchemaForm($request, 'UPDATE');
+        $schema_arr = $this->validateTasks($request);
 
-        $schema_arr = $this->validateProdSchemas($request);
         if (array_key_exists('ERROR', $schema_arr)) {
             $schema_arr = $schema_arr['ERROR'];
             return back()->with('prod_schema_errors', $schema_arr)->withInput();
         } else if (array_key_exists('INSERT', $schema_arr)) {
             $schema_arr = $schema_arr['INSERT'];
         }
+            $user = Auth::user();
+            $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
 
-        $user = Auth::user();
-        $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
-
-        if (!isset($request->component_id) or empty($request->component_id)) {
-            Log::channel('error')->error('Error updating component: error occurred in Component->storeUpdatedComponent method. ID of the component not found', [
-                'employeeNo' => $employee_no,
-            ]);
-            return back()->with('status', 'Nie udało się etytować komponentu - nie znaleziono ID.')->withInput();
-        }
-        if (!(Component::find($request->component_id) instanceof Component)) {
-            Log::channel('error')->error('Error updating component: error occurred in Component->storeUpdatedComponent method. Component with id ' . $request->component_id . ' not found', [
-                'employeeNo' => $employee_no,
-            ]);
-            return back()->with('status', 'Nie udało się etytować komponentu - nie znalezionoF komponentu o podanym ID.')->withInput();
-        }
-
-        $comp_id = $request->component_id;
-        $independent = $request->independent == null ? 0 : $request->independent;
-        $desc = empty($request->description) ? '' : $request->description;
-        $height = doubleval($request->height);
-        $length = doubleval($request->length);
-        $width = doubleval($request->width);
-        $saved_files = [];
-
-        try {
-
-            DB::beginTransaction();
-
-            $comp_image = !empty($request->file('comp_photo')) ? $request->file('comp_photo') : $request->comp_photo_file_to_copy;
-            $update_result = $this->updateComponent($comp_id, $employee_no, $request->name, $request->material, $desc, $independent,
-                $height, $length, $width, $comp_image);
-
-            if (array_key_exists('SAVED_FILES', $update_result)) {
-                $saved_files['components'] = $update_result['SAVED_FILES'];
+            if (!isset($request->schema_id) or empty($request->schema_id)) {
+                Log::channel('error')->error('Error updating production_schema: error occurred in ProdSchema->storeUpdatedSchema method. ID of the production_schema not found', [
+                    'employeeNo' => $employee_no,
+                ]);
+                return back()->with('status', 'Nie udało się etytować schematu - nie znaleziono ID.')->withInput();
+            }
+            if (!(ProductionSchema::find($request->schema_id) instanceof ProductionSchema)) {
+                Log::channel('error')->error('Error updating production_schema: error occurred in ProdSchema->storeUpdatedSchema method. ProductionSchema with id ' . $request->schema_id . ' not found', [
+                    'employeeNo' => $employee_no,
+                ]);
+                return back()->with('status', 'Nie udało się etytować schematu - nie znaleziono schematu o podanym ID.')->withInput();
             }
 
-            if (array_key_exists('ERROR', $update_result)) {
-                throw new Exception('Error inserting component: error occurred in Component->updateComponent method.
+            $schema_id = $request->schema_id;
+            $saved_files = [];
+
+            try {
+                DB::beginTransaction();
+
+                $this->updateProdSchema($schema_id, $employee_no, $request->production_schema,
+                    $request->description, count($schema_arr));
+
+                $this->updateProdSchemaProdStd($schema_id, $request->amount,$request->duration, $request->unit, $employee_no);
+
+                $this->updateTasks($schema_id, $schema_arr, $employee_no);
+
+                $instr_pdf = !empty($request->file('instr_pdf')) ? $request->file('instr_pdf') : $request->instr_pdf_file_to_copy;
+                $instr_video = !empty($request->file('instr_video')) ? $request->file('instr_video') : $request->instr_video_file_to_copy;
+                $instr_name = 'Instrukcja wykonania schematu: ' . $request->name;
+                $update_result = InstructionController::updateInstruction($schema_id, 'production_schema_id', $instr_name, $employee_no, $instr_pdf, $instr_video);
+                if (array_key_exists('SAVED_FILES', $update_result)) {
+                    $saved_files['instructions'] = $update_result['SAVED_FILES'];
+                }
+                if (array_key_exists('ERROR', $update_result)) {
+                    throw new Exception('Error updating production_schema: error occurred in ProdSchema->updateInstruction method.
     Error message: ' . $update_result['ERROR']);
-            }
+                }
 
-            $this->updateCompProdSchemaAndProdStd($comp_id, $schema_arr, $employee_no);
+                DB::commit();
+                //DB::rollBack();
 
-            $instr_pdf = !empty($request->file('instr_pdf')) ? $request->file('instr_pdf') : $request->instr_pdf_file_to_copy;
-            $instr_video = !empty($request->file('instr_video')) ? $request->file('instr_video') : $request->instr_video_file_to_copy;
-            $update_result = $this->updateInstruction($comp_id, $request->name, $employee_no, $instr_pdf, $instr_video);
+            } catch (Exception $e) {
+                Log::channel('error')->error('Error updating production_schema: ' . $e->getMessage(), [
+                    'employeeNo' => $employee_no,
+                ]);
+                DB::rollBack();
 
-            if (array_key_exists('SAVED_FILES', $update_result)) {
-                $saved_files['instructions'] = $update_result['SAVED_FILES'];
-
-            }
-            if (array_key_exists('ERROR', $update_result)) {
-                throw new Exception('Error updating component: error occurred in Component->insertInstruction method.
-    Error message: ' . $update_result['ERROR']);
-            }
-            DB::commit();
-            //DB::rollBack();
-
-        } catch (Exception $e) {
-            Log::channel('error')->error('Error updating component: ' . $e->getMessage(), [
-                'employeeNo' => $employee_no,
-            ]);
-            DB::rollBack();
-
-            foreach ($saved_files as $path => $files) {
-                if(is_array($files)) {
-                    foreach ($files as $file) {
-                        fileTrait::deleteFile($path, $file);
+                foreach ($saved_files as $path => $files) {
+                    if (is_array($files)) {
+                        foreach ($files as $file) {
+                            fileTrait::deleteFile($path, $file);
+                        }
+                    } else if (is_string($files)) {
+                        fileTrait::deleteFile($path, $files);
                     }
                 }
-                else if(is_string($files)) {
-                    fileTrait::deleteFile($path, $files);
-                }
-            }
 
-            if (isset($update_result) and array_key_exists('ERROR', $update_result)) {
-                return back()->with('status', $update_result['ERROR'])
+                if (isset($update_result) and array_key_exists('ERROR', $update_result)) {
+                    return back()->with('status', $update_result['ERROR'])
+                        ->withInput();
+                }
+                return back()->with('status', 'Schemat nie został edytowany: błąd przy wprowadzaniu danych do systemu.')
                     ->withInput();
             }
-            return back()->with('status', 'Komponent nie został edytowany: błąd przy wprowadzaniu danych do systemu.')
-                ->withInput();
+            return redirect()->route('schema.index')->with('status', 'Edytowano schemat.');
         }
-        return redirect()->route('product.index')->with('status', 'Edytowano komponent.');
-    }
 
 
-    public function destroyComponent(Request $request): RedirectResponse
+
+    public function destroySchema(Request $request): RedirectResponse
     {
+
         try {
             $request->validate([
-                'confirmation' => ['regex:(usuń|usun)'],
+                'confirmation' => ['regex:/^(usuń|usun)$/i'],
             ],
                 [
                     'confirmation.regex' => 'Nie można usunąć komponentu: niepoprawna wartość. Wpisz "usuń".',
@@ -396,26 +339,26 @@ class ProdSchemaController
             return redirect()->back()->with('status_err', $e->getMessage());
         }
 
+
         $user = Auth::user();
         $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
-        $comp_id = $request->remove_id;
-        $comp = Component::find($comp_id);
-        if($comp instanceof Component) {
+        $schema_id = $request->remove_id;
+        $schema = ProductionSchema::find($schema_id);
+        if($schema instanceof ProductionSchema) {
             try {
 
                 DB::beginTransaction();
 
-                ProductComponent::where('component_id', $comp_id)->delete();
-                ComponentProductionSchema::where('component_id', $comp_id)->delete();
-                ProductionStandard::where('component_id', $comp_id)->delete();
+                Task::where('production_schema_id', $schema_id)->delete();
+                ProductionStandard::where('production_schema_id', $schema_id)->delete();
 
-                $instr= Instruction::where('component_id',$comp_id)
+                $instr= Instruction::where('production_schema_id',$schema_id)
                     ->select('instruction_pdf','video')
                     ->get();
                 $instr = count($instr) == 1 ? $instr[0] : null;
 
-                Instruction::where('component_id', $comp_id)->delete();
-                Component::where('id', $comp_id)->delete();
+                Instruction::where('production_schema_id', $schema_id)->delete();
+                ProductionSchema::where('id', $schema_id)->delete();
 
                 if($instr instanceof Instruction) {
                     if(fileTrait::fileExists('instructions', $instr->instruction_pdf)) {
@@ -425,75 +368,90 @@ class ProdSchemaController
                         fileTrait::deleteFile('instructions', $instr->video);
                     }
                 }
-                if(fileTrait::fileExists('components', $comp->image)) {
-                    fileTrait::deleteFile('components', $comp->image);
-                }
 
                 DB::commit();
 
             } catch (Exception $e) {
-                Log::channel('error')->error('Error deleting component: ' . $e->getMessage(), [
+                Log::channel('error')->error('Error deleting production_schema: ' . $e->getMessage(), [
                     'employeeNo' => $employee_no,
                 ]);
                 DB::rollBack();
 
-                return back()->with('status_err', 'Komponent nie został usunięty: błąd przy usuwaniu danych z systemu.')
+                return back()->with('status_err', 'Schemat nie został usunięty: błąd przy usuwaniu danych z systemu.')
                     ->withInput();
             }
+
+            return  redirect()->route('schema.index')
+                ->with('status', 'Usunięto schemat: '.$schema->production_schema.'.')
+                ->withInput();
         }
 
-        return  redirect()->route('product.index')
-            ->with('status', 'Usunięto komponent: '.$comp->name.'.')
+        return  redirect()->route('schema.index')
+            ->with('status_err', 'Schemat nie został usunięty: nie znaleziono schematu.')
             ->withInput();
+
     }
 
     ///////////////////////////////////////////////////////////
     ///  PRIVATE METHODS
     ///////////////////////////////////////////////////////////
 
-    private function getAddComponentData(bool $adjusted_to_component, int $component_id = 0): array
+    private function getSchemaData(int $schema_id = 0): array
     {
-        $materials = StaticValue::where('type','material')->get();
-        $units = Unit::select('unit','name')->get();
-        $prod_schemas = ProductionSchema::all();
-        if($adjusted_to_component) {
-            $data = DB::select('select
-                                        psh.id as prod_schema_id,
-                                        cps.sequence_no as prod_schema_sequence_no,
-                                        psh.production_schema as prod_schema,
-                                        psh.description as prod_schema_desc,
-                                        psh.tasks_count,
-                                        psht.task_id,
-                                        psht.sequence_no as task_sequence_no,
-                                        t.name as task_name,
-                                        t.description as task_desc
-                                    from production_schema psh
-                                             left join production_schema_task psht
-                                                on psh.id = psht.production_schema_id
-                                             left join task t
-                                                on t.id = psht.task_id
-                                             left join component_production_schema cps
-                                                on psh.id = cps.production_schema_id
-                                                and cps.component_id = '.$component_id.'
-                                    order by cps.sequence_no, psht.production_schema_id, psht.sequence_no');
-        } else {
-            $data = DB::select('select
-                                        psh.id as prod_schema_id,
-                                        psh.production_schema as prod_schema,
-                                        psh.description as prod_schema_desc,
-                                        psh.tasks_count,
-                                        psht.task_id,
-                                        psht.sequence_no as task_sequence_no,
-                                        t.name as task_name,
-                                        t.description as task_desc
-                                    from production_schema psh
-                                             left join production_schema_task psht
-                                                  on psh.id = psht.production_schema_id
-                                             left join task t
-                                                  on t.id = psht.task_id
-                                    order by production_schema_id, task_sequence_no');
-        }
 
+        if($schema_id > 0) {
+            $data = DB::select('select
+                                       ps.id as prod_schema_id,
+                                       ps.production_schema as prod_schema,
+                                       ps.description as prod_schema_desc,
+                                       t.id as task_id,
+                                       t.sequence_no as sequence_no,
+                                       t.amount_required,
+                                       t.name as task_name,
+                                       t.description as task_desc,
+                                       pstd.id as prod_std_id,
+                                       pstd.name as prod_std_name,
+                                       pstd.description as prod_std_desc,
+                                       pstd.duration_hours prod_std_duration,
+                                       pstd.amount as prod_std_amount,
+                                       u.unit as prod_std_unit
+                                from production_schema ps
+                                join task t
+                                    on t.production_schema_id = ps.id
+                                left join production_standard pstd
+                                       on pstd.production_schema_id = ps.id
+                                        and pstd.component_id is null
+                                left join unit u
+                                    on u.id = pstd.unit_id
+                                where ps.id = ' . $schema_id .
+                ' order by ps.id, t.sequence_no');
+        }
+        else{
+            $data = DB::select('select
+                                    ps.id as prod_schema_id,
+                                    ps.production_schema as prod_schema,
+                                    ps.description as prod_schema_desc,
+                                    t.id as task_id,
+                                    t.sequence_no as sequence_no,
+                                    t.amount_required,
+                                    t.name as task_name,
+                                    t.description as task_desc,
+                                    pstd.id as prod_std_id,
+                                    pstd.name as prod_std_name,
+                                    pstd.description as prod_std_desc,
+                                    pstd.duration_hours prod_std_duration,
+                                    pstd.amount as prod_std_amount,
+                                    u.unit as prod_std_unit
+                                from production_schema ps
+                                         join task t
+                                              on t.production_schema_id = ps.id
+                                         left join production_standard pstd
+                                              on pstd.production_schema_id = ps.id
+                                              and pstd.component_id is null
+                                         left join unit u
+                                              on u.id = pstd.unit_id
+                                order by ps.id, t.sequence_no');
+        }
 
         $prod_schema_tasks = array();
         if(count($data) > 0) {
@@ -511,56 +469,135 @@ class ProdSchemaController
             $prod_schema_tasks[$curr_schema_id] = $temp;
         }
 
-        return array('materials' => $materials,
-            'units' => $units,
-            'prod_schema_tasks' => $prod_schema_tasks,
-            'prod_schemas' => $prod_schemas
+        return $prod_schema_tasks;
+    }
+
+    private function getAddSchemaData(int $schema_id = 0): array
+    {
+        $materials = StaticValue::where('type','material')->get();
+        $units = Unit::select('unit','name')->get();
+
+        if($schema_id > 0) {
+//task_distinct.task_id is used, coz in the task section of the prod-schema.prod-schema-add view are diplayed only
+// tasks grouped by name and desc, with lowest id. Thus to fit existing component's tasks to those tasks this join is done
+            $data = DB::select("select
+                                       ps.id as prod_schema_id,
+                                       ps.production_schema as prod_schema,
+                                       ps.description as prod_schema_desc,
+                                       task_distinct.task_id,
+                                       t.sequence_no as task_sequence_no,
+                                       t.amount_required,
+                                       t.name as task_name,
+                                       t.description as task_desc
+                                from production_schema ps
+                                join task t
+                                    on t.production_schema_id = ps.id
+                                join (select
+                                           min(t.id) as task_id,
+                                           t.name as task_name,
+                                           t.description as task_desc
+                                        from task t
+                                        group by t.name, t.description) task_distinct
+                                on task_distinct.task_name = t.name
+                                and IFNULL(task_distinct.task_desc,'') = IFNULL(t.description,'')
+                                where ps.id = " . $schema_id .
+                ' order by ps.id, task_distinct.task_id');
+        }
+        else{
+            $data = DB::select('select
+                                       min(t.id) as task_id,
+                                       t.name as task_name,
+                                       t.description as task_desc
+                                from task t
+                                group by t.name, t.description
+                                order by task_id');
+        }
+
+        return array(
+            'tasks' => $data,
+            'materials' => $materials,
+            'units' => $units
         );
     }
-    private function validateProdSchemas(Request $request): array
+    private function validateTasks(Request $request): array
     {
-        $units = DB::select('select unit from unit');
-        //CAST DB::select result to simple array
-        $units = collect($units)->map(function (stdClass $arr) { return $arr->unit; })->toArray();
-
-        //errors to be displayed on page are stored here
         $error_arr = [];
         $insert_arr = [];
-        $schemas = explode('_',$request->prodschema_input);
+        if(is_null($request->task_input) and ($request->new_counter == 0 or is_null($request->new_counter))) {
+            $error_arr[] = 'Schemat musi mieć przypisane minimum 1 zadanie.';
+            return array('ERROR' => $error_arr);
+        }
 
-        //each prod schema values validation
-        $sequence_no_arr = array_map(function($x) { return $x; }, range(1, count($schemas)));
-        foreach ($schemas as $schema) {
-            $schema_id = intval($schema);
-            if($schema_id > 0) {
-                $duration = 'duration_'.$schema_id;
-                $amount = 'amount_'.$schema_id;
-                $unit = 'unit_'.$schema_id;
-                $sequence_no = 'sequenceno_'.$schema_id;
+        $new_task_count = intval($request->new_counter);
+        $new_task_id_arr = array();
+        if($new_task_count > 0) {
+            $new_task_id_arr = array_map(function($x) { return $x; }, range(1, $new_task_count));
+        }
 
-                if($request->$duration == null or $request->$duration <= 0) {
-                    $error_arr[] = 'Niepoprawna wartość Czas [h] dla jednego ze schematów produkcji.';
-                }
-                if($request->$amount == null or $request->$amount <= 0) {
-                    $error_arr[] = 'Niepoprawna wartość Ilość dla jednego ze schematów produkcji.';
-                }
-                if($request->$unit == null or !in_array($request->$unit, $units)) {
-                    $error_arr[] = 'Niepoprawna wartość Jednostka dla jednego ze schematów produkcji.';
-                }
+
+        $tasks = is_null($request->task_input) ? [] : explode('_', $request->task_input);
+        $sequence_no_count = empty($tasks) ? $new_task_count : count($tasks) + $new_task_count;
+        $sequence_no_arr = array_map(function($x) { return $x; }, range(1, $sequence_no_count));
+        $taks_names_arr = array();
+        foreach ($new_task_id_arr  as $new_task_id) {
+            if($new_task_id > 0) {
+                $sequence_no = 'new_sequence_no_'.$new_task_id;
+                $amount_required = 'new_amount_required_'.$new_task_id;
+                $name = 'new_name_'.$new_task_id;
+                $desc = 'new_desc_'.$new_task_id;
+
                 if($request->$sequence_no == null or !in_array($request->$sequence_no, $sequence_no_arr)) {
-                    $error_arr[] = 'Niepoprawne wartości Kolejność wyk. Schematy powinny zawierać liczby od 1 do '.count($schemas).' (w dowolnej kolejności).';
+                    $error_arr[] = 'Niepoprawne wartości Kolejność wykonania. Schematy powinny zawierać liczby od 1 do '.$sequence_no_count.' (w dowolnej kolejności).';
                 } else {
                     array_splice($sequence_no_arr,array_search($request->$sequence_no, $sequence_no_arr),1);
+                }
+                if(empty($request->$name)) {
+                    $error_arr[] = 'Aby dodać nowe zadanie podaj jego nazwę.';
+                }
+                if(in_array($request->$name, $taks_names_arr)) {
+                    $error_arr[] = 'Nie można dodać 2 zadań o identycznej nazwie.';
+                } else {
+                    $taks_names_arr[] = $request->$name;
                 }
 
                 $error_arr = array_unique($error_arr);
                 if(count($error_arr) == 0) {
-                    $insert_arr[$schema_id] = array(
-                        "duration" => $request->$duration,
-                        "amount" => $request->$amount,
-                        "unit" => $request->$unit,
-                        "sequence_no" => $request->$sequence_no
+                    $insert_arr['new_'.$new_task_id] = array(
+                        "name" => $request->$name,
+                        "sequence_no" => $request->$sequence_no,
+                        "description" => $request->$desc,
+                        "amount_required" => $request->$amount_required,
                     );
+                }
+            }
+        }
+
+        if(!empty($tasks)) {
+            //case when there are tasks existing tasks selected
+            foreach ($tasks as $task) {
+                $task_id = intval($task);
+                if($task_id > 0) {
+                    $name = Task::where('id', $task_id)->select('name')->first();
+                    $name = $name instanceof Task ? $name->name : null;
+                    $sequence_no = 'sequenceno_'.$task_id;
+                    $amount_required = 'amount_required_'.$task_id;
+                    if($request->$sequence_no == null or !in_array($request->$sequence_no, $sequence_no_arr)) {
+                        $error_arr[] = 'Niepoprawne wartości Kolejność wykonania. Schematy powinny zawierać liczby od 1 do '.$sequence_no_count.' (w dowolnej kolejności).';
+                    } else {
+                        array_splice($sequence_no_arr,array_search($request->$sequence_no, $sequence_no_arr),1);
+                    }
+                    if(in_array($name, $taks_names_arr)) {
+                        $error_arr[] = 'Nie można dodać 2 zadań o identycznej nazwie.';
+                    } else {
+                        $taks_names_arr[] = $name;
+                    }
+                    $error_arr = array_unique($error_arr);
+                    if(count($error_arr) == 0) {
+                        $insert_arr[$task_id] = array(
+                            "sequence_no" => $request->$sequence_no,
+                            "amount_required" => $request->$amount_required,
+                        );
+                    }
                 }
             }
         }
@@ -569,348 +606,231 @@ class ProdSchemaController
             return array('ERROR' => $error_arr);
         }
         return array('INSERT' => $insert_arr);
-
     }
 
-    private function insertComponent(string $employee_no, string $name, string $material, string $description, int $independent,
-                                     float $height, float $length, float $width, $comp_image): array
+    private function insertProdSchema(string $employee_no, string $prod_schema, string|null $description, int $tasks_count): array
     {
 
-        $comp_id = DB::table('component')->insertGetId([
-            'name' => $name,
-            'material' => $material,
+        $schema_id = DB::table('production_schema')->insertGetId([
+            'production_schema' => $prod_schema,
             'description' => $description,
-            'independent' => $independent,
-            'image' => '',
-            'height' => $height,
-            'length' => $length,
-            'width' => $width,
+            'tasks_count' => $tasks_count,
             'created_by' => $employee_no,
             'updated_by' => $employee_no,
             'created_at' => date('y-m-d h:i:s'),
             'updated_at' => date('y-m-d h:i:s'),
         ]);
 
-        $image_name = '';
-        if($comp_image instanceof UploadedFile) {
-            $image_name = fileTrait::saveFile($comp_image, 'components', 'comp_'.$comp_id.'_');
-            //if failed to save comp image file
-            if(empty($image_name)) {
-                return array('ERROR' => 'Nowy komponent nie został dodany: błąd przy zapisie pliku "Zdjęcie komponentu" na dysku.');
-            }
-        }
-        else if(is_string($comp_image)) {
-            $new_image_name = fileTrait::getFileName('components', $comp_image);
-            if(!fileTrait::copyFile('components', $comp_image, 'components', $new_image_name)) {
-                return array('ERROR' => 'Nowy komponent nie został dodany: błąd przy kopiowaniu pliku "Zdjęcie komponentu" na dysku.');
-            }
-            else {
-                $image_name = $new_image_name;
-            }
-        }
-
-        if(!empty($image_name)) {
-            try {
-                DB::table('component')
-                    ->where('id', $comp_id)
-                    ->update(['image' => $image_name]);
-
-            } catch(Exception $e) {
-                Log::channel('error')->error('Error inserting component: '.$e->getMessage(), [
-                    'employeeNo' => $employee_no,
-                ]);
-                return array('ERROR' => 'Nowy komponent nie został dodany: błąd przy zapisie nazwy pliku "Zdjęcie komponentu" w bazie danych.',
-                    'SAVED_FILES' => array($image_name));
-            }
-        }
-
-
-        return array('SAVED_FILES' => array($image_name),
-                     'ID' => $comp_id);
+        return array('ID' => $schema_id);
 
     }
 
-    private function updateComponent(int $comp_id, string $employee_no, string $name, string $material, string $description, int $independent,
-                                     float $height, float $length, float $width, $comp_image): array
+    private function updateProdSchema(int $schema_id, string $employee_no, string $prod_schema,
+                                      string|null $description, int $tasks_count): void
     {
-        $comp_old = Component::find($comp_id);
 
-        DB::table('component')
-            ->where('id', $comp_id)
+        DB::table('production_schema')
+            ->where('id', $schema_id)
             ->update([
-            'name' => $name,
-            'material' => $material,
-            'description' => $description,
-            'independent' => $independent,
-            'height' => $height,
-            'length' => $length,
-            'width' => $width,
-            'updated_by' => $employee_no,
-            'updated_at' => date('y-m-d h:i:s'),
-        ]);
-
-
-        $image_name = '';
-        if($comp_image instanceof UploadedFile) {
-            $image_name = fileTrait::saveFile($comp_image, 'components', 'comp_'.$comp_id.'_');
-            //if failed to save comp image file
-            if(empty($image_name)) {
-                return array('ERROR' => 'Komponent nie został edytowany: błąd przy zapisie pliku "Zdjęcie komponentu" na dysku.');
-            }
-            if(!empty($comp_old->image) and fileTrait::fileExists('components', $comp_old->image)) {
-                fileTrait::deleteFile('components', $comp_old->image);
-            }
-
-        }
-        else if(is_null($comp_image)) {
-            if(!empty($comp_old->image) and fileTrait::fileExists('components', $comp_old->image)) {
-                fileTrait::deleteFile('components', $comp_old->image);
-            }
-            $image_name = null;
-        }
-
-        //if image name is null update occurs
-        if(is_null($image_name) || !empty($image_name)) {
-            try {
-                DB::table('component')
-                    ->where('id', $comp_id)
-                    ->update(['image' => $image_name]);
-
-            } catch(Exception $e) {
-                Log::channel('error')->error('Error updating component: '.$e->getMessage(), [
-                    'employeeNo' => $employee_no,
+                'production_schema' => $prod_schema,
+                'description' => $description,
+                'tasks_count' => $tasks_count,
+                'updated_by' => $employee_no,
+                'updated_at' => date('y-m-d h:i:s'),
                 ]);
-                return array('ERROR' => 'Komponent nie został edytowany: błąd przy zapisie nazwy pliku "Zdjęcie komponentu" w bazie danych.',
-                    'SAVED_FILES' => array($image_name));
-            }
-        }
-
-
-        return array('SAVED_FILES' => array($image_name));
 
     }
 
-    private function insertInstruction(int $comp_id, string $name, string $employee_no, $instr_pdf, $instr_video): array
+    /**
+     * @throws Exception
+     */
+    private function insertTasks(int $schema_id, array $schema_arr, string $employee_no): void
     {
 
-        $instr_name = 'Instrukcja wykonania komponentu: '.$name;
-        $instr_id = DB::table('instruction')->insertGetId([
-            'component_id' => $comp_id,
-            'name' => $instr_name,
-            'instruction_pdf' => '',
-            'video' => '',
+        foreach ($schema_arr as $key => $schema) {
+            if(is_int($key)) {
+                $task = Task::where('id',$key)->select('name', 'description')->first();
+                if($task instanceof Task) {
+                    $schema['name'] = $task->name;
+                    $schema['description'] = $task->description;
+                }
+                else {
+                    throw new Exception('Error inserting production_schema: error occurred in ProdSchema->insertTasks method. Selected task not found in database.');
+                }
+            }
+            else if(!(is_string($key) and str_contains($key, 'new'))) {
+                throw new Exception('Error inserting production_schema: error occurred in ProdSchema->insertTasks method. Incorrect key occurred in $schema_arr array.');
+            }
+            $am_req = !empty($schema['amount_required']);
+            DB::table('task')->insert([
+                'production_schema_id' => $schema_id,
+                'name' => $schema['name'],
+                'description' => $schema['description'],
+                'sequence_no' => $schema['sequence_no'],
+                'amount_required' => $am_req,
+                'created_by' => $employee_no,
+                'updated_by' => $employee_no,
+                'created_at' => date('y-m-d h:i:s'),
+                'updated_at' => date('y-m-d h:i:s'),
+            ]);
+        }
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function updateTasks(int $schema_id, array $task_arr, string $employee_no): void
+    {
+
+        $ids = DB::select("select t.id as task_id, task_distinct.task_id as task_distinct_id
+                                    from task t
+                                        join (select
+                                               min(t.id) as task_id,
+                                               t.name as task_name,
+                                               t.description as task_desc
+                                           from task t
+                                           group by t.name, t.description) task_distinct
+                                             on task_distinct.task_name = t.name
+                                                 and IFNULL(task_distinct.task_desc,'') = IFNULL(t.description,'')
+                                    where t.production_schema_id = ".$schema_id.";");
+        //array contains real task_id mapped with id from task section
+        $id_map = array();
+        foreach ($ids as $row) {
+            $id_map[$row->task_id] = $row->task_distinct_id;
+        }
+
+        foreach ($task_arr as $key => $task) {
+
+            $am_req = !empty($task['amount_required']);
+            //if key is int then task may be added or updated if it is existing one
+            if(is_int($key)) {
+                //if task_id is in id_map array then update
+                if(in_array($key, $id_map)) {
+                    $real_task_id = array_search($key, $id_map);
+
+                    DB::table('task')
+                        ->where('id',$real_task_id)
+                        ->update([
+                            'sequence_no' => $task['sequence_no'],
+                            'amount_required' => $am_req,
+                            'updated_by' => $employee_no,
+                            'updated_at' => date('y-m-d h:i:s'),
+                        ]);
+                    unset($id_map[$real_task_id]);
+                }
+                //if task_id isn't in id_map then it is inserted
+                else {
+                    $t = Task::where('id',$key)->select('name', 'description')->first();
+                    if($t instanceof Task) {
+                        $task['name'] = $t->name;
+                        $task['description'] = $t->description;
+                    }
+                    else {
+                        throw new Exception('Error updating production_schema: error occurred in ProdSchema->updateTasks method. Selected task not found in database.');
+                    }
+                    DB::table('task')->insert([
+                        'production_schema_id' => $schema_id,
+                        'name' => $task['name'],
+                        'description' => $task['description'],
+                        'sequence_no' => $task['sequence_no'],
+                        'amount_required' => $am_req,
+                        'created_by' => $employee_no,
+                        'updated_by' => $employee_no,
+                        'created_at' => date('y-m-d h:i:s'),
+                        'updated_at' => date('y-m-d h:i:s'),
+                    ]);
+                }
+            }
+            else if(is_string($key) and str_contains($key, 'new')) {
+                DB::table('task')->insert([
+                    'production_schema_id' => $schema_id,
+                    'name' => $task['name'],
+                    'description' => $task['description'],
+                    'sequence_no' => $task['sequence_no'],
+                    'amount_required' => $am_req,
+                    'created_by' => $employee_no,
+                    'updated_by' => $employee_no,
+                    'created_at' => date('y-m-d h:i:s'),
+                    'updated_at' => date('y-m-d h:i:s'),
+                ]);
+            }
+            else {
+                throw new Exception('Error updating production_schema: error occurred in ProdSchema->updateTasks method. Incorrect key occurred in $task_arr array.');
+            }
+        }
+
+        foreach ($id_map as $real_task_id => $distinct_task_id) {
+            Task::where('id', $real_task_id)->delete();
+        }
+    }
+    /**
+     * @throws Exception
+     */
+    private function insertProdSchemaProdStd(int $schema_id, float $amount, float $duration, string $unit, string $employee_no ): void
+    {
+
+        $unit_id = Unit::where('unit',$unit)->select('id')->first();
+        if($unit_id instanceof Unit) {
+            $unit_id = $unit_id->id;
+        }
+        else {
+            throw new Exception('Error inserting production_schema: error occurred in ProdSchema->insertProdSchemaProdStd method. Id not found for provided unit.');
+        }
+        DB::table('production_standard')->insert([
+            'production_schema_id' => $schema_id,
+            'name' => '',
+            'duration_hours' => $duration,
+            'amount' =>$amount,
+            'unit_id' => $unit_id,
             'created_by' => $employee_no,
             'updated_by' => $employee_no,
             'created_at' => date('y-m-d h:i:s'),
             'updated_at' => date('y-m-d h:i:s'),
         ]);
-
-        $instr_pdf_name = '';
-        if($instr_pdf instanceof UploadedFile) {
-            $instr_pdf_name = fileTrait::saveFile($instr_pdf, 'instructions', 'instr_doc_'.$instr_id.'_');
-            //if failed to save instr file
-            if(empty($instr_pdf_name)) {
-                return array('ERROR' => 'Nowy komponent nie został dodany: błąd przy zapisie pliku "Instrukcja wykonania komponentu".');
-            }
-        }
-        else if(is_string($instr_pdf)) {
-            $new_instr_pdf_name = fileTrait::getFileName('instructions', $instr_pdf);
-            if(!fileTrait::copyFile('instructions', $instr_pdf, 'instructions', $new_instr_pdf_name)) {
-                return array('ERROR' => 'Nowy komponent nie został dodany: błąd przy kopiowaniu pliku "Instrukcja wykonania komponentu".');
-            }
-            else {
-                $instr_pdf_name = $new_instr_pdf_name;
-            }
-        }
-
-        $instr_video_name = '';
-        if($instr_video instanceof UploadedFile) {
-            $instr_video_name = fileTrait::saveFile($instr_video, 'instructions', 'instr_vid'.$instr_id.'_');
-            //if failed to save comp instr video file
-            if(empty($instr_video_name)) {
-                return array('ERROR' => 'Nowy komponent nie został dodany: błąd przy zapisie pliku "Film instruktażowy".',
-                    'SAVED_FILES' => array($instr_pdf_name));
-            }
-        }
-        else if(is_string($instr_video)) {
-            $new_instr_video_name = fileTrait::getFileName('instructions', $instr_video);
-            if(!fileTrait::copyFile('instructions', $instr_video, 'instructions', $new_instr_video_name)) {
-                return array('ERROR' => 'Nowy komponent nie został dodany: błąd przy kopiowaniu pliku "Film instruktażowy".',
-                    'SAVED_FILES' => array($instr_pdf_name));
-            }
-            else {
-                $instr_video_name = $new_instr_video_name;
-            }
-        }
-
-        $saved_files = [];
-        if(!empty($instr_pdf_name)) {
-            $saved_files[] = $instr_pdf_name;
-        }
-        if(!empty($instr_video_name)) {
-            $saved_files[] = $instr_video_name;
-        }
-
-        if(count($saved_files) > 0) {
-            try {
-                DB::table('instruction')
-                    ->where('id', $instr_id)
-                    ->update(['instruction_pdf' => $instr_pdf_name,
-                        'video' => $instr_video_name,]);
-
-            } catch(Exception $e) {
-                Log::channel('error')->error('Error inserting component: '.$e->getMessage(), [
-                    'employeeNo' => $employee_no,
-                ]);
-                return array('ERROR' => 'Nowy komponent nie został dodany: błąd przy zapisie nazwy plików "Instrukcja wykonania komponentu" oraz "Film instruktażowy" w bazie danych.',
-                    'SAVED_FILES' => $saved_files);
-            }
-        }
-
-
-        return array('SAVED_FILES' => $saved_files);
     }
 
-    private function updateInstruction(int $comp_id, string $name, string $employee_no, $instr_pdf, $instr_video): array
+    /**
+     * @throws Exception
+     */
+    private function updateProdSchemaProdStd(int $schema_id, float|null $amount,float|null $duration,string|null $unit, $employee_no ): void
     {
-        $instr_name = 'Instrukcja wykonania komponentu: '.$name;
+        $unit_id = Unit::where('unit',$unit)->select('id')->first();
+        if($unit_id instanceof Unit) {
+            $unit_id = $unit_id->id;
+        }
+        else {
+            throw new Exception('Error inserting production_schema: error occurred in ProdSchema->insertProdSchemaProdStd method. Id not found for provided unit.');
+        }
 
-        $instr_old = Instruction::where('component_id',$comp_id)->get();
-        $instr_id = collect($instr_old)->map(function (Instruction $arr) { return $arr->id; })->toArray();
-
-        $instr_old = count($instr_old) == 1 ? $instr_old[0] : null;
-
-        if(count($instr_id) > 0) {
-            $instr_id = $instr_id[0];
-
-            DB::table('instruction')
-                ->where('id',$instr_id)
-                ->update([
-                    'name' => $instr_name,
+        if(is_null($duration) and is_null($amount)) {
+            if(ProductionStandard::where('production_schema_id', $schema_id)->first() instanceof ProductionStandard) {
+                ProductionStandard::where('production_schema_id', $schema_id)->delete();
+            }
+        } else {
+            $duration = floatval($duration);
+            $amount = floatval($amount);
+            if(ProductionStandard::where('production_schema_id', $schema_id)->first() instanceof ProductionStandard) {
+                DB::table('production_standard')
+                    ->where('production_schema_id', $schema_id)
+                    ->update([
+                    'duration_hours' => $duration,
+                    'amount' =>$amount,
+                    'unit_id' => $unit_id,
                     'updated_by' => $employee_no,
                     'updated_at' => date('y-m-d h:i:s'),
                 ]);
-        }
-        else {
-            $instr_id = DB::table('instruction')->insertGetId([
-                'component_id' => $comp_id,
-                'name' => $instr_name,
-                'instruction_pdf' => '',
-                'video' => '',
-                'created_by' => $employee_no,
-                'updated_by' => $employee_no,
-                'created_at' => date('y-m-d h:i:s'),
-                'updated_at' => date('y-m-d h:i:s'),
-            ]);
-        }
-
-        $instr_pdf_name = '';
-        if($instr_pdf instanceof UploadedFile) {
-            $instr_pdf_name = fileTrait::saveFile($instr_pdf, 'instructions', 'instr_doc_'.$instr_id.'_');
-            //if failed to save instr file
-            if(empty($instr_pdf_name)) {
-                return array('ERROR' => 'Komponent nie został edytowany: błąd przy zapisie pliku "Instrukcja wykonania komponentu" na dysku.');
+            } else {
+                DB::table('production_standard')->insert([
+                    'production_schema_id' => $schema_id,
+                    'duration_hours' => $duration,
+                    'amount' =>$amount,
+                    'unit_id' => $unit_id,
+                    'created_by' => $employee_no,
+                    'updated_by' => $employee_no,
+                    'created_at' => date('y-m-d h:i:s'),
+                    'updated_at' => date('y-m-d h:i:s'),
+                ]);
             }
-            if(!empty($instr_old->instruction_pdf) and fileTrait::fileExists('instructions', $instr_old->instruction_pdf)) {
-                fileTrait::deleteFile('instructions', $instr_old->instruction_pdf);
-            }
-        }
-        else if(is_null($instr_pdf)) {
-            if(!empty($instr_old->instruction_pdf) and fileTrait::fileExists('instructions', $instr_old->instruction_pdf)) {
-                fileTrait::deleteFile('instructions', $instr_old->instruction_pdf);
-            }
-            $instr_pdf_name = null;
-        }
-
-
-        $instr_video_name = '';
-        if($instr_video instanceof UploadedFile) {
-            $instr_video_name = fileTrait::saveFile($instr_video, 'instructions', 'instr_vid_'.$instr_id.'_');
-            //if failed to save comp instr video file
-            if(empty($instr_video_name)) {
-                if(empty($instr_pdf_name)){
-                    return array('ERROR' => 'Komponent nie został edytowany: błąd przy zapisie pliku "Film instruktażowy" na dysku.');
-                }
-                return array('ERROR' => 'Komponent nie został edytowany: błąd przy zapisie pliku "Film instruktażowy" na dysku.',
-                             'SAVED_FILES' => array($instr_pdf_name));
-            }
-            if(!empty($instr_old->video) and fileTrait::fileExists('instructions', $instr_old->video)) {
-                fileTrait::deleteFile('instructions', $instr_old->video);
-            }
-        }
-        else if(is_null($instr_video)) {
-            if(!empty($instr_old->video) and fileTrait::fileExists('instructions', $instr_old->video)) {
-                fileTrait::deleteFile('instructions', $instr_old->video);
-            }
-            $instr_video_name = null;
-        }
-
-
-        $saved_files = [];
-        if(!empty($instr_pdf_name)) {
-            $saved_files[] = $instr_pdf_name;
-        }
-        else if(!is_null($instr_pdf_name)) {
-            $instr_pdf_name = $instr_old->instruction_pdf;
-        }
-        if(!empty($instr_video_name)) {
-            $saved_files[] = $instr_video_name;
-        }
-        else if(!is_null($instr_video_name)) {
-            $instr_video_name = $instr_old->video;
-        }
-
-        try {
-            DB::table('instruction')
-                ->where('id', $instr_id)
-                ->update(['instruction_pdf' => $instr_pdf_name,
-                    'video' => $instr_video_name,]);
-
-        } catch(Exception $e) {
-            Log::channel('error')->error('Error updating component: '.$e->getMessage(), [
-                'employeeNo' => $employee_no,
-            ]);
-            return array('ERROR' => 'Nowy komponent nie został edytowany: błąd przy zapisie nazwy plików "Instrukcja wykonania komponentu" oraz "Film instruktażowy" w bazie danych.',
-                'SAVED_FILES' => $saved_files);
-        }
-
-
-        return array('SAVED_FILES' => $saved_files);
-    }
-
-
-    private function insertCompProdSchemaAndProdStd(int $comp_id, array $schema_arr, string $employee_no ): void
-    {
-
-        foreach ($schema_arr as $schema_id => $value) {
-
-            $unit_id = DB::select("select id from unit where unit = '".$value['unit']."'");
-            $unit_id = collect($unit_id)->map(function (stdClass $arr) { return $arr->id; })->toArray();
-            $unit_id = count($unit_id) > 0 ? $unit_id[0] : 0;
-
-            DB::table('component_production_schema')->insert([
-                'component_id' => $comp_id,
-                'production_schema_id' => $schema_id,
-                'sequence_no' => $value['sequence_no'],
-                'unit_id' => $unit_id,
-                'created_by' => $employee_no,
-                'updated_by' => $employee_no,
-                'created_at' => date('y-m-d h:i:s'),
-                'updated_at' => date('y-m-d h:i:s'),
-            ]);
-
-            DB::table('production_standard')->insert([
-                'component_id' => $comp_id,
-                'production_schema_id' => $schema_id,
-                'name' => '',
-                'duration_hours' => $value['duration'],
-                'amount' =>$value['amount'],
-                'unit_id' => $unit_id,
-                'created_by' => $employee_no,
-                'updated_by' => $employee_no,
-                'created_at' => date('y-m-d h:i:s'),
-                'updated_at' => date('y-m-d h:i:s'),
-            ]);
         }
     }
 
@@ -992,58 +912,50 @@ class ProdSchemaController
         }
     }
 
-    private function validateAddComponentForm(Request $request, string $action) : void
+    private function validateAddSchemaForm(Request $request, string $action) : void
     {
-        $materials = StaticValue::where('type','material')->select('value', 'value_full')->get();
+        $units = Unit::all();
 
         $err_mess = '';
-        $mat_in = 'in:';
-        foreach ($materials as $mat) {
-            $mat_in .= $mat->value.',';
-            $err_mess .= $mat->value_full.' ,';
+        $unit_in = 'in:';
+        foreach ($units as $unit) {
+            $unit_in .= $unit->unit.',';
+            $err_mess .= $unit->unit.' ,';
         }
-        $mat_in = rtrim($mat_in,',');
+        $unit_in = rtrim($unit_in,',');
         $err_mess = rtrim($err_mess,',');
 
-        $ext_comp_photo = empty($request->file('comp_photo')) ? '' : $request->file('comp_photo')->extension();
+
         $ext_instr_pdf = empty($request->file('instr_pdf')) ? '' : $request->file('instr_pdf')->extension();
         $ext_instr_video = empty($request->file('instr_video')) ? '' : $request->file('instr_video')->extension();
 
-        $name_rules = ['required', 'string',  'min:1','max:100'];
+        $prod_schema_rules = ['required', 'string',  'min:1','max:100'];
         if($action == 'INSERT') {
-            $name_rules[] =  'unique:'.Component::class;
+            $prod_schema_rules[] =  'unique:'.ProductionSchema::class;
         }
+
         $request->validate([
-            'name' => $name_rules,
-            'material' => ['required', 'string',  $mat_in],
-            'comp_photo' => ['mimes:jpeg,gif,bmp,png,jpg,svg', 'max:16384'],
+            'production_schema' => $prod_schema_rules,
+            'amount' => ['nullable', 'gt:0'],
+            'duration' => ['nullable', 'gt:0'],
+            'unit' => ['nullable', $unit_in],
             'instr_pdf' => ['mimes:pdf,docx', 'max:16384'],
             'instr_video' => ['mimes:mp4,mov,mkv,wmv', 'max:51300'],
-            'height' => ['gt:-1'],
-            'length' => ['gt:-1'],
-            'width' => ['gt:-1'],
             'description' => ['max:200'],
-            'prodschema_input' => ['required'],
         ],
             [
-                'name.unique' => 'Nazwa komponentu musi być unikalna.',
-                'material.in' => 'Wybierz jeden z materiałów: '.$err_mess.'.',
-                'comp_photo.mimes' => 'Przesłany plik powinien mieć rozszerzenie: jpeg,bmp,png,jpg,svg. Rozszerzenie pliku: '.$ext_comp_photo.'.',
-                'instr_pdf.mimes' => 'Przesłany plik powinien mieć rozszerzenie: pdf,docx. Rozszerzenie pliku: '.$ext_instr_video.'.',
-                'instr_video.mimes' => 'Przesłany plik powinien mieć rozszerzenie: mp4,mov,mkv,wmv. Rozszerzenie pliku: '.$ext_instr_pdf.'.',
-                'comp_photo.max' => 'Przesłany plik jest za duży. Maksymalny rozmiar pliku: 16 MB.',
+                'production_schema.unique' => 'Nazwa schematu musi być unikalna.',
+                'amount.gt' => 'Ilość musi być większa od 0',
+                'duration.gt' => 'Czas trwania musi być większy od 0',
+                'unit.in' => 'Niepoprawna jednostka. Wybierz jedną z: '.$err_mess,
+                'instr_pdf.mimes' => 'Przesłany plik powinien mieć rozszerzenie: pdf. Rozszerzenie pliku: '.$ext_instr_pdf.'.',
+                'instr_video.mimes' => 'Przesłany plik powinien mieć rozszerzenie: mp4,mov,mkv,wmv. Rozszerzenie pliku: '.$ext_instr_video.'.',
                 'instr_pdf.max' => 'Przesłany plik jest za duży. Maksymalny rozmiar pliku: 16 MB.',
                 'instr_video.max' => 'Przesłany plik jest za duży. Maksymalny rozmiar pliku: 50 MB.',
-                'height.gt' => 'Wysokość nie może być ujemna.',
-                'length.gt' => 'Długość nie może być ujemna.',
-                'width.gt' => 'Szerokość nie może być ujemna.',
-                'prodschema_input.required' => 'Wybierz przynajmniej jeden schemat produkcji.',
                 'required' => 'To pole jest wymagane.',
                 'max' => 'Wpisany tekst ma za dużo znaków.',
                 'min' => 'Wpisany tekst ma za mało znaków.',
             ]);
-
-
     }
 
 }

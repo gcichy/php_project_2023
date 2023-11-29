@@ -25,9 +25,9 @@ return new class extends Migration
                 ->constrained('component')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
-            $table->foreignId('task_id')
+            $table->foreignId('production_schema_id')
                 ->nullable()
-                ->constrained('task')
+                ->constrained('production_schema')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
             $table->string('name');

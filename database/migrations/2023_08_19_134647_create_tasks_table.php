@@ -15,7 +15,13 @@ return new class extends Migration
     {
         Schema::create('task', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('production_schema_id')
+                ->constrained('production_schema')
+                ->onUpdate('cascade')
+                ->onDelete('restrict');
             $table->string('name');
+            $table->unsignedSmallInteger('sequence_no');
+            $table->boolean('amount_required');
             $table->string('description')->nullable();
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();

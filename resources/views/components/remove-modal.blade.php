@@ -1,17 +1,21 @@
-@if(isset($buttonId))
+@props(['button_id','id', 'route','remove_elem_id','remove_elem_class','name',])
+@if(isset($button_id) and isset($id) and isset($route) and isset($remove_elem_id) and isset($remove_elem_class) and isset($name))
     <script type="module">
         $(document).ready(function() {
 
             // Open modal
-            $("#{{$buttonId}}").on('click', function () {
+            $("#{{$button_id}}").on('click', function () {
+                $('.{{$remove_elem_class}}').addClass('hidden');
                 $("#modal-background-{{$id}}, #modal-{{$id}}").removeClass("hidden");
                 let activeElem = $('.list-element.active-list-elem');
                 if(typeof activeElem.attr('id') === "string") {
                     let id = activeElem.attr('id').split('-');
+
                     if(id.length > 1) {
                         $('#remove-id-{{$id}}').val(id[1]);
+                        $('#{{$remove_elem_id}}' + id[1]).removeClass('hidden')
                     }
-                    console.log($('#remove-id-{{$id}}').val());
+
                 }
             });
 
@@ -21,9 +25,10 @@
             });
         });
     </script>
-@endif
-@if(isset($route) and isset($id) and isset($name))
 
+    <button type="button" id="{{$button_id}}" disabled class="btn btn-primary on-select remove inline-flex items-center ml-1 lg:ml-3 lg:mr-5 px-2 py-1 lg:px-4 lg:py-2 bg-red-600 hover:bg-red-800 border border-transparent rounded-md font-semibold text-sm md:text-md xl:text-lg text-white uppercase tracking-widest focus:bg-gray-700  focus:ring-4 focus:outline-none focus:ring-gray-300  focus:ring-offset-2 transition ease-in-out duration-150">
+        {{__('Usuń')}}
+    </button>
     <!-- Modal Background -->
     <div id="modal-background-{{$id}}" class="z-[100] fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 hidden"></div>
 
