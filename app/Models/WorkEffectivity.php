@@ -15,6 +15,7 @@ class WorkEffectivity extends Model
     protected $fillable = [
         'production_cycle_id',
         'production_standard_id',
+        'work_id',                          //id of work for which effectivity is calculated
         'success_rate',                     //ratio amount created/standard amount
         //other performance measurements
     ];
