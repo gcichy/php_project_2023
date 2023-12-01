@@ -13,21 +13,19 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('product_component', function (Blueprint $table) {
-            $table->foreignId('product_id')
-                ->constrained('product')
+        Schema::create('production_cycle_user', function (Blueprint $table) {
+            $table->foreignId('production_cycle_id')
+                ->constrained('production_cycle')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
-            $table->foreignId('component_id')
-                ->constrained('component')
+            $table->foreignId('user_id')
+                ->constrained('users')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
-            $table->integer('amount_per_product')->default(1);
-            $table->string('description',200)->nullable();
             $table->string('created_by',30)->nullable();
             $table->string('updated_by',30)->nullable();
             $table->timestamps();
-            $table->primary(['product_id','component_id']);
+            $table->primary(['production_cycle_id','user_id']);
         });
     }
 
@@ -38,6 +36,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('product_component');
+        Schema::dropIfExists('production_cycle_users');
     }
 };

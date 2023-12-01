@@ -191,164 +191,171 @@
                 </div>
                 <div class="hidden p-4 bg-white rounded-lg lg:p-8 dark:bg-gray-800" id="production" role="tabpanel" aria-labelledby="production-tab">
                     @if(count($data) > 0)
-                        <div class="max-w-7xl mt-[3%] mx-auto sm:px-6 lg:px-8 space-y-6">
-                            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg flex justify-start items-center flex-col">
-                                @php
-                                    $inputPlaceholder = "Wpisz nazwę lub materiał...";
-                                    $xElemComp = "component";
-                                @endphp
-                                <div class="w-full flex flex-col lg:flex-row justify-center items-center">
-                                    <x-search-input :inputPlaceholder="$inputPlaceholder" :xListElementUniqueId="$xElemComp">
-                                    </x-search-input>
-                                    <div class="w-1/3 flex justify-center items-center mt-3 lg:mt-0">
-                                        <x-nav-button  class="ml-1 lg:ml-3 on-select details bg-blue-450 hover:bg-blue-800">
-                                            {{ __('Szczegóły') }}
-                                        </x-nav-button>
-                                    </div>
-
+                        <div class="max-w-7xl mt-[3%] mx-auto sm:px-6 lg:px-8 space-y-6 flex justify-center items-center flex-col">
+                            @php
+                                $inputPlaceholder = "Wpisz nazwę lub materiał...";
+                                $xElemComp = "component";
+                            @endphp
+                            <div class="w-full xl:w-4/5 flex flex-col lg:flex-row justify-center items-center">
+                                <x-search-input :inputPlaceholder="$inputPlaceholder" :xListElementUniqueId="$xElemComp">
+                                </x-search-input>
+                                <div class="w-1/3 flex justify-center items-center mt-3 lg:mt-0">
+                                    <x-nav-button  class="ml-1 lg:ml-3 on-select details bg-blue-450 hover:bg-blue-800">
+                                        {{ __('Szczegóły') }}
+                                    </x-nav-button>
                                 </div>
 
-                                <div class="w-full">
-                                    @foreach($data as $comp)
-                                        <x-list-element class="list-element-{{$xElemComp}} list-element flex-col" id="component-{{$comp->id}}">
-                                            <div class="w-[100%] flex justify-between items-center">
-                                                <div class="w-[80%] flex justify-left items-center">
-                                                    <div class="border-2 inline-block w-[50px] h-[50px] md:w-[100px] md:h-[100px]">
-                                                        @if(!empty($comp->image))
-                                                            @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
-                                                            <img src="{{asset('storage/'.$path.$comp->image)}}">
-                                                        @endif
-                                                    </div>
-                                                    <p class="inline-block list-element-name ml-[3%] text-left xl:text-lg text-md">{{$comp->name}} - {{$comp->material}}</p>
+                            </div>
+                            <div class="w-full xl:w-4/5 ">
+                                @foreach($data as $comp)
+                                    <x-list-element class="list-element-{{$xElemComp}} list-element flex-col" id="component-{{$comp->id}}">
+                                        <div class="w-[100%] flex justify-between items-center">
+                                            <div class="w-[80%] flex justify-left items-center">
+                                                <div class="border-2 inline-block w-[50px] h-[50px] md:w-[100px] md:h-[100px]">
+                                                    @if(!empty($comp->image))
+                                                        @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
+                                                        <img src="{{asset('storage/'.$path.$comp->image)}}">
+                                                    @endif
                                                 </div>
-                                                <div id="expbtn-{{$comp->id}}-comp" class="expand-btn inline-block bg-gray-800 w-4 h-4 lg:w-8 lg:h-8 md:w-6 md:h-6 sm:w-4 sm:h-4 mr-8 md:rounded-md rounded-sm rotate-0 transition-all">
-                                                    <img src="{{asset('storage/expand-down.png') }}" >
-                                                </div>
+                                                <p class="inline-block list-element-name ml-[3%] text-left xl:text-lg text-md">{{$comp->name}} - {{$comp->material}}</p>
                                             </div>
-                                            <div class="comp-list-{{$comp->id}} hidden mt-6 w-full md:w-[60%]">
-                                                <div class="relative overflow-x-auto shadow-md">
-                                                    <table class="w-full text-sm md:text-lg text-left text-gray-500 dark:text-gray-400">
-                                                        <thead class="text-sm md:text-lg text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                                        <tr>
-                                                            <th scope="col" class="px-6 py-3">
-                                                                Opis
-                                                            </th>
-                                                            <th scope="col" class="px-6 py-3"></th>
-                                                        </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                                            <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                                                Materiał
-                                                            </th>
-                                                            <td class="px-6 py-4">
-                                                                {{is_null($comp->material) ? '' : $comp->material}}
-                                                            </td>
-                                                        </tr>
-                                                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                                            <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                                                @php
-                                                                    $name = '';
-                                                                    $dim = '';
-                                                                    if(!is_null($comp->height)) {
-                                                                        $name .= 'wys ';
-                                                                        $dim .= $comp->height.' ';
-                                                                    }
-                                                                    if(!is_null($comp->length)) {
-                                                                        if(!empty($name)) {
-                                                                            $name .= 'x  ';
-                                                                            $dim .= 'x  ';
-                                                                        }
-                                                                        $name .= 'dług ';
-                                                                        $dim .= $comp->length.' ';
-                                                                    }
-                                                                    if(!is_null($comp->width)) {
-                                                                        if(!empty($name)) {
-                                                                            $name .= 'x  ';
-                                                                            $dim .= 'x  ';
-                                                                        }
-                                                                        $name .= 'szer';
-                                                                        $dim .= $comp->width.' ';
-                                                                    }
-                                                                    $name .= ' [cm]';
-                                                                @endphp
-                                                                {{$name}}
-                                                            </th>
-                                                            <td class="px-6 py-4">
-                                                                {{$dim}}
-                                                            </td>
-                                                        </tr>
-                                                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                                            <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                                                Produkowane niezależnie
-                                                            </th>
-                                                            <td class="px-6 py-4">
-                                                                @if($comp->independent == 1)
-                                                                    tak
-                                                                @else
-                                                                    nie
-                                                                @endif
-                                                            </td>
-                                                        </tr>
-                                                        @if(!empty($comp->description))
-                                                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                                                <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                                                    Szczegóły
-                                                                </th>
-                                                                <td class="px-6 py-4">
-                                                                    {{$comp->description}}
-                                                                </td>
-                                                            </tr>
-                                                        @endif
-                                                        </tbody>
-                                                    </table>
-                                                </div>
+                                            <div id="expbtn-{{$comp->id}}-comp" class="expand-btn inline-block bg-gray-800 w-4 h-4 lg:w-6 lg:h-6 mr-8 md:rounded-md rounded-sm rotate-0 transition-all">
+                                                <img src="{{asset('storage/expand-down.png') }}" >
                                             </div>
-                                        </x-list-element>
-                                    @endforeach
-                                </div>
+                                        </div>
+                                        <div class="comp-list-{{$comp->id}} hidden mt-6 w-full xl:w-[80%]">
+                                            <div class="relative overflow-x-auto shadow-md">
+                                                <table class="w-full text-sm xl:text-lg lg:text-md text-left text-gray-500 dark:text-gray-400">
+                                                    <thead class="text-sm md:text-lg text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                                    <tr>
+                                                        <th scope="col" class="px-6 py-3">
+                                                            Opis
+                                                        </th>
+                                                        <th scope="col" class="px-6 py-3"></th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                            Materiał
+                                                        </th>
+                                                        <td class="px-6 py-4">
+                                                            {{is_null($comp->material) ? '' : $comp->material}}
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                            Ilość sztuk do wykonania produktu
+                                                        </th>
+                                                        <td class="px-6 py-4">
+                                                            {{is_null($comp->amount_per_product) ? '' : $comp->amount_per_product}}
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                            @php
+                                                                $name = '';
+                                                                $dim = '';
+                                                                if(!is_null($comp->height)) {
+                                                                    $name .= 'wys ';
+                                                                    $dim .= $comp->height.' ';
+                                                                }
+                                                                if(!is_null($comp->length)) {
+                                                                    if(!empty($name)) {
+                                                                        $name .= 'x  ';
+                                                                        $dim .= 'x  ';
+                                                                    }
+                                                                    $name .= 'dług ';
+                                                                    $dim .= $comp->length.' ';
+                                                                }
+                                                                if(!is_null($comp->width)) {
+                                                                    if(!empty($name)) {
+                                                                        $name .= 'x  ';
+                                                                        $dim .= 'x  ';
+                                                                    }
+                                                                    $name .= 'szer';
+                                                                    $dim .= $comp->width.' ';
+                                                                }
+                                                                $name .= ' [cm]';
+                                                            @endphp
+                                                            {{$name}}
+                                                        </th>
+                                                        <td class="px-6 py-4">
+                                                            {{$dim}}
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                            Produkowane niezależnie
+                                                        </th>
+                                                        <td class="px-6 py-4">
+                                                            @if($comp->independent == 1)
+                                                                tak
+                                                            @else
+                                                                nie
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                    @if(!empty($comp->description))
+                                                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                                            <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                                Szczegóły
+                                                            </th>
+                                                            <td class="px-6 py-4">
+                                                                {{$comp->description}}
+                                                            </td>
+                                                        </tr>
+                                                    @endif
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </x-list-element>
+                                @endforeach
                             </div>
                         </div>
                     @endif
                 </div>
                 <div class="hidden p-4 bg-white rounded-lg lg:p-8 dark:bg-gray-800 flex flex-col justify-center items-center" id="manual" role="tabpanel" aria-labelledby="manual-tab">
-                    @if(!empty($prod->barcode_image))
-                        <div class="w-full flex flex-col justify-center items-center mb-12">
-                            <p class="w-full lg:w-[80%] mb-4 text-md md:text-xl font-medium pl-2 lg:pl-4 lg:pb-2 text-gray-950 border-l-4 border-blue-450">
-                                Kod kreskowy produktu
-                            </p>
-                            @php $path = isset($storage_path_products) ? $storage_path_products.'/' : ''; @endphp
-                            <div class="w-full flex flex-col justify-center items-center">
-                                <img class=" h-[200px] lg:h-[300px] xl:h-[400px]" src="{{asset('storage/'.$path.$prod->barcode_image)}}"/>
-                            </div>
+                    <div class="w-[90%] p-4">
+                        @if(!empty($prod->barcode_image))
+                            <div class="w-full flex flex-col justify-center items-center mb-12">
+                                <p class="w-full lg:w-[80%] mb-4 text-md md:text-xl font-medium pl-2 lg:pl-4 lg:pb-2 text-gray-950 border-l-4 border-blue-450">
+                                    Kod kreskowy produktu
+                                </p>
+                                @php $path = isset($storage_path_products) ? $storage_path_products.'/' : ''; @endphp
+                                <div class="w-full flex flex-col justify-center items-center">
+                                    <img class=" h-[200px] lg:h-[300px] xl:h-[400px]" src="{{asset('storage/'.$path.$prod->barcode_image)}}"/>
+                                </div>
 
-                        </div>
-                    @endif
-                    @if($instruction instanceof \App\Models\Instruction)
-                        <div class="w-full flex flex-col justify-center items-center mb-12">
-                            <p class="w-full lg:w-[80%] mb-4 text-md md:text-xl font-medium pl-2 lg:pl-4 lg:pb-2 text-gray-950 border-l-4 border-blue-450">
-                                {{$instruction->name}}
-                            </p>
-                            @php $path = isset($storage_path_instructions) ? $storage_path_instructions.'/' : ''; @endphp
-                            @if(!is_null($instruction->video))
-                                <video class="w-full lg:w-[80%]" width="320" height="240" controls>
-                                    <source src="{{asset('storage/'.$path.$instruction->video)}}" type="video/mp4">
-                                    Your browser does not support the video tag.
-                                </video>
-                            @else
-                                <p class="w-full text-center text-red-700 text-sm xl:text-md">Brak filmu instruktażowego.</p>
-                            @endif
-                        </div>
-                        @if(!is_null($instruction->instruction_pdf))
-                            <div class="w-full flex flex-col justify-center items-center">
-                                <embed class="w-full lg:w-[80%] h-[400px] lg:h-[600px] xl:h-[800px]" src="{{asset('storage/'.$path.$instruction->instruction_pdf)}}" width="800px" height="800px"/>
                             </div>
+                        @endif
+                        @if($instruction instanceof \App\Models\Instruction)
+                            <div class="w-full flex flex-col justify-center items-center mb-12">
+                                <p class="w-full lg:w-[80%] mb-4 text-md md:text-xl font-medium pl-2 lg:pl-4 lg:pb-2 text-gray-950 border-l-4 border-blue-450">
+                                    {{$instruction->name}}
+                                </p>
+                                @php $path = isset($storage_path_instructions) ? $storage_path_instructions.'/' : ''; @endphp
+                                @if(!is_null($instruction->video))
+                                    <video class="w-full lg:w-[80%]" width="320" height="240" controls>
+                                        <source src="{{asset('storage/'.$path.$instruction->video)}}" type="video/mp4">
+                                        Your browser does not support the video tag.
+                                    </video>
+                                @else
+                                    <p class="w-full text-center text-red-700 text-sm xl:text-md">Brak filmu instruktażowego.</p>
+                                @endif
+                            </div>
+                            @if(!is_null($instruction->instruction_pdf))
+                                <div class="w-full flex flex-col justify-center items-center">
+                                    <embed class="w-full lg:w-[80%] h-[400px] lg:h-[600px] xl:h-[800px]" src="{{asset('storage/'.$path.$instruction->instruction_pdf)}}" width="800px" height="800px"/>
+                                </div>
+                            @else
+                                <p class="w-full text-center text-red-700 text-sm xl:text-md">Brak instrukcji tekstowej.</p>
+                            @endif
                         @else
-                            <p class="w-full text-center text-red-700 text-sm xl:text-md">Brak instrukcji tekstowej.</p>
-                       @endif
-                    @else
-                        <p class="w-full text-center text-red-700 text-lg mt-6">Brak instrukcji.</p>
-                    @endif
+                            <p class="w-full text-center text-red-700 text-lg mt-6">Brak instrukcji.</p>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>

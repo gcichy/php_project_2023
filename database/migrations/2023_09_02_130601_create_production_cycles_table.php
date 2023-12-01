@@ -29,15 +29,23 @@ return new class extends Migration
                 ->constrained('component')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
+            $table->foreignId('parent_id')
+                ->nullable()
+                ->constrained('production_cycle')
+                ->onUpdate('cascade')
+                ->onDelete('restrict');
             $table->dateTime('start_time');
             $table->dateTime('end_time');
+            $table->dateTime('expected_start_time');
+            $table->dateTime('expected_end_time');
             $table->unsignedBigInteger('duration_minute_sum');
-            $table->double('amount_sum');
-            $table->boolean('cycle_finished');
+            $table->double('total_amount');
+            $table->double('current_amount');
+            $table->double('defect_amount');
             $table->boolean('settled');
-            $table->string('additional_comment')->nullable();
-            $table->string('created_by')->nullable();
-            $table->string('updated_by')->nullable();
+            $table->string('additional_comment',200)->nullable();
+            $table->string('created_by',30)->nullable();
+            $table->string('updated_by',30)->nullable();
             $table->timestamps();
         });
     }

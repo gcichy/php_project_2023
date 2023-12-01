@@ -72,6 +72,7 @@ class ProductController
 
         $data = DB::select('select
                                        c.id,
+                                       pc.amount_per_product,
                                        c.name,
                                        c.description,
                                        c.independent,
@@ -134,36 +135,21 @@ class ProductController
 
                 $data = $this->getAddProductData(true, $prod->id);
                 $selected_prod_comps = DB::select('select
+                                            pc.product_id,
                                             c.id as comp_id,
+                                            pc.amount_per_product,
                                             c.name,
                                             c.description,
                                             c.independent,
                                             c.material,
                                             c.height,
                                             c.length,
-                                            c.width,
-                                            psh.id as prod_schema_id,
-                                            psh.production_schema as prod_schema,
-                                            cpsh.sequence_no as prod_schema_sequence_no,
-                                            psh.description as prod_schema_desc,
-                                            psh.tasks_count,
-                                            pstd.duration_hours as prod_std_duration,
-                                            pstd.amount as prod_std_amount,
-                                            u.unit as prod_std_unit
+                                            c.width
                                         from component c
                                              join product_component pc
                                                        on c.id = pc.component_id
                                                        and pc.product_id = '.$prod->id.'
-                                             left join component_production_schema cpsh
-                                                       on cpsh.component_id = c.id
-                                             left join production_schema psh
-                                                       on cpsh.production_schema_id = psh.id
-                                             left join production_standard pstd
-                                                       on pstd.component_id = c.id
-                                                           and pstd.production_schema_id = psh.id
-                                             left join unit u
-                                                       on u.id = pstd.unit_id
-                                        order by pc.product_id, c.id, cpsh.sequence_no');
+                                        order by pc.product_id, c.id');
 
                 $component_input = '';
                 $prod_comps = ProductComponent::where('product_id', $id)->select('component_id')->get();
@@ -174,7 +160,6 @@ class ProductController
 
                 $update = str_contains($request->url(), 'edytuj');
 
-
                 $status = $request->session()->get('status');
                 return view('product.product-add', [
                     'components' => $data['components'],
@@ -183,7 +168,7 @@ class ProductController
                     'material_list' => $data['materials'],
                     'user' => $request->user(),
                     'selected_prod' => $prod,
-                    '$selected_prod_comps' => $selected_prod_comps,
+                    'selected_prod_comps' => $selected_prod_comps,
                     'selected_prod_instr' => $selected_prod_instr,
                     'component_input' => $component_input,
                     'update' => $update,
@@ -195,13 +180,19 @@ class ProductController
     }
     public function storeProduct(Request $request): RedirectResponse
     {
+
         $this->validateAddProductForm($request, 'INSERT');
+        try {
+            $this->validateComponentAmount($request);
+        }
+        catch (Exception $e) {
+            return redirect()->back()->withInput()->withErrors(['amount_per_product' => $e->getMessage()]);
+        }
 
         $user = Auth::user();
         $price = floatval($request->price);
         $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
         $saved_files = [];
-
         try {
 
             DB::beginTransaction();
@@ -226,7 +217,7 @@ class ProductController
 
             }
 
-            $insert_result = $this->insertProductComponents($request->component_input, $prod_id, $employee_no);
+            $insert_result = $this->insertProductComponents($request, $prod_id, $employee_no);
             if (array_key_exists('ERROR', $insert_result)) {
                 throw new Exception('error occurred in ProductController->insertProductComponents method.
     Error message: ' . $insert_result['ERROR']);
@@ -280,6 +271,12 @@ class ProductController
     public function storeUpdatedProduct(Request $request): RedirectResponse
     {
         $this->validateAddProductForm($request, 'UPDATE');
+        try {
+            $this->validateComponentAmount($request);
+        }
+        catch (Exception $e) {
+            return redirect()->back()->withInput()->withErrors(['amount_per_product' => $e->getMessage()]);
+        }
 
         $user = Auth::user();
         $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
@@ -320,7 +317,7 @@ class ProductController
     Error message: ' . $update_result['ERROR']);
             }
 
-            $update_result = $this->updateProductComponents($request->component_input, $prod_id, $employee_no);
+            $update_result = $this->updateProductComponents($request, $prod_id, $employee_no);
             if (array_key_exists('ERROR', $update_result)) {
                 throw new Exception('Error updating product: error occurred in Product->updateProductComponents method.
     Error message: ' . $update_result['ERROR']);
@@ -438,8 +435,35 @@ class ProductController
     }
 
 
+    /**
+     * @throws Exception
+     */
+    private function validateComponentAmount(Request $request): void
+    {
+        $user = Auth::user();
+        $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
+
+        if(!empty($request->component_input)) {
+            $comps = explode('_',$request->component_input);
+            for ($i = 0; $i < count($comps); $i++) {
+                $amount_name = 'amount_'.$comps[$i];
+                if(intval($request->$amount_name) <= 0) {
+                    throw new Exception('Ilość sztuk potrzebnych do wykonania produktu musi być dodatnia.');
+                }
+                $comp = intval($comps[$i]);
+                if($comp <= 0) {
+                    Log::channel('error')->error('Error validating product: Error occurred in Product->validateComponentAmount method. Incorrect "component_input" value:' . $request->component_input, [
+                        'employeeNo' => $employee_no,
+                    ]);
+                    throw new Exception('Produkt nie został dodany. Błąd systemu.');
+                }
+                $comps[$i] = $comp;
+            }
+        }
+    }
     private function validateAddProductForm(Request $request, string $action) : void
     {
+
         $materials = StaticValue::where('type','material')->select('value', 'value_full')->get();
 
         $err_mess = '';
@@ -675,21 +699,24 @@ class ProductController
     }
 
 
-    private function insertProductComponents(string|null $component_input, int $prod_id, string $employee_no): array
+    private function insertProductComponents(Request $request, int $prod_id, string $employee_no): array
     {
-        if(is_null($component_input)) {
+        if(is_null($request->component_input)) {
             return [];
         }
 
-        $comps = explode('_',$component_input);
+        $comps = explode('_',$request->component_input);
 
         foreach ($comps as $comp) {
+            $amount_name = 'amount_'.$comp;
+            $amount_per_product = $request->$amount_name;
             $comp_id = intval($comp);
             if(Component::find($comp_id) instanceof Component) {
 
                 DB::table('product_component')->insert([
                     'product_id' => $prod_id,
                     'component_id' => $comp_id,
+                    'amount_per_product' => $amount_per_product,
                     'created_by' => $employee_no,
                     'updated_by' => $employee_no,
                     'created_at' => date('y-m-d h:i:s'),
@@ -705,23 +732,38 @@ class ProductController
         }
         return [];
     }
-    private function updateProductComponents(string|null $component_input, int $prod_id, string $employee_no): array
+    private function updateProductComponents(Request $request, int $prod_id, string $employee_no): array
     {
         $old_comps_id = ProductComponent::where(['product_id' => $prod_id])
             ->select('component_id')->get();
         $old_comps_id = collect($old_comps_id)->map(function (ProductComponent $arr) { return $arr->component_id; })->toArray();
-        if(!is_null($component_input)) {
-            $comps = explode('_',$component_input);
+        if(!is_null($request->component_input)) {
+            $comps = explode('_',$request->component_input);
 
             foreach ($comps as $comp) {
                 $comp_id = intval($comp);
+                $amount_name = 'amount_'.$comp;
+                $amount_per_product = $request->$amount_name;
                 if(in_array($comp_id, $old_comps_id)) {
+                    $prod_comp = ProductComponent::where(['component_id' => $comp_id, 'product_id' => $prod_id])
+                                ->select('amount_per_product')->first();
+                    if($prod_comp instanceof  ProductComponent and $prod_comp->amount_per_product != $amount_per_product) {
+                        DB::table('product_component')
+                            ->where(['product_id' => $prod_id,
+                                     'component_id' => $comp_id,])
+                            ->update([
+                            'amount_per_product' => $amount_per_product,
+                            'updated_by' => $employee_no,
+                            'updated_at' => date('y-m-d h:i:s'),
+                        ]);
+                    }
                     array_splice($old_comps_id,array_search($comp_id, $old_comps_id),1);
                 }
                 else if(Component::find($comp_id) instanceof Component) {
                     DB::table('product_component')->insert([
                         'product_id' => $prod_id,
                         'component_id' => $comp_id,
+                        'amount_per_product' => $amount_per_product,
                         'created_by' => $employee_no,
                         'updated_by' => $employee_no,
                         'created_at' => date('y-m-d h:i:s'),
@@ -756,6 +798,7 @@ class ProductController
         if($adjusted_to_component) {
             $data = DB::select('select
                                             c.id as comp_id,
+                                            pc.amount_per_product,
                                             c.name,
                                             c.description,
                                             c.independent,
@@ -783,11 +826,11 @@ class ProductController
                                                        on u.id = pstd.unit_id
                                              left join product_component pc
                                                        on c.id = pc.component_id
-                                                       and pc.product_id = '.$product_id.'
                                         order by pc.product_id, c.id, cpsh.sequence_no');
         } else {
             $data = DB::select('select
                                             c.id as comp_id,
+                                            pc.amount_per_product,
                                             c.name,
                                             c.description,
                                             c.independent,
@@ -813,6 +856,8 @@ class ProductController
                                                            and pstd.production_schema_id = psh.id
                                              left join unit u
                                                        on u.id = pstd.unit_id
+                                             left join product_component pc
+                                                       on c.id = pc.component_id
                                         order by c.id, cpsh.sequence_no');
         }
 

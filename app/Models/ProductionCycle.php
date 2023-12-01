@@ -16,12 +16,16 @@ class ProductionCycle extends Model
         'production_schema_id',             //id of production schema for which production cycle is created
         'product_id',                       //id of product for which production cycle is created
         'component_id',                     //if production cycle is created for component (not for product), then component id must be supplied
-        'start_time',                       //cycle start time
-        'end_time',                         //cycle end time
+        'parent_id',                        //if cycle is created for product, then subcycles are created for its components and prod schemas
+        'start_time',                       //cycle real start time
+        'end_time',                         //cycle real end time
+        'expected_start_time',              //cycle expected start time - determined on creation
+        'expected_end_time',                //cycle expected end time - determined on creation
         'duration_minute_sum',              //summed duration of works from start to completion of production cycle
-        'amount_sum',                       //summed amount for all works of this cycle
+        'total_amount',                     //total amount to be produced within cycle
+        'current_amount',
+        'defect_amount',                    //determines how many defects was produced
         'cycle_finished',                   //determines if cycle is finished
-        'effectivity_calculated',           //determines if effectivity has been calculated for the finished cycle
         'additional_comment',
     ];
 

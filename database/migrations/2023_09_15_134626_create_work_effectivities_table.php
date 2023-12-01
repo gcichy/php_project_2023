@@ -23,9 +23,13 @@ return new class extends Migration
                 ->constrained('production_standard')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
+            $table->foreignId('work_id')
+                ->constrained('work')
+                ->onUpdate('cascade')
+                ->onDelete('restrict');
             $table->double('success_rate');
-            $table->string('created_by')->nullable();
-            $table->string('updated_by')->nullable();
+            $table->string('created_by',30)->nullable();
+            $table->string('updated_by',30)->nullable();
             $table->timestamps();
         });
     }

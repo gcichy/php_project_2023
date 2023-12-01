@@ -16,9 +16,9 @@ class ComponentSeeder extends Seeder
     public function run()
     {
         DB::table('component')->insert([
-            'name' => 'fronty - Łóżko Domek',
+            'name' => 'front - Łóżko Domek',
             'material' => 'MDF',
-            'description' => 'Komplet 2 frontów na przód oraz tył Łóżka Domek. Wykonane z płyty MDF.',
+            'description' => 'Frontów na przód lub tył Łóżka Domek. Wykonany z płyty MDF.',
             'independent' => false,
             'height' => 160,
             'length' => 90,
@@ -61,9 +61,9 @@ class ComponentSeeder extends Seeder
             'updated_at' => date('y-m-d h:i:s'),
         ]);
         DB::table('component')->insert([
-            'name' => 'poprzeczki boczne - łóżko',
+            'name' => 'poprzeczka boczna - łóżko',
             'material' => 'MDF',
-            'description' => 'Poprzeczki boczne. Łączą kontrukcję nóg nad obiema długimi barierkami. Wykonane z płyty MDF.',
+            'description' => 'Poprzeczka boczna. Łączy kontrukcję nóg nad długą barierkamą. Wykonana z płyty MDF.',
             'independent' => false,
             'length' => 180,
             'created_by' => 'system',
@@ -72,9 +72,9 @@ class ComponentSeeder extends Seeder
             'updated_at' => date('y-m-d h:i:s'),
         ]);
         DB::table('component')->insert([
-            'name' => 'nogi - Łóżko Domek',
+            'name' => 'noga - Łóżko Domek',
             'material' => 'drewno',
-            'description' => 'Łóżko Domek - nogi. Komplet 4 sztuk, przednich i tylnych. Wykonane z drewna.',
+            'description' => 'Łóżko Domek - noga. Wykonane z drewna.',
             'independent' => false,
             'height' => 160,
             'length' => 90,
@@ -117,9 +117,9 @@ class ComponentSeeder extends Seeder
             'updated_at' => date('y-m-d h:i:s'),
         ]);
         DB::table('component')->insert([
-            'name' => 'poprzeczki boczne - łóżko',
+            'name' => 'poprzeczka boczna - łóżko',
             'material' => 'drewno',
-            'description' => 'Poprzeczki boczne. Łączą kontrukcję nóg nad obiema długimi barierkami. Wykonane z drewna.',
+            'description' => 'Poprzeczka boczna. Łączy kontrukcję nóg nad długą barierkamą. Wykonana z drewna.',
             'independent' => false,
             'length' => 180,
             'created_by' => 'system',
