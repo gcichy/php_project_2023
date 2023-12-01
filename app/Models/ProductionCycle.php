@@ -24,6 +24,7 @@ class ProductionCycle extends Model
         'duration_minute_sum',              //summed duration of works from start to completion of production cycle
         'total_amount',                     //total amount to be produced within cycle
         'current_amount',
+        'defect_amount',                    //determines how many defects was produced
         'cycle_finished',                   //determines if cycle is finished
         'additional_comment',
     ];

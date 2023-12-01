@@ -55,10 +55,10 @@
                 </div>
             </div>
             <div class="my-6 w-[100%] flex flex-row justify-center items-center">
-                <x-nav-button id="close-modal-button-{{$id}}" class="mr-[5%]">
+                <x-nav-button id="close-modal-button-{{$id}}" class="mr-[5%] text-sm">
                     {{__('Anuluj')}}
                 </x-nav-button>
-                <x-submit-button id="submit-remove-{{$id}}" type="submit" class="ml-[5%] bg-red-600 hover:bg-red-800">
+                <x-submit-button id="submit-remove-{{$id}}" type="submit" class="ml-[5%] bg-red-600 hover:bg-red-800 text-sm">
                     {{__('Usuń')}}
                 </x-submit-button>
             </div>

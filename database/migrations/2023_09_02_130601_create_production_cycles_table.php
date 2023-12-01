@@ -41,6 +41,7 @@ return new class extends Migration
             $table->unsignedBigInteger('duration_minute_sum');
             $table->double('total_amount');
             $table->double('current_amount');
+            $table->double('defect_amount');
             $table->boolean('settled');
             $table->string('additional_comment',200)->nullable();
             $table->string('created_by',30)->nullable();
