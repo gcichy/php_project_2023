@@ -6,7 +6,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeStatisticsController;
 use App\Http\Controllers\ProdSchemaController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\ProductionController;
+use App\Http\Controllers\ProductionCycleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StatisticsController;
@@ -34,11 +34,7 @@ Route::get('/', function () {
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard',[DashboardController::class, 'create'])->name('dashboard');
     Route::get('/profil/{employeeNo}', [ProfileController::class, 'index'])->name('profile.index');
-//    Route::get('/profile_edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::get('/edytuj-profil/{employeeNo}', [ProfileController::class, 'edit'])->name('profile.edit');
-//    Route::patch('/profile_edit/{employeeNo}', function (Request $request, string $employeeNo) {
-//        dd($request);
-//    })->name('profile.update');
     Route::patch('/edytuj-profil/{employeeNo}', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/usun-profil', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
@@ -88,7 +84,7 @@ Route::middleware(['auth'])->group(function () {
 
 //production
 Route::middleware('auth')->group(function () {
-    Route::get('/produkcja', [ProductionController::class, 'index'])->name('production.index');
+    Route::get('/produkcja', [ProductionCycleController::class, 'index'])->name('production.index');
 });
 
 //schedule

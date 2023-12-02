@@ -22,7 +22,8 @@ return new class extends Migration
             $table->string('color', 30)->nullable();
             $table->string('image', 50)->nullable();
             $table->string('barcode_image', 50)->nullable();
-            $table->float('price')->nullable();
+            $table->double('price')->nullable();
+            $table->double('piecework_fee')->nullable();
             $table->string('created_by', 30)->nullable();
             $table->string('updated_by', 30)->nullable();
             $table->timestamps();

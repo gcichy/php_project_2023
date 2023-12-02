@@ -228,7 +228,7 @@
 
     </script>
     @php
-        $name = (isset($update) and $update) ? 'Edytuj schemat' : 'Dodaj schemat';
+        $name = (isset($update) and $update) ? 'Edytuj zadanie' : 'Dodaj zadanie';
     @endphp
     <x-information-panel :viewName="$name"></x-information-panel>
     @if(session('status'))
@@ -251,7 +251,7 @@
                             <div class="g-0 lg:flex lg:flex-wrap">
                                 <!-- Left column container-->
                                 <div class="flex items-center flex-col justify-start rounded-b-lg w-full xl:w-6/12 xl:rounded-r-lg xl:rounded-bl-none p-2 xl:p-0 bg-white/30">
-                                    <div class="md:mx-6 md:p-12 px-2 py-6 w-full">
+                                    <div class="md:mx-6 md:px-12 md:pt-12 px-2 py-6 w-full">
                                         <input type="text" id="schema-id" name="schema_id" class="hidden"
                                                value="{{old('schema_id') ? old('schema_id') : (empty($selected_schem) ? '' : $selected_schem->id )}}">
                                         <div class="mb-6">
@@ -261,14 +261,33 @@
                                                    class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
                                             <x-input-error :messages="$errors->get('production_schema')" class="mt-2" />
                                         </div>
-                                        <div class="">
-                                            <label for="description" class="block mb-2 text-sm lg:text-md xl:text-lg font-medium text-gray-900 dark:text-white">Opis schematu</label>
+                                        <div class="mb-6">
+                                            <label for="description" class="block mb-2 text-sm lg:text-md xl:text-lg font-medium text-gray-900 dark:text-white">Opis zadania</label>
                                             {{--                                            <input type="textarea" id="description" name="description" value="{{old('description') ? old('description') : (empty($selected_schem) ? '' : $selected_schem->description )}}" class="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs lg:text-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">--}}
                                             <textarea id="description" name="description" rows="4" class="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs lg:text-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
 {{old('description') ? old('description') : (empty($selected_schem) ? '' : $selected_schem->description )}}
                                                 </textarea>
                                             <x-input-error :messages="$errors->get('description')" class="mt-2" />
                                         </div>
+                                        <div class="">
+                                            <label for="countable" class="block text-sm lg:text-md xl:text-lg font-medium text-gray-900 dark:text-white">Niemierzalne</label>
+                                            <p class="w-full text-sm lg:text-lg font-medium text-left text-gray-900 dark:text-white p-2">
+                                                <span class="text-green-500 text-xs lg:text-sm"><em>Zaznacz, jeśli nie da się zmierzyć efektów zadania, np sprzątanie hali produkcyjnej itp. Jeśli pole jest zaznaczone, norma produkcji nie zostanie dodana.</em></span>
+                                            </p>
+                                            <input
+                                                class="countable ml-2 mr-2 mt-[0.3rem] h-3.5 w-8 appearance-none rounded-[0.4375rem] bg-neutral-300 before:pointer-events-none before:absolute before:h-3.5 before:w-3.5 before:rounded-full before:bg-transparent before:content-[''] after:absolute after:z-[2] after:-mt-[0.1875rem] after:h-5 after:w-5 after:rounded-full after:border-none after:bg-neutral-100 after:shadow-[0_0px_3px_0_rgb(0_0_0_/_7%),_0_2px_2px_0_rgb(0_0_0_/_4%)] after:transition-[background-color_0.2s,transform_0.2s] after:content-[''] checked:bg-primary checked:after:absolute checked:after:z-[2] checked:after:-mt-[3px] checked:after:ml-[1.0625rem] checked:after:h-5 checked:after:w-5 checked:after:rounded-full checked:after:border-none checked:after:bg-primary checked:after:shadow-[0_3px_1px_-2px_rgba(0,0,0,0.2),_0_2px_2px_0_rgba(0,0,0,0.14),_0_1px_5px_0_rgba(0,0,0,0.12)] checked:after:transition-[background-color_0.2s,transform_0.2s] checked:after:content-[''] hover:cursor-pointer focus:outline-none focus:ring-0 focus:before:scale-100 focus:before:opacity-[0.12] focus:before:shadow-[3px_-1px_0px_13px_rgba(0,0,0,0.6)] focus:before:transition-[box-shadow_0.2s,transform_0.2s] focus:after:absolute focus:after:z-[1] focus:after:block focus:after:h-5 focus:after:w-5 focus:after:rounded-full focus:after:content-[''] checked:focus:border-primary checked:focus:bg-primary checked:focus:before:ml-[1.0625rem] checked:focus:before:scale-100 checked:focus:before:shadow-[3px_-1px_0px_13px_#3b71ca] checked:focus:before:transition-[box-shadow_0.2s,transform_0.2s] dark:bg-neutral-600 dark:after:bg-neutral-400 dark:checked:bg-primary dark:checked:after:bg-primary dark:focus:before:shadow-[3px_-1px_0px_13px_rgba(255,255,255,0.4)] dark:checked:focus:before:shadow-[3px_-1px_0px_13px_#3b71ca]"
+                                                type="checkbox" role="switch" id="countable" name="countable"
+                                                {{ old('countable') == 'on' ? 'checked' : ((!empty($selected_schem) and $selected_schem->non_countable) ? 'checked' : '') }}/>
+                                        </div>
+{{--                                        <div class="">--}}
+{{--                                            <label for="" class="block text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Niemierzalny</label>--}}
+{{--                                            <p class="w-full text-sm lg:text-lg font-medium text-left text-gray-900 dark:text-white p-2">--}}
+{{--                                                <span class="text-green-500 text-xs lg:text-sm"><em>Określa, czy wykonując zadanie, należy wprowadzić ilość sztuk. Najczęściej jest to konieczne dla ostatniego zadania w schemacie.</em></span>--}}
+{{--                                            </p>--}}
+{{--                                            <input--}}
+{{--                                                class="new-amount-required amount-required-input mr-2 mt-[0.3rem] h-3.5 w-8 appearance-none rounded-[0.4375rem] bg-neutral-300 before:pointer-events-none before:absolute before:h-3.5 before:w-3.5 before:rounded-full before:bg-transparent before:content-[''] after:absolute after:z-[2] after:-mt-[0.1875rem] after:h-5 after:w-5 after:rounded-full after:border-none after:bg-neutral-100 after:shadow-[0_0px_3px_0_rgb(0_0_0_/_7%),_0_2px_2px_0_rgb(0_0_0_/_4%)] after:transition-[background-color_0.2s,transform_0.2s] after:content-[''] checked:bg-primary checked:after:absolute checked:after:z-[2] checked:after:-mt-[3px] checked:after:ml-[1.0625rem] checked:after:h-5 checked:after:w-5 checked:after:rounded-full checked:after:border-none checked:after:bg-primary checked:after:shadow-[0_3px_1px_-2px_rgba(0,0,0,0.2),_0_2px_2px_0_rgba(0,0,0,0.14),_0_1px_5px_0_rgba(0,0,0,0.12)] checked:after:transition-[background-color_0.2s,transform_0.2s] checked:after:content-[''] hover:cursor-pointer focus:outline-none focus:ring-0 focus:before:scale-100 focus:before:opacity-[0.12] focus:before:shadow-[3px_-1px_0px_13px_rgba(0,0,0,0.6)] focus:before:transition-[box-shadow_0.2s,transform_0.2s] focus:after:absolute focus:after:z-[1] focus:after:block focus:after:h-5 focus:after:w-5 focus:after:rounded-full focus:after:content-[''] checked:focus:border-primary checked:focus:bg-primary checked:focus:before:ml-[1.0625rem] checked:focus:before:scale-100 checked:focus:before:shadow-[3px_-1px_0px_13px_#3b71ca] checked:focus:before:transition-[box-shadow_0.2s,transform_0.2s] dark:bg-neutral-600 dark:after:bg-neutral-400 dark:checked:bg-primary dark:checked:after:bg-primary dark:focus:before:shadow-[3px_-1px_0px_13px_rgba(255,255,255,0.4)] dark:checked:focus:before:shadow-[3px_-1px_0px_13px_#3b71ca]"--}}
+{{--                                                type="checkbox" role="switch" id="" name=""/>--}}
+{{--                                        </div>--}}
                                     </div>
                                     <div class="flex items-center flex-col justify-start mt-[5%] md:mx-6 md:px-12 w-full">
                                         <button id="dropdownInstructionButton" class="text-white bg-blue-450 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-md lg:text-lg px-5 py-2.5 text-center inline-flex items-center justify-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
@@ -317,7 +336,7 @@
                                         </button>
                                         <div class="w-full mx-auto">
                                             <p id="" class=" w-full text-sm lg:text-lg font-medium text-left text-gray-900 dark:text-white p-2">
-                                                <span class="text-green-500 text-xs lg:text-sm"><em>Jeśli schemat nie jest wykorzystywany do wytwarzania komponentów, można dodać mu własną normę produkcji.</em></span>
+                                                <span class="text-green-500 text-xs lg:text-sm"><em>Jeśli zadanie nie jest wykorzystywane do wytwarzania materiałów, można dodać mu własną normę produkcji.</em></span>
                                             </p>
                                         </div>
                                         <div id="production-standard" class="production-standard mt-4 w-full ml-[3%] {{(old('duration') or !empty($selected_schem_prod_std))? '' : 'hidden'}} ">
@@ -380,7 +399,7 @@
                                                 type="button"
                                                 data-te-ripple-init
                                                 data-te-ripple-color="light">
-                                            Zadania
+                                            Podzadania
                                             <svg class="w-2.5 h-2.5 ml-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
                                                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
                                             </svg>
@@ -388,8 +407,8 @@
                                         @if(isset($tasks) and count($tasks) > 0)
                                             <div class="w-full mt-[5%] mx-auto">
                                                 <p id="label-schema" class=" w-full text-sm lg:text-lg font-medium text-left text-gray-900 dark:text-white p-2">
-                                                    Wybrane zadania <span class="text-red-700">*</span>
-                                                    <br><span class="text-green-500 text-xs lg:text-sm"><em>Aby dodać schemat przypisz do niego minimum 1 zadanie</em></span>
+                                                    Wybrane podzadania <span class="text-red-700">*</span>
+                                                    <br><span class="text-green-500 text-xs lg:text-sm"><em>Aby dodać zadanie przypisz do niego minimum 1 podzadanie</em></span>
                                                 </p>
                                                 @if(session('task_errors'))
                                                     @foreach(session('task_errors') as $err)
@@ -472,7 +491,7 @@
                                                 type="button"
                                                 data-te-ripple-init
                                                 data-te-ripple-color="light">
-                                            Nowe zadanie
+                                            Nowe podzadanie
                                             <svg class="w-4 h-4 ml-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                 <path d="M4 12H20M12 4V20" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
                                             </svg>
@@ -485,13 +504,13 @@
                                                         <div class="w-full">
                                                             <input type="text" id="schema-id" name="schema_id" value="{{old('schema_id') ? old('schema_id') : (empty($selected_schem) ? '' : $selected_schem->id )}}" class="hidden">
                                                             <div class="">
-                                                                <label for="task-name" class="block mb-1 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Nazwa zadania<span class="text-red-700">*</span></label>
+                                                                <label for="task-name" class="block mb-1 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Nazwa<span class="text-red-700">*</span></label>
                                                                 <input type="text" id="" name="" value="{{old('name') ? old('name') : (empty($selected_schem) ? '' : $selected_schem->name )}}"
                                                                        class="new-name shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-xs lg:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
                                                                 <x-input-error :messages="$errors->get('name')" class="mt-2" />
                                                             </div>
                                                             <div class="">
-                                                                <label for="" class="block mt-2 mb-1 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Opis zadania</label>
+                                                                <label for="" class="block mt-2 mb-1 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Opis podzadania</label>
                                                                 {{--                                            <input type="textarea" id="description" name="description" value="{{old('description') ? old('description') : (empty($selected_schem) ? '' : $selected_schem->description )}}" class="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs lg:text-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">--}}
                                                                 <textarea id="" name="" rows="2" class="new-desc block w-full p-1 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs lg:text-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                                                                     {{old('description') ? old('description') : (empty($selected_schem) ? '' : $selected_schem->description )}}
@@ -506,7 +525,7 @@
                                                             <div class="mt-4">
                                                                 <label for="" class="block text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Ilość wymagana</label>
                                                                 <p class="w-full text-sm lg:text-lg font-medium text-left text-gray-900 dark:text-white p-2">
-                                                                    <span class="text-green-500 text-xs lg:text-sm"><em>Określa, czy wykonując zadanie, należy wprowadzić ilość sztuk. Najczęściej jest to konieczne dla ostatniego zadania w schemacie.</em></span>
+                                                                    <span class="text-green-500 text-xs lg:text-sm"><em>Określa, czy wykonując podzadanie, należy wprowadzić ilość sztuk. Najczęściej jest to konieczne dla ostatniego podzadania w zadaniu.</em></span>
                                                                 </p>
                                                                 <input
                                                                     class="new-amount-required amount-required-input mr-2 mt-[0.3rem] h-3.5 w-8 appearance-none rounded-[0.4375rem] bg-neutral-300 before:pointer-events-none before:absolute before:h-3.5 before:w-3.5 before:rounded-full before:bg-transparent before:content-[''] after:absolute after:z-[2] after:-mt-[0.1875rem] after:h-5 after:w-5 after:rounded-full after:border-none after:bg-neutral-100 after:shadow-[0_0px_3px_0_rgb(0_0_0_/_7%),_0_2px_2px_0_rgb(0_0_0_/_4%)] after:transition-[background-color_0.2s,transform_0.2s] after:content-[''] checked:bg-primary checked:after:absolute checked:after:z-[2] checked:after:-mt-[3px] checked:after:ml-[1.0625rem] checked:after:h-5 checked:after:w-5 checked:after:rounded-full checked:after:border-none checked:after:bg-primary checked:after:shadow-[0_3px_1px_-2px_rgba(0,0,0,0.2),_0_2px_2px_0_rgba(0,0,0,0.14),_0_1px_5px_0_rgba(0,0,0,0.12)] checked:after:transition-[background-color_0.2s,transform_0.2s] checked:after:content-[''] hover:cursor-pointer focus:outline-none focus:ring-0 focus:before:scale-100 focus:before:opacity-[0.12] focus:before:shadow-[3px_-1px_0px_13px_rgba(0,0,0,0.6)] focus:before:transition-[box-shadow_0.2s,transform_0.2s] focus:after:absolute focus:after:z-[1] focus:after:block focus:after:h-5 focus:after:w-5 focus:after:rounded-full focus:after:content-[''] checked:focus:border-primary checked:focus:bg-primary checked:focus:before:ml-[1.0625rem] checked:focus:before:scale-100 checked:focus:before:shadow-[3px_-1px_0px_13px_#3b71ca] checked:focus:before:transition-[box-shadow_0.2s,transform_0.2s] dark:bg-neutral-600 dark:after:bg-neutral-400 dark:checked:bg-primary dark:checked:after:bg-primary dark:focus:before:shadow-[3px_-1px_0px_13px_rgba(255,255,255,0.4)] dark:checked:focus:before:shadow-[3px_-1px_0px_13px_#3b71ca]"

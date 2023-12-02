@@ -61,13 +61,6 @@
             return ids.includes(elem_id)
         }
 
-        function checkIndependent() {
-            if($('#independent').val()) {
-                $('#independent').prop('checked', true);
-            } else {
-                $('#independent').prop('checked', false);
-            }
-        }
 
         $(document).ready(function() {
             checkIndependent();
@@ -163,15 +156,11 @@
                     });
                 }
             });
-
-            $('#independent').on('click', function () {
-                $(this).val($(this).prop("checked") ? 1 : 0);
-            });
         });
 
     </script>
     @php
-        $name = (isset($update) and $update) ? 'Edytuj komponent' : 'Dodaj komponent';
+        $name = (isset($update) and $update) ? 'Edytuj materiał' : 'Dodaj materiał';
     @endphp
     <x-information-panel :viewName="$name"></x-information-panel>
     @if(isset($status))
@@ -202,7 +191,7 @@
                                             <x-input-error :messages="$errors->get('name')" class="mt-2" />
                                         </div>
                                         <div class="mb-6">
-                                            <label for="material" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Materiał <span class="text-red-700">*</span></label>
+                                            <label for="material" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Surowiec <span class="text-red-700">*</span></label>
                                             <select id="material" name="material" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                                                 @if(isset($material_list) and count($material_list) > 0)
                                                     @foreach($material_list as $mat)
@@ -221,8 +210,12 @@
                                         <div class="mb-6">
                                             <label for="independent" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Produkowany Niezależnie</label>
                                             <label class="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" id="independent" name="independent" value="{{old('independent') ? old('independent') : (empty($selected_comp) ? '' : $selected_comp->independent )}}" class="sr-only peer">
-                                                <div class="w-11 h-6 bg-gray-200 rounded-full peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+{{--                                                <input type="checkbox" id="independent" name="independent" value="{{old('independent') ? old('independent') : (empty($selected_comp) ? '' : $selected_comp->independent )}}" class="sr-only peer">--}}
+{{--                                                <div class="w-11 h-6 bg-gray-200 rounded-full peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>--}}
+                                                <input
+                                                    class="countable ml-2 mr-2 mt-[0.3rem] h-3.5 w-8 appearance-none rounded-[0.4375rem] bg-neutral-300 before:pointer-events-none before:absolute before:h-3.5 before:w-3.5 before:rounded-full before:bg-transparent before:content-[''] after:absolute after:z-[2] after:-mt-[0.1875rem] after:h-5 after:w-5 after:rounded-full after:border-none after:bg-neutral-100 after:shadow-[0_0px_3px_0_rgb(0_0_0_/_7%),_0_2px_2px_0_rgb(0_0_0_/_4%)] after:transition-[background-color_0.2s,transform_0.2s] after:content-[''] checked:bg-primary checked:after:absolute checked:after:z-[2] checked:after:-mt-[3px] checked:after:ml-[1.0625rem] checked:after:h-5 checked:after:w-5 checked:after:rounded-full checked:after:border-none checked:after:bg-primary checked:after:shadow-[0_3px_1px_-2px_rgba(0,0,0,0.2),_0_2px_2px_0_rgba(0,0,0,0.14),_0_1px_5px_0_rgba(0,0,0,0.12)] checked:after:transition-[background-color_0.2s,transform_0.2s] checked:after:content-[''] hover:cursor-pointer focus:outline-none focus:ring-0 focus:before:scale-100 focus:before:opacity-[0.12] focus:before:shadow-[3px_-1px_0px_13px_rgba(0,0,0,0.6)] focus:before:transition-[box-shadow_0.2s,transform_0.2s] focus:after:absolute focus:after:z-[1] focus:after:block focus:after:h-5 focus:after:w-5 focus:after:rounded-full focus:after:content-[''] checked:focus:border-primary checked:focus:bg-primary checked:focus:before:ml-[1.0625rem] checked:focus:before:scale-100 checked:focus:before:shadow-[3px_-1px_0px_13px_#3b71ca] checked:focus:before:transition-[box-shadow_0.2s,transform_0.2s] dark:bg-neutral-600 dark:after:bg-neutral-400 dark:checked:bg-primary dark:checked:after:bg-primary dark:focus:before:shadow-[3px_-1px_0px_13px_rgba(255,255,255,0.4)] dark:checked:focus:before:shadow-[3px_-1px_0px_13px_#3b71ca]"
+                                                    type="checkbox" role="switch" id="independent" name="independent"
+                                                    {{ old('independent') == 'on' ? 'checked' : ((!empty($selected_comp) and $selected_comp->independent == 1) ? 'checked' : '') }}/>
                                                 <x-input-error :messages="$errors->get('independent')" class="mt-2" />
                                             </label>
                                         </div>
@@ -248,7 +241,7 @@
                                         </div>
                                         <div class="mb-6">
                                             @php
-                                                $label = 'Zdjęcie Komponentu';
+                                                $label = 'Zdjęcie materiału';
                                                 $info = 'Format: svg, png, jpg, jpeg, bmp';
                                                 $input_name = 'comp_photo';
                                                 $file_to_copy = ($selected_comp instanceof \App\Models\Component and !empty($selected_comp->image)) ? $selected_comp->image : '';
@@ -256,7 +249,7 @@
                                             <x-file-input :name="$input_name" :label="$label" :info="$info" :file="$file_to_copy"></x-file-input>
                                         </div>
                                         <div class="mb-6">
-                                            <label for="description" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Opis komponentu</label>
+                                            <label for="description" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Opis materiału</label>
 {{--                                            <input type="textarea" id="description" name="description" value="{{old('description') ? old('description') : (empty($selected_comp) ? '' : $selected_comp->description )}}" class="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs lg:text-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">--}}
                                                 <textarea id="description" name="description" rows="4" class="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 text-xs lg:text-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
 {{old('description') ? old('description') : (empty($selected_comp) ? '' : $selected_comp->description )}}
@@ -273,7 +266,7 @@
                                                 type="button"
                                                 data-te-ripple-init
                                                 data-te-ripple-color="light">
-                                            Schematy produkcji
+                                            Zadania
                                             <svg class="w-2.5 h-2.5 ml-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
                                                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
                                             </svg>
@@ -281,8 +274,8 @@
                                         @if(isset($schema_data) and count($schema_data) > 0)
                                             <div class="w-full mt-[5%] mx-auto">
                                                 <p id="label-schema" class=" w-full text-sm lg:text-lg font-medium text-left text-gray-900 dark:text-white p-2">
-                                                    Wybrane schematy <span class="text-red-700">*</span>
-                                                    <br><span class="text-green-500 text-xs lg:text-sm"><em>Aby dodać komponent przypisz do niego schemat(y) produkcji</em></span>
+                                                    Wybrane zadania <span class="text-red-700">*</span>
+                                                    <br><span class="text-green-500 text-xs lg:text-sm"><em>Aby dodać materiał przypisz do niego minimum 1 zadanie</em></span>
                                                 </p>
                                                 <x-input-error :messages="$errors->get('prodschema_input')" class="w-full px-2"/>
                                                 @if(isset($prod_schema_errors))
@@ -292,7 +285,7 @@
                                                 @endif
                                                 <div class="bg-white flex justify-start items-center flex-col mt-4">
                                                     @php
-                                                        $inputPlaceholder = "Wpisz nazwę schematu...";
+                                                        $inputPlaceholder = "Wpisz nazwę zadania...";
                                                         $xListElem = "prodschema";
                                                     @endphp
                                                     <div id="search-schema" class="prodschema-toggle w-full hidden">
@@ -376,7 +369,7 @@
                                                                     </div>
                                                                     <ul class="prodschema-list-{{$prod_schema_tasks[0]->prod_schema_id}} mt-[3%] ml-[3%] relative m-0 w-full hidden list-none overflow-hidden p-0 transition-[height] duration-200 ease-in-out text-xs md:text-sm lg:text-md">
                                                                         @php $i = 1; @endphp
-                                                                        <h2 class="text-gray-800">Lista zadań:</h2>
+                                                                        <h2 class="text-gray-800">Lista podzadań:</h2>
                                                                         @foreach($prod_schema_tasks as $task)
                                                                             <li class="relative h-fit after:absolute after:left-[2.45rem] after:top-[3.6rem] after:mt-px after:h-[calc(100%-2.45rem)] after:w-px after:bg-[#e0e0e0] after:content-[''] dark:after:bg-neutral-600">
                                                                                 <div class="w-full flex cursor-pointer items-center p-6 leading-[1.3rem] no-underline after:bg-[#e0e0e0] after:content-[''] hover:bg-[#f9f9f9] focus:outline-none dark:after:bg-neutral-600 dark:hover:bg-[#3b3b3b]">
@@ -426,7 +419,7 @@
                                         </div>
                                         <div class="mb-6 w-full">
                                             @php
-                                                $label = 'Instrukcja wykonania Komponentu';
+                                                $label = 'Instrukcja wykonania materiału';
                                                 $info = 'Format: pdf, docx';
                                                 $input_name = 'instr_pdf';
                                                 $file_to_copy = ($selected_comp_instr instanceof \App\Models\Instruction and !empty($selected_comp_instr->instruction_pdf)) ? $selected_comp_instr->instruction_pdf : '';

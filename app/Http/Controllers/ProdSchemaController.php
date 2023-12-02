@@ -66,12 +66,12 @@ class ProdSchemaController
         }
 
         return view('component.component-details', [
-            'error_msg' => 'Brak danych dla schematu.',
+            'error_msg' => 'Brak danych dla zadania.',
         ]);
 
     }
 
-    public function addSchema(Request $request, ?string $id = null): View
+    public function addSchema(Request $request): View
     {
         $data = $this->getAddSchemaData();
 
@@ -88,7 +88,7 @@ class ProdSchemaController
     {
 
         if ($id != null) {
-            $schema = ProductionSchema::where('id',$id)->select('id','production_schema', 'description', 'tasks_count')->first();
+            $schema = ProductionSchema::where('id',$id)->select('id','production_schema', 'description', 'tasks_count', 'non_countable')->first();
             if ($schema instanceof ProductionSchema) {
                 $data = $this->getAddSchemaData();
                 $selected_schem_tasks = $this->getAddSchemaData($id);
@@ -115,7 +115,6 @@ class ProdSchemaController
                 $task_input = substr($task_input, 0, strlen($task_input) - 1);
 
                 $update = str_contains($request->url(), 'edytuj');
-
 
 
                 return view('prod-schema.prod-schema-add', [
@@ -156,7 +155,7 @@ class ProdSchemaController
     {
         $this->validateAddSchemaForm($request, 'INSERT');
         if((is_null($request->amount) and !is_null($request->duration)) or (!is_null($request->amount) and is_null($request->duration))) {
-            return back()->withErrors(['amount' => 'Aby dodać normę produkcji dla schematu należy podać czas trwania oraz ilość.'])->withInput();
+            return back()->withErrors(['amount' => 'Aby dodać normę produkcji dla zadania należy podać czas trwania oraz ilość.'])->withInput();
         }
 
         $schema_arr = $this->validateTasks($request);
@@ -171,12 +170,11 @@ class ProdSchemaController
         $user = Auth::user();
         $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
         $saved_files = [];
-
+        $non_countable = !empty($request->countable);
         try {
 
             DB::beginTransaction();
-
-            $insert_result = $this->insertProdSchema($employee_no, $request->production_schema, $request->description, count($schema_arr));
+            $insert_result = $this->insertProdSchema($employee_no, $request->production_schema, $request->description, count($schema_arr), $non_countable);
             if (array_key_exists('ERROR', $insert_result)) {
                 throw new Exception('Error inserting production_schema: error occurred in ProdSchema->insertProdSchema method.
     Error message: ' . $insert_result['ERROR']);
@@ -187,8 +185,7 @@ class ProdSchemaController
                 throw new Exception('Error inserting production_schema: after insert to production_schema table. Failed to evaluate id of inserted production_schema.');
 
             }
-
-            if(!in_array(null,array($request->amount,$request->duration, $request->unit))) {
+            if(!in_array(null,array($request->amount,$request->duration, $request->unit)) and !$non_countable) {
                 $amount = floatval($request->amount);
                 $duration = floatval($request->duration);
                 $this->insertProdSchemaProdStd($schema_id, $amount,$duration, $request->unit, $employee_no);
@@ -199,7 +196,7 @@ class ProdSchemaController
             $instr_pdf = !empty($request->file('instr_pdf')) ? $request->file('instr_pdf') : $request->instr_pdf_file_to_copy;
             $instr_video = !empty($request->file('instr_video')) ? $request->file('instr_video') : $request->instr_video_file_to_copy;
 
-            $instr_name = 'Instrukcja wykonania schematu: '.$request->name;
+            $instr_name = 'Instrukcja wykonania zadania: '.$request->name;
             $insert_result = InstructionController::insertInstruction($schema_id, 'production_schema_id', $instr_name ,$employee_no, $instr_pdf, $instr_video);
 
             if (array_key_exists('SAVED_FILES', $insert_result)) {
@@ -235,92 +232,95 @@ class ProdSchemaController
                 return back()->with('status', $insert_result['ERROR'])
                     ->withInput();
             }
-            return back()->with('status', 'Nowy schemat produkcji nie został dodany: błąd przy wprowadzaniu danych do systemu.')
+            return back()->with('status', 'Nowe zadanie nie zostało dodane: błąd przy wprowadzaniu danych do systemu.')
                 ->withInput();
         }
-        return redirect()->route('schema.index')->with('status', 'Schemat produkcji został dodany do systemu.');
+        return redirect()->route('schema.index')->with('status', 'Zadanie zostało dodane do systemu.');
     }
 
     public function storeUpdatedSchema(Request $request): RedirectResponse
     {
         $this->validateAddSchemaForm($request, 'UPDATE');
+
         $schema_arr = $this->validateTasks($request);
 
         if (array_key_exists('ERROR', $schema_arr)) {
             $schema_arr = $schema_arr['ERROR'];
-            return back()->with('prod_schema_errors', $schema_arr)->withInput();
+            return back()->with('task_errors', $schema_arr)->withInput();
         } else if (array_key_exists('INSERT', $schema_arr)) {
             $schema_arr = $schema_arr['INSERT'];
         }
-            $user = Auth::user();
-            $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
 
-            if (!isset($request->schema_id) or empty($request->schema_id)) {
-                Log::channel('error')->error('Error updating production_schema: error occurred in ProdSchema->storeUpdatedSchema method. ID of the production_schema not found', [
-                    'employeeNo' => $employee_no,
-                ]);
-                return back()->with('status', 'Nie udało się etytować schematu - nie znaleziono ID.')->withInput();
+        $user = Auth::user();
+        $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
+
+        if (!isset($request->schema_id) or empty($request->schema_id)) {
+            Log::channel('error')->error('Error updating production_schema: error occurred in ProdSchema->storeUpdatedSchema method. ID of the production_schema not found', [
+                'employeeNo' => $employee_no,
+            ]);
+            return back()->with('status', 'Nie udało się etytować zadania - nie znaleziono ID.')->withInput();
+        }
+        if (!(ProductionSchema::find($request->schema_id) instanceof ProductionSchema)) {
+            Log::channel('error')->error('Error updating production_schema: error occurred in ProdSchema->storeUpdatedSchema method. ProductionSchema with id ' . $request->schema_id . ' not found', [
+                'employeeNo' => $employee_no,
+            ]);
+            return back()->with('status', 'Nie udało się etytować zadania - nie znaleziono zadania o podanym ID.')->withInput();
+        }
+
+        $schema_id = $request->schema_id;
+        $saved_files = [];
+        $non_countable = !empty($request->countable);
+
+        try {
+            DB::beginTransaction();
+
+            $this->updateProdSchema($schema_id, $employee_no, $request->production_schema,
+                $request->description, count($schema_arr), $non_countable);
+
+            $this->updateProdSchemaProdStd($schema_id, $request->amount,$request->duration, $request->unit, $employee_no, $non_countable);
+
+            $this->updateTasks($schema_id, $schema_arr, $employee_no);
+
+            $instr_pdf = !empty($request->file('instr_pdf')) ? $request->file('instr_pdf') : $request->instr_pdf_file_to_copy;
+            $instr_video = !empty($request->file('instr_video')) ? $request->file('instr_video') : $request->instr_video_file_to_copy;
+            $instr_name = 'Instrukcja wykonania zadania: ' . $request->name;
+            $update_result = InstructionController::updateInstruction($schema_id, 'production_schema_id', $instr_name, $employee_no, $instr_pdf, $instr_video);
+            if (array_key_exists('SAVED_FILES', $update_result)) {
+                $saved_files['instructions'] = $update_result['SAVED_FILES'];
             }
-            if (!(ProductionSchema::find($request->schema_id) instanceof ProductionSchema)) {
-                Log::channel('error')->error('Error updating production_schema: error occurred in ProdSchema->storeUpdatedSchema method. ProductionSchema with id ' . $request->schema_id . ' not found', [
-                    'employeeNo' => $employee_no,
-                ]);
-                return back()->with('status', 'Nie udało się etytować schematu - nie znaleziono schematu o podanym ID.')->withInput();
-            }
-
-            $schema_id = $request->schema_id;
-            $saved_files = [];
-
-            try {
-                DB::beginTransaction();
-
-                $this->updateProdSchema($schema_id, $employee_no, $request->production_schema,
-                    $request->description, count($schema_arr));
-
-                $this->updateProdSchemaProdStd($schema_id, $request->amount,$request->duration, $request->unit, $employee_no);
-
-                $this->updateTasks($schema_id, $schema_arr, $employee_no);
-
-                $instr_pdf = !empty($request->file('instr_pdf')) ? $request->file('instr_pdf') : $request->instr_pdf_file_to_copy;
-                $instr_video = !empty($request->file('instr_video')) ? $request->file('instr_video') : $request->instr_video_file_to_copy;
-                $instr_name = 'Instrukcja wykonania schematu: ' . $request->name;
-                $update_result = InstructionController::updateInstruction($schema_id, 'production_schema_id', $instr_name, $employee_no, $instr_pdf, $instr_video);
-                if (array_key_exists('SAVED_FILES', $update_result)) {
-                    $saved_files['instructions'] = $update_result['SAVED_FILES'];
-                }
-                if (array_key_exists('ERROR', $update_result)) {
-                    throw new Exception('Error updating production_schema: error occurred in ProdSchema->updateInstruction method.
+            if (array_key_exists('ERROR', $update_result)) {
+                throw new Exception('Error updating production_schema: error occurred in ProdSchema->updateInstruction method.
     Error message: ' . $update_result['ERROR']);
-                }
+            }
 
-                DB::commit();
-                //DB::rollBack();
+            DB::commit();
+            //DB::rollBack();
 
-            } catch (Exception $e) {
-                Log::channel('error')->error('Error updating production_schema: ' . $e->getMessage(), [
-                    'employeeNo' => $employee_no,
-                ]);
-                DB::rollBack();
+        } catch (Exception $e) {
+            Log::channel('error')->error('Error updating production_schema: ' . $e->getMessage(), [
+                'employeeNo' => $employee_no,
+            ]);
+            DB::rollBack();
 
-                foreach ($saved_files as $path => $files) {
-                    if (is_array($files)) {
-                        foreach ($files as $file) {
-                            fileTrait::deleteFile($path, $file);
-                        }
-                    } else if (is_string($files)) {
-                        fileTrait::deleteFile($path, $files);
+            foreach ($saved_files as $path => $files) {
+                if (is_array($files)) {
+                    foreach ($files as $file) {
+                        fileTrait::deleteFile($path, $file);
                     }
+                } else if (is_string($files)) {
+                    fileTrait::deleteFile($path, $files);
                 }
+            }
 
-                if (isset($update_result) and array_key_exists('ERROR', $update_result)) {
-                    return back()->with('status', $update_result['ERROR'])
-                        ->withInput();
-                }
-                return back()->with('status', 'Schemat nie został edytowany: błąd przy wprowadzaniu danych do systemu.')
+            if (isset($update_result) and array_key_exists('ERROR', $update_result)) {
+                return back()->with('status', $update_result['ERROR'])
                     ->withInput();
             }
-            return redirect()->route('schema.index')->with('status', 'Edytowano schemat.');
+            return back()->with('status', 'Zadanie nie zostało edytowane: błąd przy wprowadzaniu danych do systemu.')
+                ->withInput();
         }
+        return redirect()->route('schema.index')->with('status', 'Edytowano zadanie.');
+    }
 
 
 
@@ -377,17 +377,17 @@ class ProdSchemaController
                 ]);
                 DB::rollBack();
 
-                return back()->with('status_err', 'Schemat nie został usunięty: błąd przy usuwaniu danych z systemu.')
+                return back()->with('status_err', 'Zadanie nie zostało usunięte: błąd przy usuwaniu danych z systemu.')
                     ->withInput();
             }
 
             return  redirect()->route('schema.index')
-                ->with('status', 'Usunięto schemat: '.$schema->production_schema.'.')
+                ->with('status', 'Usunięto zadanie: '.$schema->production_schema.'.')
                 ->withInput();
         }
 
         return  redirect()->route('schema.index')
-            ->with('status_err', 'Schemat nie został usunięty: nie znaleziono schematu.')
+            ->with('status_err', 'Zadnie nie zostało usunięte: nie znaleziono zadania.')
             ->withInput();
 
     }
@@ -404,6 +404,7 @@ class ProdSchemaController
                                        ps.id as prod_schema_id,
                                        ps.production_schema as prod_schema,
                                        ps.description as prod_schema_desc,
+                                       ps.non_countable,
                                        t.id as task_id,
                                        t.sequence_no as sequence_no,
                                        t.amount_required,
@@ -431,6 +432,7 @@ class ProdSchemaController
                                     ps.id as prod_schema_id,
                                     ps.production_schema as prod_schema,
                                     ps.description as prod_schema_desc,
+                                    ps.non_countable,
                                     t.id as task_id,
                                     t.sequence_no as sequence_no,
                                     t.amount_required,
@@ -524,7 +526,7 @@ class ProdSchemaController
         $error_arr = [];
         $insert_arr = [];
         if(is_null($request->task_input) and ($request->new_counter == 0 or is_null($request->new_counter))) {
-            $error_arr[] = 'Schemat musi mieć przypisane minimum 1 zadanie.';
+            $error_arr[] = 'Zadanie musi mieć przypisane minimum 1 podzadanie.';
             return array('ERROR' => $error_arr);
         }
 
@@ -547,12 +549,12 @@ class ProdSchemaController
                 $desc = 'new_desc_'.$new_task_id;
 
                 if($request->$sequence_no == null or !in_array($request->$sequence_no, $sequence_no_arr)) {
-                    $error_arr[] = 'Niepoprawne wartości Kolejność wykonania. Schematy powinny zawierać liczby od 1 do '.$sequence_no_count.' (w dowolnej kolejności).';
+                    $error_arr[] = 'Niepoprawne wartości Kolejność wykonania. Podzadania powinny zawierać liczby od 1 do '.$sequence_no_count.' (w dowolnej kolejności).';
                 } else {
                     array_splice($sequence_no_arr,array_search($request->$sequence_no, $sequence_no_arr),1);
                 }
                 if(empty($request->$name)) {
-                    $error_arr[] = 'Aby dodać nowe zadanie podaj jego nazwę.';
+                    $error_arr[] = 'Aby dodać nowe podzadanie podaj jego nazwę.';
                 }
                 if(in_array($request->$name, $taks_names_arr)) {
                     $error_arr[] = 'Nie można dodać 2 zadań o identycznej nazwie.';
@@ -582,7 +584,7 @@ class ProdSchemaController
                     $sequence_no = 'sequenceno_'.$task_id;
                     $amount_required = 'amount_required_'.$task_id;
                     if($request->$sequence_no == null or !in_array($request->$sequence_no, $sequence_no_arr)) {
-                        $error_arr[] = 'Niepoprawne wartości Kolejność wykonania. Schematy powinny zawierać liczby od 1 do '.$sequence_no_count.' (w dowolnej kolejności).';
+                        $error_arr[] = 'Niepoprawne wartości Kolejność wykonania. Podzadania powinny zawierać liczby od 1 do '.$sequence_no_count.' (w dowolnej kolejności).';
                     } else {
                         array_splice($sequence_no_arr,array_search($request->$sequence_no, $sequence_no_arr),1);
                     }
@@ -608,13 +610,14 @@ class ProdSchemaController
         return array('INSERT' => $insert_arr);
     }
 
-    private function insertProdSchema(string $employee_no, string $prod_schema, string|null $description, int $tasks_count): array
+    private function insertProdSchema(string $employee_no, string $prod_schema, string|null $description, int $tasks_count, bool $non_countable): array
     {
 
         $schema_id = DB::table('production_schema')->insertGetId([
             'production_schema' => $prod_schema,
             'description' => $description,
             'tasks_count' => $tasks_count,
+            'non_countable' => $non_countable,
             'created_by' => $employee_no,
             'updated_by' => $employee_no,
             'created_at' => date('y-m-d h:i:s'),
@@ -626,7 +629,7 @@ class ProdSchemaController
     }
 
     private function updateProdSchema(int $schema_id, string $employee_no, string $prod_schema,
-                                      string|null $description, int $tasks_count): void
+                                      string|null $description, int $tasks_count, bool $non_countable): void
     {
 
         DB::table('production_schema')
@@ -635,6 +638,7 @@ class ProdSchemaController
                 'production_schema' => $prod_schema,
                 'description' => $description,
                 'tasks_count' => $tasks_count,
+                'non_countable' => $non_countable,
                 'updated_by' => $employee_no,
                 'updated_at' => date('y-m-d h:i:s'),
                 ]);
@@ -792,7 +796,7 @@ class ProdSchemaController
     /**
      * @throws Exception
      */
-    private function updateProdSchemaProdStd(int $schema_id, float|null $amount,float|null $duration,string|null $unit, $employee_no ): void
+    private function updateProdSchemaProdStd(int $schema_id, float|null $amount,float|null $duration,string|null $unit, $employee_no, bool $non_countable ): void
     {
         $unit_id = Unit::where('unit',$unit)->select('id')->first();
         if($unit_id instanceof Unit) {
@@ -801,8 +805,7 @@ class ProdSchemaController
         else {
             throw new Exception('Error inserting production_schema: error occurred in ProdSchema->insertProdSchemaProdStd method. Id not found for provided unit.');
         }
-
-        if(is_null($duration) and is_null($amount)) {
+        if((is_null($duration) and is_null($amount)) or $non_countable) {
             if(ProductionStandard::where('production_schema_id', $schema_id)->first() instanceof ProductionStandard) {
                 ProductionStandard::where('production_schema_id', $schema_id)->delete();
             }
@@ -944,7 +947,7 @@ class ProdSchemaController
             'description' => ['max:200'],
         ],
             [
-                'production_schema.unique' => 'Nazwa schematu musi być unikalna.',
+                'production_schema.unique' => 'Nazwa zadania musi być unikalna.',
                 'amount.gt' => 'Ilość musi być większa od 0',
                 'duration.gt' => 'Czas trwania musi być większy od 0',
                 'unit.in' => 'Niepoprawna jednostka. Wybierz jedną z: '.$err_mess,

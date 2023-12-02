@@ -497,9 +497,9 @@ class ProductController
             'description' => ['max:200'],
         ],
             [
-                'name.unique' => 'Nazwa komponentu musi być unikalna.',
+                'name.unique' => 'Nazwa materiału musi być unikalna.',
                 'gtin.between' => 'GTIN powinien mieć długość od 12 do 14 cyfr',
-                'material.in' => 'Wybierz jeden z materiałów: '.$err_mess.'.',
+                'material.in' => 'Wybierz jeden z surowców: '.$err_mess.'.',
                 'prod_image.mimes' => 'Przesłany plik powinien mieć rozszerzenie: jpeg,bmp,png,jpg,svg. Rozszerzenie pliku: '.$ext_prod_image.'.',
                 'prod_barcode_mimes' => 'Przesłany plik powinien mieć rozszerzenie: jpeg,gif,bmp,png,jpg,svg,pdf. Rozszerzenie pliku: '.$ext_prod_barcode.'.',
                 'instr_pdf.mimes' => 'Przesłany plik powinien mieć rozszerzenie: pdf. Rozszerzenie pliku: '.$ext_instr_pdf.'.',
@@ -727,7 +727,7 @@ class ProductController
                 Log::channel('error')->error('Error inserting product_component: Component not found for value ' .$component_input. ' of "component_input" input.', [
                     'employeeNo' => $employee_no,
                 ]);
-                return ['ERROR' => 'Nie znaleziono komponentu dla wybranych komponentów.'];
+                return ['ERROR' => 'Nie znaleziono materiału dla wybranych materiałów.'];
             }
         }
         return [];
@@ -774,7 +774,7 @@ class ProductController
                     Log::channel('error')->error('Error inserting product_component: Component not found for value ' .$component_input. ' of "component_input" input.', [
                         'employeeNo' => $employee_no,
                     ]);
-                    return ['ERROR' => 'nie znaleziono komponentu dla wybranych komponentów.'];
+                    return ['ERROR' => 'nie znaleziono materiału dla wybranych materiałów.'];
                 }
             }
         }

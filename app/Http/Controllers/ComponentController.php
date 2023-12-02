@@ -105,7 +105,7 @@ class ComponentController
         }
 
         return view('component.component-details', [
-            'error_msg' => 'Brak danych dla komponentu.',
+            'error_msg' => 'Brak danych dla materiału.',
         ]);
 
     }
@@ -187,11 +187,12 @@ class ComponentController
         }
 
 
-        return redirect()->route('component.index')->with('status_err', 'Nie znaleziono komponentu');
+        return redirect()->route('component.index')->with('status_err', 'Nie znaleziono materiału');
     }
 
     public function storeComponent(Request $request): RedirectResponse
     {
+
         $this->validateAddComponentForm($request, 'INSERT');
 
         $schema_arr = $this->validateProdSchemas($request);
@@ -203,7 +204,7 @@ class ComponentController
         }
 
         $user = Auth::user();
-        $independent = $request->independent == null ? 0 : $request->independent;
+        $independent = empty($request->independent) ? 0 : 1;
         $height = doubleval($request->height);
         $length = doubleval($request->length);
         $width = doubleval($request->width);
@@ -239,7 +240,7 @@ class ComponentController
             $instr_pdf = !empty($request->file('instr_pdf')) ? $request->file('instr_pdf') : $request->instr_pdf_file_to_copy;
             $instr_video = !empty($request->file('instr_video')) ? $request->file('instr_video') : $request->instr_video_file_to_copy;
 
-            $instr_name = 'Instrukcja wykonania komponentu: '.$request->name;
+            $instr_name = 'Instrukcja wykonania materiału: '.$request->name;
             $insert_result = InstructionController::insertInstruction($comp_id, 'component_id', $instr_name ,$employee_no, $instr_pdf, $instr_video);
 
             if (array_key_exists('SAVED_FILES', $insert_result)) {
@@ -274,10 +275,10 @@ class ComponentController
                 return back()->with('status', $insert_result['ERROR'])
                     ->withInput();
             }
-            return back()->with('status', 'Nowy komponent nie został dodany: błąd przy wprowadzaniu danych do systemu.')
+            return back()->with('status', 'Nowy materiał nie został dodany: błąd przy wprowadzaniu danych do systemu.')
                 ->withInput();
         }
-        return redirect()->route('component.index')->with('status', 'Komponent został dodany do systemu.');
+        return redirect()->route('component.index')->with('status', 'Materiał został dodany do systemu.');
     }
 
     public function storeUpdatedComponent(Request $request): RedirectResponse
@@ -299,17 +300,17 @@ class ComponentController
             Log::channel('error')->error('Error updating component: error occurred in Component->storeUpdatedComponent method. ID of the component not found', [
                 'employeeNo' => $employee_no,
             ]);
-            return back()->with('status', 'Nie udało się etytować komponentu - nie znaleziono ID.')->withInput();
+            return back()->with('status', 'Nie udało się etytować materiału - nie znaleziono ID.')->withInput();
         }
         if (!(Component::find($request->component_id) instanceof Component)) {
             Log::channel('error')->error('Error updating component: error occurred in Component->storeUpdatedComponent method. Component with id ' . $request->component_id . ' not found', [
                 'employeeNo' => $employee_no,
             ]);
-            return back()->with('status', 'Nie udało się etytować komponentu - nie znaleziono komponentu o podanym ID.')->withInput();
+            return back()->with('status', 'Nie udało się etytować materiału - nie znaleziono materiału o podanym ID.')->withInput();
         }
 
         $comp_id = $request->component_id;
-        $independent = $request->independent == null ? 0 : $request->independent;
+        $independent = $request->independent == null ? 0 : 1;
         $height = doubleval($request->height);
         $length = doubleval($request->length);
         $width = doubleval($request->width);
@@ -372,10 +373,10 @@ class ComponentController
                 return back()->with('status', $update_result['ERROR'])
                     ->withInput();
             }
-            return back()->with('status', 'Komponent nie został edytowany: błąd przy wprowadzaniu danych do systemu.')
+            return back()->with('status', 'Materiał nie został edytowany: błąd przy wprowadzaniu danych do systemu.')
                 ->withInput();
         }
-        return redirect()->route('component.index')->with('status', 'Edytowano komponent.');
+        return redirect()->route('component.index')->with('status', 'Edytowano materiał.');
     }
 
 
@@ -386,7 +387,7 @@ class ComponentController
                 'confirmation' => ['regex:(usuń|usun)'],
             ],
                 [
-                    'confirmation.regex' => 'Nie można usunąć komponentu: niepoprawna wartość. Wpisz "usuń".',
+                    'confirmation.regex' => 'Nie można usunąć materiału: niepoprawna wartość. Wpisz "usuń".',
                 ]);
         }
         catch (Exception $e) {
@@ -434,13 +435,13 @@ class ComponentController
                 ]);
                 DB::rollBack();
 
-                return back()->with('status_err', 'Komponent nie został usunięty: błąd przy usuwaniu danych z systemu.')
+                return back()->with('status_err', 'Materiał nie został usunięty: błąd przy usuwaniu danych z systemu.')
                     ->withInput();
             }
         }
 
         return  redirect()->route('component.index')
-            ->with('status', 'Usunięto komponent: '.$comp->name.'.')
+            ->with('status', 'Usunięto materiał: '.$comp->name.'.')
             ->withInput();
     }
 
@@ -532,16 +533,16 @@ class ComponentController
                 $sequence_no = 'sequenceno_'.$schema_id;
 
                 if($request->$duration == null or $request->$duration <= 0) {
-                    $error_arr[] = 'Niepoprawna wartość Czas [h] dla jednego ze schematów produkcji.';
+                    $error_arr[] = 'Niepoprawna wartość Czas [h] dla jednego z zadań.';
                 }
                 if($request->$amount == null or $request->$amount <= 0) {
-                    $error_arr[] = 'Niepoprawna wartość Ilość dla jednego ze schematów produkcji.';
+                    $error_arr[] = 'Niepoprawna wartość Ilość dla jednego z zadań.';
                 }
                 if($request->$unit == null or !in_array($request->$unit, $units)) {
-                    $error_arr[] = 'Niepoprawna wartość Jednostka dla jednego ze schematów produkcji.';
+                    $error_arr[] = 'Niepoprawna wartość Jednostka dla jednego z zadań.';
                 }
                 if($request->$sequence_no == null or !in_array($request->$sequence_no, $sequence_no_arr)) {
-                    $error_arr[] = 'Niepoprawne wartości Kolejność wyk. Schematy powinny zawierać liczby od 1 do '.count($schemas).' (w dowolnej kolejności).';
+                    $error_arr[] = 'Niepoprawne wartości Kolejność wyk. Zadania powinny zawierać liczby od 1 do '.count($schemas).' (w dowolnej kolejności).';
                 } else {
                     array_splice($sequence_no_arr,array_search($request->$sequence_no, $sequence_no_arr),1);
                 }
@@ -589,13 +590,13 @@ class ComponentController
             $image_name = fileTrait::saveFile($comp_image, 'components', 'comp_'.$comp_id.'_');
             //if failed to save comp image file
             if(empty($image_name)) {
-                return array('ERROR' => 'Nowy komponent nie został dodany: błąd przy zapisie pliku "Zdjęcie komponentu" na dysku.');
+                return array('ERROR' => 'Nowy materiał nie został dodany: błąd przy zapisie pliku "Zdjęcie materiału" na dysku.');
             }
         }
         else if(is_string($comp_image)) {
             $new_image_name = fileTrait::getFileName('components', $comp_image);
             if(!fileTrait::copyFile('components', $comp_image, 'components', $new_image_name)) {
-                return array('ERROR' => 'Nowy komponent nie został dodany: błąd przy kopiowaniu pliku "Zdjęcie komponentu" na dysku.');
+                return array('ERROR' => 'Nowy materiał nie został dodany: błąd przy kopiowaniu pliku "Zdjęcie materiału" na dysku.');
             }
             else {
                 $image_name = $new_image_name;
@@ -612,7 +613,7 @@ class ComponentController
                 Log::channel('error')->error('Error inserting component: '.$e->getMessage(), [
                     'employeeNo' => $employee_no,
                 ]);
-                return array('ERROR' => 'Nowy komponent nie został dodany: błąd przy zapisie nazwy pliku "Zdjęcie komponentu" w bazie danych.',
+                return array('ERROR' => 'Nowy materiał nie został dodany: błąd przy zapisie nazwy pliku "Zdjęcie materiału" w bazie danych.',
                     'SAVED_FILES' => array($image_name));
             }
         }
@@ -648,7 +649,7 @@ class ComponentController
             $image_name = fileTrait::saveFile($comp_image, 'components', 'comp_'.$comp_id.'_');
             //if failed to save comp image file
             if(empty($image_name)) {
-                return array('ERROR' => 'Komponent nie został edytowany: błąd przy zapisie pliku "Zdjęcie komponentu" na dysku.');
+                return array('ERROR' => 'Materiał nie został edytowany: błąd przy zapisie pliku "Zdjęcie materiału" na dysku.');
             }
             if(!empty($comp_old->image) and fileTrait::fileExists('components', $comp_old->image)) {
                 fileTrait::deleteFile('components', $comp_old->image);
@@ -673,7 +674,7 @@ class ComponentController
                 Log::channel('error')->error('Error updating component: '.$e->getMessage(), [
                     'employeeNo' => $employee_no,
                 ]);
-                return array('ERROR' => 'Komponent nie został edytowany: błąd przy zapisie nazwy pliku "Zdjęcie komponentu" w bazie danych.',
+                return array('ERROR' => 'Materiał nie został edytowany: błąd przy zapisie nazwy pliku "Zdjęcie materiału" w bazie danych.',
                     'SAVED_FILES' => array($image_name));
             }
         }
@@ -685,7 +686,7 @@ class ComponentController
 
     private function updateInstruction(int $comp_id, string $name, string $employee_no, $instr_pdf, $instr_video): array
     {
-        $instr_name = 'Instrukcja wykonania komponentu: '.$name;
+        $instr_name = 'Instrukcja wykonania materiału: '.$name;
 
         $instr_old = Instruction::where('component_id',$comp_id)->get();
         $instr_id = collect($instr_old)->map(function (Instruction $arr) { return $arr->id; })->toArray();
@@ -721,7 +722,7 @@ class ComponentController
             $instr_pdf_name = fileTrait::saveFile($instr_pdf, 'instructions', 'instr_doc_'.$instr_id.'_');
             //if failed to save instr file
             if(empty($instr_pdf_name)) {
-                return array('ERROR' => 'Komponent nie został edytowany: błąd przy zapisie pliku "Instrukcja wykonania komponentu" na dysku.');
+                return array('ERROR' => 'Materiał nie został edytowany: błąd przy zapisie pliku "Instrukcja wykonania materiału" na dysku.');
             }
             if(!empty($instr_old->instruction_pdf) and fileTrait::fileExists('instructions', $instr_old->instruction_pdf)) {
                 fileTrait::deleteFile('instructions', $instr_old->instruction_pdf);
@@ -741,9 +742,9 @@ class ComponentController
             //if failed to save comp instr video file
             if(empty($instr_video_name)) {
                 if(empty($instr_pdf_name)){
-                    return array('ERROR' => 'Komponent nie został edytowany: błąd przy zapisie pliku "Film instruktażowy" na dysku.');
+                    return array('ERROR' => 'Materiał nie został edytowany: błąd przy zapisie pliku "Film instruktażowy" na dysku.');
                 }
-                return array('ERROR' => 'Komponent nie został edytowany: błąd przy zapisie pliku "Film instruktażowy" na dysku.',
+                return array('ERROR' => 'Materiał nie został edytowany: błąd przy zapisie pliku "Film instruktażowy" na dysku.',
                              'SAVED_FILES' => array($instr_pdf_name));
             }
             if(!empty($instr_old->video) and fileTrait::fileExists('instructions', $instr_old->video)) {
@@ -782,7 +783,7 @@ class ComponentController
             Log::channel('error')->error('Error updating component: '.$e->getMessage(), [
                 'employeeNo' => $employee_no,
             ]);
-            return array('ERROR' => 'Nowy komponent nie został edytowany: błąd przy zapisie nazwy plików "Instrukcja wykonania komponentu" oraz "Film instruktażowy" w bazie danych.',
+            return array('ERROR' => 'Nowy materiał nie został edytowany: błąd przy zapisie nazwy plików "Instrukcja wykonania materiału" oraz "Film instruktażowy" w bazie danych.',
                 'SAVED_FILES' => $saved_files);
         }
 
@@ -938,8 +939,8 @@ class ComponentController
             'prodschema_input' => ['required'],
         ],
             [
-                'name.unique' => 'Nazwa komponentu musi być unikalna.',
-                'material.in' => 'Wybierz jeden z materiałów: '.$err_mess.'.',
+                'name.unique' => 'Nazwa materiału musi być unikalna.',
+                'material.in' => 'Wybierz jeden z surowców: '.$err_mess.'.',
                 'comp_photo.mimes' => 'Przesłany plik powinien mieć rozszerzenie: jpeg,bmp,png,jpg,svg. Rozszerzenie pliku: '.$ext_comp_photo.'.',
                 'instr_pdf.mimes' => 'Przesłany plik powinien mieć rozszerzenie: pdf. Rozszerzenie pliku: '.$ext_instr_pdf.'.',
                 'instr_video.mimes' => 'Przesłany plik powinien mieć rozszerzenie: mp4,mov,mkv,wmv. Rozszerzenie pliku: '.$ext_instr_video.'.',
@@ -949,7 +950,7 @@ class ComponentController
                 'height.gte' => 'Wysokość nie może być ujemna.',
                 'length.gte' => 'Długość nie może być ujemna.',
                 'width.gte' => 'Szerokość nie może być ujemna.',
-                'prodschema_input.required' => 'Wybierz przynajmniej jeden schemat produkcji.',
+                'prodschema_input.required' => 'Wybierz przynajmniej jedno zadanie.',
                 'required' => 'To pole jest wymagane.',
                 'max' => 'Wpisany tekst ma za dużo znaków.',
                 'min' => 'Wpisany tekst ma za mało znaków.',

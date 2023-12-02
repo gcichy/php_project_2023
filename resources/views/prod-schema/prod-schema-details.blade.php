@@ -1,16 +1,16 @@
 <x-app-layout>
     @php
-        $viewName = 'Szczegóły schematu';
+        $viewName = 'Szczegóły zadania';
     @endphp
     <x-information-panel :viewName="$viewName"></x-information-panel>
-    @if(isset($prod_schema_tasks) and isset($instruction) and isset($prod_schema))
+    @if(isset($prod_schema_tasks) and isset($prod_schema))
         <div class="max-w-7xl mt-[3%] mx-auto sm:px-6 lg:px-8 space-y-6 flex justify-center">
             <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg flex justify-start items-center flex-col w-full">
                 <div class="w-full lg:w-[90%] mt-4 md:mt-8 bg-white border border-gray-200 rounded-md shadow dark:bg-gray-800 dark:border-gray-700">
                     <ul class="flex text-sm md:text-lg lg:text-xl font-medium text-center text-gray-500 divide-x divide-gray-200 rounded-lg  dark:divide-gray-600 dark:text-gray-400" id="fullWidthTab" data-tabs-toggle="#fullWidthTabContent" role="tablist">
                         <li class="w-full">
                             <button id="production-tab" data-tabs-target="#production" type="button" role="tab" aria-controls="production" aria-selected="false" class="aria-selected:text-blue-450 inline-block w-full p-4 bg-gray-50 hover:bg-gray-100 focus:outline-none dark:bg-gray-700 dark:hover:bg-gray-600">
-                                Schemat Produkcji
+                                Zadanie
                             </button>
                         </li>
                         <li class="w-full">
@@ -82,7 +82,14 @@
                                             </div>
                                         @endif
                                     </div>
-                                    <h2 class="text-gray-800 font-medium text-md xl:text-lg my-2">Lista zadań:</h2>
+                                    <div class="my-4">
+                                        <label for="countable" class="block text-sm lg:text-md xl:text-lg font-medium text-gray-900 dark:text-white">Niemierzalne</label>
+                                        <input
+                                            class="countable ml-2 mr-2 mt-[0.3rem] h-3.5 w-8 appearance-none rounded-[0.4375rem] bg-neutral-300 before:pointer-events-none before:absolute before:h-3.5 before:w-3.5 before:rounded-full before:bg-transparent before:content-[''] after:absolute after:z-[2] after:-mt-[0.1875rem] after:h-5 after:w-5 after:rounded-full after:border-none after:bg-neutral-100 after:shadow-[0_0px_3px_0_rgb(0_0_0_/_7%),_0_2px_2px_0_rgb(0_0_0_/_4%)] after:transition-[background-color_0.2s,transform_0.2s] after:content-[''] checked:bg-primary checked:after:absolute checked:after:z-[2] checked:after:-mt-[3px] checked:after:ml-[1.0625rem] checked:after:h-5 checked:after:w-5 checked:after:rounded-full checked:after:border-none checked:after:bg-primary checked:after:shadow-[0_3px_1px_-2px_rgba(0,0,0,0.2),_0_2px_2px_0_rgba(0,0,0,0.14),_0_1px_5px_0_rgba(0,0,0,0.12)] checked:after:transition-[background-color_0.2s,transform_0.2s] checked:after:content-[''] hover:cursor-pointer focus:outline-none focus:ring-0 focus:before:scale-100 focus:before:opacity-[0.12] focus:before:shadow-[3px_-1px_0px_13px_rgba(0,0,0,0.6)] focus:before:transition-[box-shadow_0.2s,transform_0.2s] focus:after:absolute focus:after:z-[1] focus:after:block focus:after:h-5 focus:after:w-5 focus:after:rounded-full focus:after:content-[''] checked:focus:border-primary checked:focus:bg-primary checked:focus:before:ml-[1.0625rem] checked:focus:before:scale-100 checked:focus:before:shadow-[3px_-1px_0px_13px_#3b71ca] checked:focus:before:transition-[box-shadow_0.2s,transform_0.2s] dark:bg-neutral-600 dark:after:bg-neutral-400 dark:checked:bg-primary dark:checked:after:bg-primary dark:focus:before:shadow-[3px_-1px_0px_13px_rgba(255,255,255,0.4)] dark:checked:focus:before:shadow-[3px_-1px_0px_13px_#3b71ca]"
+                                            type="checkbox" role="switch" id="countable" name="countable"
+                                            {{ $prod_schema_tasks[0]->non_countable ? 'checked' : '' }} disabled/>
+                                    </div>
+                                    <h2 class="text-gray-800 font-medium text-md xl:text-lg my-2">Lista podzadań:</h2>
                                     <div class="flex flex-col items-left justify-center text-gray-700 border-blue-450 border-2 mb-3 md:w-[100%]">
                                         @endif
                                         <li class="my-5 ml-6">
@@ -101,7 +108,7 @@
                             @endif
                         </div>
                         <div class="p-4 bg-white rounded-lg lg:p-8 dark:bg-gray-800 flex flex-col justify-center items-center" id="manual" role="tabpanel" aria-labelledby="manual-tab">
-                            @if($instruction instanceof \App\Models\Instruction)
+                            @if(isset($instruction) and $instruction instanceof \App\Models\Instruction)
                                     @if(!is_null($instruction->id))
                                         <div class="w-full flex flex-col justify-center items-center mb-4 mt-4">
                                             <p class="list-element-name w-full lg:w-[80%] mb-8 text-md xl:text-lg font-medium pl-2 lg:pl-4 lg:pb-2 text-gray-950 border-l-4 border-blue-450">

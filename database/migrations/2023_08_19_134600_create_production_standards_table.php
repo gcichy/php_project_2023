@@ -24,6 +24,11 @@ return new class extends Migration
                 ->constrained('component')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
+            $table->foreignId('product_id')
+                ->nullable()
+                ->constrained('product')
+                ->onUpdate('cascade')
+                ->onDelete('restrict');
             $table->string('name')->nullable();
             $table->double('duration_hours');
             $table->double('amount');

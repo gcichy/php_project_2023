@@ -13,6 +13,7 @@ class ProductionCycle extends Model
      * @var array<int, string, double>
      */
     protected $fillable = [
+        'level',                            //determines hierarchy: 1 - parent (prod,comp,schema), 2 - child (comp, schema), 3 - subchild (schema)
         'production_schema_id',             //id of production schema for which production cycle is created
         'product_id',                       //id of product for which production cycle is created
         'component_id',                     //if production cycle is created for component (not for product), then component id must be supplied
@@ -25,7 +26,7 @@ class ProductionCycle extends Model
         'total_amount',                     //total amount to be produced within cycle
         'current_amount',
         'defect_amount',                    //determines how many defects was produced
-        'cycle_finished',                   //determines if cycle is finished
+        'finished',                   //determines if cycle is finished
         'additional_comment',
     ];
 

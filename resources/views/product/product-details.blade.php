@@ -99,7 +99,7 @@
                 </li>
                 <li class="w-full">
                     <button id="production-tab" data-tabs-target="#production" type="button" role="tab" aria-controls="production" aria-selected="false" class="aria-selected:text-blue-450 inline-block w-full p-4 bg-gray-50 hover:bg-gray-100 focus:outline-none dark:bg-gray-700 dark:hover:bg-gray-600">
-                        Komponenty
+                        Materiały
                     </button>
                 </li>
                 <li class="w-full">
@@ -150,7 +150,7 @@
                                         </tr>
                                         <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                             <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                                Materiał
+                                                Surowiec
                                             </th>
                                             <td class="px-6 py-4">
                                                 {{is_null($prod->material) ? '' : $prod->material}}
@@ -193,7 +193,7 @@
                     @if(count($data) > 0)
                         <div class="max-w-7xl mt-[3%] mx-auto sm:px-6 lg:px-8 space-y-6 flex justify-center items-center flex-col">
                             @php
-                                $inputPlaceholder = "Wpisz nazwę lub materiał...";
+                                $inputPlaceholder = "Wpisz nazwę lub surowiec...";
                                 $xElemComp = "component";
                             @endphp
                             <div class="w-full xl:w-4/5 flex flex-col lg:flex-row justify-center items-center">
@@ -237,7 +237,7 @@
                                                     <tbody>
                                                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                                         <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                                            Materiał
+                                                            Surowiec
                                                         </th>
                                                         <td class="px-6 py-4">
                                                             {{is_null($comp->material) ? '' : $comp->material}}

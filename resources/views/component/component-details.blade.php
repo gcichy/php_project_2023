@@ -1,6 +1,6 @@
 <x-app-layout>
     @php
-        $viewName = 'Szczegóły komponentu';
+        $viewName = 'Szczegóły materiału';
     @endphp
     <x-information-panel :viewName="$viewName"></x-information-panel>
     @if(isset($comp) and isset($prod_standards) and isset($data) and isset($instruction))
@@ -13,7 +13,7 @@
                 </li>
                 <li class="w-full">
                     <button id="production-tab" data-tabs-target="#production" type="button" role="tab" aria-controls="production" aria-selected="false" class="aria-selected:text-blue-450 inline-block w-full p-4 bg-gray-50 hover:bg-gray-100 focus:outline-none dark:bg-gray-700 dark:hover:bg-gray-600">
-                        Etapy produkcji
+                        Zadania
                     </button>
                 </li>
                 <li class="w-full">
@@ -48,7 +48,7 @@
                                         <tbody>
                                         <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                             <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                                Materiał
+                                                Surowiec
                                             </th>
                                             <td class="px-6 py-4">
                                                 {{is_null($comp->material) ? '' : $comp->material}}

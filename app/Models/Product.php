@@ -14,12 +14,15 @@ class Product extends Model
      * @var array<int, string, double>
      */
     protected $fillable = [
+        'gtin',
         'name',
         'material',
         'color',
         'description',
         'image',
+        'barcode_image',
         'price',
+        'piecework_fee'                 //fee for one manufactured pcs of product
     ];
 
     /**

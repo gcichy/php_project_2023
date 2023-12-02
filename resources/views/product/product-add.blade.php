@@ -216,7 +216,7 @@
                                             <x-file-input :name="$input_name" :label="$label" :info="$info" :file="$file_to_copy"></x-file-input>
                                         </div>
                                         <div class="mb-6">
-                                            <label for="material" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Materiał</label>
+                                            <label for="material" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Surowiec</label>
                                             <select id="material" name="material" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                                                 @if(isset($material_list) and count($material_list) > 0)
                                                     <option value=""></option>
@@ -245,7 +245,7 @@
                                         </div>
                                         <div class="mb-6">
                                             @php
-                                                $label = 'Zdjęcie Komponentu';
+                                                $label = 'Zdjęcie produktu';
                                                 $info = 'Format: svg, png, jpg, jpeg, bmp';
                                                 $input_name = 'prod_image';
                                                 $file_to_copy = ($selected_prod instanceof \App\Models\Product and !empty($selected_prod->image)) ? $selected_prod->image : '';
@@ -270,7 +270,7 @@
                                                 type="button"
                                                 data-te-ripple-init
                                                 data-te-ripple-color="light">
-                                            Komponenty
+                                            Materiały
                                             <svg class="w-2.5 h-2.5 ml-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
                                                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
                                             </svg>
@@ -278,8 +278,8 @@
                                         @if(isset($comp_data) and count($comp_data) > 0)
                                             <div class="w-full mt-[5%] mx-auto">
                                                 <p id="label-{{$class_prefix}}" class=" w-full text-sm lg:text-lg font-medium text-left text-gray-900 dark:text-white p-2">
-                                                    Wybrane komponenty
-                                                    <br><span class="text-green-500 text-xs lg:text-sm"><em>Jeśli produkt powinien mieć normę produkcji, dodaj komponent(y) z którego(ych) jest wykonany</em></span>
+                                                    Wybrane materiały
+                                                    <br><span class="text-green-500 text-xs lg:text-sm"><em>Jeśli produkt powinien mieć normę produkcji, dodaj materiał(y) z którego(ych) jest wykonany</em></span>
                                                 </p>
                                                 <x-input-error :messages="$errors->get($class_prefix.'_input')" class="w-full px-2"/>
                                                 <x-input-error :messages="$errors->get('amount_per_product')" class="mt-2" />
@@ -290,7 +290,7 @@
                                                 @endif
                                                 <div class="bg-white flex justify-start items-center flex-col mt-4">
                                                     @php
-                                                        $inputPlaceholder = "Wpisz nazwę komponentu...";
+                                                        $inputPlaceholder = "Wpisz nazwę materiału...";
                                                         $xListElem = "component";
                                                     @endphp
                                                     <div id="search-{{$class_prefix}}" class="{{$class_prefix}}-toggle w-full hidden">
@@ -344,7 +344,7 @@
                                                                                 <tbody>
                                                                                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                                                                     <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                                                                        Materiał
+                                                                                        Surowiec
                                                                                     </th>
                                                                                     <td class="px-6 py-4">
                                                                                         {{is_null($comp_prod_schemas[0]->material) ? '' : $comp_prod_schemas[0]->material}}

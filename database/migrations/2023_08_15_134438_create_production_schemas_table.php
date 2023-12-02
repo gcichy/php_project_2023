@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('production_schema');
             $table->string('description')->nullable();
             $table->integer('tasks_count');
+            $table->boolean('non_countable')->default('false');
             $table->foreignId('parent_id')
                 ->nullable()
                 ->constrained('production_schema')

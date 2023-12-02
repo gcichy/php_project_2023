@@ -45,8 +45,8 @@ return new class extends Migration
             $table->dateTime('start_time');
             $table->dateTime('end_time');
             $table->unsignedBigInteger('duration_minute');
-            $table->double('amount')->nullable();
-            $table->string('additional_comment',200);
+            $table->double('amount')->nullable()->default(0);
+            $table->string('additional_comment',200)->nullable();
             $table->string('created_by')->nullable();
             $table->string('updated_by')->nullable();
             $table->timestamps();

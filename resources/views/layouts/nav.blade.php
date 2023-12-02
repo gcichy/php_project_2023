@@ -117,12 +117,12 @@
                                 </li>
                                 <li>
                                     <x-responsive-nav-link :href="route('component.index')" :active="request()->routeIs('component.index')" class="w-[95%] ml-[5%]">
-                                        {{ __('Komponenty') }}
+                                        {{ __('Materiały') }}
                                     </x-responsive-nav-link>
                                 </li>
                                 <li>
                                     <x-responsive-nav-link :href="route('schema.index')" :active="request()->routeIs('schema.index')" class="w-[95%] ml-[5%]">
-                                        {{ __('Schematy') }}
+                                        {{ __('Zadania') }}
                                     </x-responsive-nav-link>
                                 </li>
                             </ul>

@@ -15,6 +15,7 @@ class ProductionSchema extends Model
     protected $fillable = [
         'production_schema',
         'description',
+        'non_countable',                        //determines if prod cycle and prod standard can be created for prod schema
         'tasks_count',                      //number of tasks for production schema
         'parent_id',                        //id of parent production schema
     ];
