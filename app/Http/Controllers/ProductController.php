@@ -70,6 +70,22 @@ class ProductController
             $instruction = $instruction[0];
         }
 
+        $pack_schema_id = StaticValue::where('type','pack_schema')->select('value')->first();
+        $pack_schema_id = intval($pack_schema_id->value);
+        $schema = ProductionSchema::find($pack_schema_id);
+        $prod_prodstd = null;
+        if($schema instanceof ProductionSchema and $schema->production_schema == 'Pakowanie produktu') {
+            $prod_prodstd = DB::select('select pstd.duration_hours, pstd.amount, u.unit
+                                                                from production_standard pstd
+                                                                         join unit u
+                                                                              on u.id = pstd.unit_id
+                                                                where pstd.production_schema_id = '.$schema->id.'
+                                                                  and pstd.product_id = '.$id);
+            if(is_array($prod_prodstd) and count($prod_prodstd) > 0) {
+                $prod_prodstd = $prod_prodstd[0];
+            }
+        }
+
         $data = DB::select('select
                                        c.id,
                                        pc.amount_per_product,
@@ -87,11 +103,14 @@ class ProductController
                                 where pc.product_id = ' . $id .
             ' order by pc.component_id asc');
 
+        $user = Auth::user();
         if (!is_null($product)) {
             return view('product.product-details', [
                 'prod' => $product,
                 'data' => $data,
                 'instruction' => $instruction,
+                'user' => $user,
+                'pack_prod_std' => $prod_prodstd,
                 'storage_path_products' => 'products',
                 'storage_path_instructions' => 'instructions',
                 'storage_path_components' => 'components',
@@ -129,6 +148,21 @@ class ProductController
             $prod = Product::find($id);
             if ($prod instanceof Product) {
 
+                $pack_schema_id = StaticValue::where('type','pack_schema')->select('value')->first();
+                $pack_schema_id = intval($pack_schema_id->value);
+                $schema = ProductionSchema::find($pack_schema_id);
+                $selected_prod_prodstd = null;
+                if($schema instanceof ProductionSchema and $schema->production_schema == 'Pakowanie produktu') {
+                    $selected_prod_prodstd = DB::select('select pstd.duration_hours, pstd.amount, u.unit
+                                                                from production_standard pstd
+                                                                         join unit u
+                                                                              on u.id = pstd.unit_id
+                                                                where pstd.production_schema_id = '.$schema->id.'
+                                                                  and pstd.product_id = '.$prod->id);
+                    if(is_array($selected_prod_prodstd) and count($selected_prod_prodstd) > 0) {
+                        $selected_prod_prodstd = $selected_prod_prodstd[0];
+                    }
+                }
                 $selected_prod_instr = Instruction::where('product_id', $prod->id)
                     ->select('instruction_pdf', 'video')->get();
                 $selected_prod_instr = count($selected_prod_instr) > 0 ? $selected_prod_instr[0] : null;
@@ -170,6 +204,7 @@ class ProductController
                     'selected_prod' => $prod,
                     'selected_prod_comps' => $selected_prod_comps,
                     'selected_prod_instr' => $selected_prod_instr,
+                    'selected_prod_prodstd' => $selected_prod_prodstd,
                     'component_input' => $component_input,
                     'update' => $update,
                     'status' => $status
@@ -180,7 +215,6 @@ class ProductController
     }
     public function storeProduct(Request $request): RedirectResponse
     {
-
         $this->validateAddProductForm($request, 'INSERT');
         try {
             $this->validateComponentAmount($request);
@@ -191,6 +225,7 @@ class ProductController
 
         $user = Auth::user();
         $price = floatval($request->price);
+        $piecework_fee = floatval($request->piecework_fee);
         $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
         $saved_files = [];
         try {
@@ -200,7 +235,7 @@ class ProductController
             $prod_image = !empty($request->file('prod_image')) ? $request->file('prod_image') : $request->prod_image_file_to_copy;
             $barcode_image = !empty($request->file('prod_barcode')) ? $request->file('prod_barcode') : $request->prod_barcode_file_to_copy;
             $insert_result = $this->insertProduct($employee_no, $request->name, $request->gtin, $request->material, $request->color,
-                                $price, $request->description, $prod_image, $barcode_image);
+                                $price, $piecework_fee, $request->description, $prod_image, $barcode_image);
 
             if (array_key_exists('SAVED_FILES', $insert_result)) {
                 $saved_files['products'] = $insert_result['SAVED_FILES'];
@@ -221,6 +256,12 @@ class ProductController
             if (array_key_exists('ERROR', $insert_result)) {
                 throw new Exception('error occurred in ProductController->insertProductComponents method.
     Error message: ' . $insert_result['ERROR']);
+            }
+
+            if(!in_array(null,array($request->amount,$request->duration, $request->unit))) {
+                $amount = floatval($request->amount);
+                $duration = floatval($request->duration);
+                $this->insertProductProdStd($prod_id, $amount,$duration, $request->unit, $employee_no);
             }
 
             $instr_pdf = !empty($request->file('instr_pdf')) ? $request->file('instr_pdf') : $request->instr_pdf_file_to_copy;
@@ -296,6 +337,7 @@ class ProductController
 
         $prod_id = $request->product_id;
         $price = floatval($request->price);
+        $piecework_fee = floatval($request->piecework_fee);
         $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
         $saved_files = [];
 
@@ -306,7 +348,7 @@ class ProductController
             $prod_image = !empty($request->file('prod_image')) ? $request->file('prod_image') : $request->prod_image_file_to_copy;
             $barcode_image = !empty($request->file('prod_barcode')) ? $request->file('prod_barcode') : $request->prod_barcode_file_to_copy;
             $update_result = $this->updateProduct($prod_id, $employee_no, $request->name, $request->gtin, $request->material,
-                                                  $request->color, $price, $request->description, $prod_image, $barcode_image);
+                                                  $request->color, $price, $piecework_fee, $request->description, $prod_image, $barcode_image);
 
             if (array_key_exists('SAVED_FILES', $update_result)) {
                 $saved_files['products'] = $update_result['SAVED_FILES'];
@@ -322,6 +364,9 @@ class ProductController
                 throw new Exception('Error updating product: error occurred in Product->updateProductComponents method.
     Error message: ' . $update_result['ERROR']);
             }
+
+            $this->updateProductProdStd($prod_id, $request->amount,$request->duration, $request->unit, $employee_no);
+
 
             $instr_pdf = !empty($request->file('instr_pdf')) ? $request->file('instr_pdf') : $request->instr_pdf_file_to_copy;
             $instr_video = !empty($request->file('instr_video')) ? $request->file('instr_video') : $request->instr_video_file_to_copy;
@@ -465,6 +510,17 @@ class ProductController
     {
 
         $materials = StaticValue::where('type','material')->select('value', 'value_full')->get();
+        $units = Unit::all();
+
+        $unit_err_mess = '';
+        $unit_in = 'in:';
+        foreach ($units as $unit) {
+            $unit_in .= $unit->unit.',';
+            $unit_err_mess .= $unit->unit.' ,';
+        }
+
+        $unit_in = rtrim($unit_in,',');
+        $unit_err_mess = rtrim($unit_err_mess,',');
 
         $err_mess = '';
         $mat_in = 'in:';
@@ -493,8 +549,12 @@ class ProductController
             'instr_pdf' => ['mimes:pdf', 'max:16384'],
             'instr_video' => ['mimes:mp4,mov,mkv,wmv', 'max:51300'],
             'color' => ['max:30'],
-            'price' => ['gt:-1'],
-            'description' => ['max:200'],
+            'price' => ['gte:0'],
+            'piecework_fee' => ['gte:0'],
+            'description' => ['max:255'],
+            'unit' => ['nullable', $unit_in],
+            'amount' => ['nullable', 'gt:0'],
+            'duration' => ['nullable', 'integer', 'gt:0'],
         ],
             [
                 'name.unique' => 'Nazwa materiału musi być unikalna.',
@@ -507,17 +567,21 @@ class ProductController
                 'prod_image.max' => 'Przesłany plik jest za duży. Maksymalny rozmiar pliku: 16 MB.',
                 'instr_pdf.max' => 'Przesłany plik jest za duży. Maksymalny rozmiar pliku: 16 MB.',
                 'instr_video.max' => 'Przesłany plik jest za duży. Maksymalny rozmiar pliku: 50 MB.',
-                'price.gt' => 'Cena musi być liczbą nie mniejszą niż 0.',
+                'price.gte' => 'Cena musi być liczbą nie mniejszą niż 0.',
+                'piecework_fee' => 'Stawka musi być liczbą nie mniejszą niż 0.',
                 'required' => 'To pole jest wymagane.',
                 'max' => 'Wpisany tekst ma za dużo znaków.',
                 'min' => 'Wpisany tekst ma za mało znaków.',
+                'amount.gt' => 'Ilość musi być większa od 0',
+                'duration.gt' => 'Czas trwania musi być większy od 0',
+                'duration.integer' => 'Czas trwania musi być liczbą całkowitą'
             ]);
 
 
     }
 
     private function insertProduct(string $employee_no, string $name, string|null $gtin, string|null $material, string|null $color,
-                                   float|null $price, string|null $description, $prod_image, $barcode_image ): array
+                                   float|null $price, float|null $piecework_fee, string|null $description, $prod_image, $barcode_image ): array
     {
 
         $prod_id = DB::table('product')->insertGetId([
@@ -529,6 +593,7 @@ class ProductController
             'image' => '',
             'barcode_image' => '',
             'price' => $price,
+            'piecework_fee' => $piecework_fee,
             'created_by' => $employee_no,
             'updated_by' => $employee_no,
             'created_at' => date('y-m-d h:i:s'),
@@ -602,7 +667,7 @@ class ProductController
 
 
     private function updateProduct(int $prod_id, string $employee_no, string $name, string|null $gtin, string|null $material, string|null $color,
-                                   float|null $price, string|null $description, $prod_image, $barcode_image ): array
+                                   float|null $price, float|null $piecework_fee, string|null $description, $prod_image, $barcode_image ): array
     {
         $prod_old = Product::find($prod_id);
         if($prod_old instanceof Product) {
@@ -617,6 +682,7 @@ class ProductController
                     'image' => '',
                     'barcode_image' => '',
                     'price' => $price,
+                    'piecework_fee' => $piecework_fee,
                     'updated_by' => $employee_no,
                     'updated_at' => date('y-m-d h:i:s'),
                 ]);
@@ -724,7 +790,7 @@ class ProductController
                 ]);
             }
             else {
-                Log::channel('error')->error('Error inserting product_component: Component not found for value ' .$component_input. ' of "component_input" input.', [
+                Log::channel('error')->error('Error inserting product_component: Component not found for value ' .$request->component_input. ' of "component_input" input.', [
                     'employeeNo' => $employee_no,
                 ]);
                 return ['ERROR' => 'Nie znaleziono materiału dla wybranych materiałów.'];
@@ -771,7 +837,7 @@ class ProductController
                     ]);
                 }
                 else {
-                    Log::channel('error')->error('Error inserting product_component: Component not found for value ' .$component_input. ' of "component_input" input.', [
+                    Log::channel('error')->error('Error inserting product_component: Component not found for value ' .$request->component_input. ' of "component_input" input.', [
                         'employeeNo' => $employee_no,
                     ]);
                     return ['ERROR' => 'nie znaleziono materiału dla wybranych materiałów.'];
@@ -885,4 +951,90 @@ class ProductController
         );
     }
 
+    /**
+     * @throws Exception
+     */
+    private function insertProductProdStd(int $prod_id, float $amount, float $duration, string $unit, string $employee_no ): void
+    {
+        $pack_schema_id = StaticValue::where('type','pack_schema')->select('value')->first();
+        $pack_schema_id = intval($pack_schema_id->value);
+        $schema = ProductionSchema::find($pack_schema_id);
+        if(!($schema instanceof ProductionSchema and $schema->production_schema == 'Pakowanie produktu')) {
+            throw new Exception('Error inserting product: error occurred in Product->insertProductProdStd method. Pack schema not found with id '.$pack_schema_id.'.');
+        }
+        $unit_id = Unit::where('unit',$unit)->select('id')->first();
+        if($unit_id instanceof Unit) {
+            $unit_id = $unit_id->id;
+        }
+        else {
+            throw new Exception('Error inserting product: error occurred in Product->insertProductProdStd method. Id not found for provided unit.');
+        }
+        DB::table('production_standard')->insert([
+            'production_schema_id' => $pack_schema_id,
+            'product_id' => $prod_id,
+            'name' => '',
+            'duration_hours' => $duration,
+            'amount' =>$amount,
+            'unit_id' => $unit_id,
+            'created_by' => $employee_no,
+            'updated_by' => $employee_no,
+            'created_at' => date('y-m-d h:i:s'),
+            'updated_at' => date('y-m-d h:i:s'),
+        ]);
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function updateProductProdStd(int $prod_id, float|null $amount,float|null $duration,string|null $unit, $employee_no): void
+    {
+        $pack_schema_id = StaticValue::where('type','pack_schema')->select('value')->first();
+        $pack_schema_id = intval($pack_schema_id->value);
+        $schema = ProductionSchema::find($pack_schema_id);
+        if(!($schema instanceof ProductionSchema and $schema->production_schema == 'Pakowanie produktu')) {
+            throw new Exception('Error updating product: error occurred in Product->updateProductProdStd method. Pack schema not found with id '.$pack_schema_id.'.');
+        }
+        $unit_id = Unit::where('unit',$unit)->select('id')->first();
+        if($unit_id instanceof Unit) {
+            $unit_id = $unit_id->id;
+        }
+        else {
+            throw new Exception('Error updating product: error occurred in Product->updateProductProdStd method. Id not found for provided unit.');
+        }
+        if(is_null($duration) and is_null($amount)) {
+            if(ProductionStandard::where(['product_id'=> $prod_id,
+                                          'production_schema_id' => $pack_schema_id])->first() instanceof ProductionStandard) {
+                ProductionStandard::where(['product_id'=> $prod_id,
+                                           'production_schema_id' => $pack_schema_id])->delete();
+            }
+        } else {
+            $duration = floatval($duration);
+            $amount = floatval($amount);
+            if(ProductionStandard::where(['product_id'=> $prod_id,
+                                          'production_schema_id' => $pack_schema_id])->first() instanceof ProductionStandard) {
+                DB::table('production_standard')
+                    ->where(['product_id'=> $prod_id,
+                             'production_schema_id' => $pack_schema_id])
+                    ->update([
+                        'duration_hours' => $duration,
+                        'amount' =>$amount,
+                        'unit_id' => $unit_id,
+                        'updated_by' => $employee_no,
+                        'updated_at' => date('y-m-d h:i:s'),
+                    ]);
+            } else {
+                DB::table('production_standard')->insert([
+                    'production_schema_id' => $pack_schema_id,
+                    'product_id'=> $prod_id,
+                    'duration_hours' => $duration,
+                    'amount' =>$amount,
+                    'unit_id' => $unit_id,
+                    'created_by' => $employee_no,
+                    'updated_by' => $employee_no,
+                    'created_at' => date('y-m-d h:i:s'),
+                    'updated_at' => date('y-m-d h:i:s'),
+                ]);
+            }
+        }
+    }
 }

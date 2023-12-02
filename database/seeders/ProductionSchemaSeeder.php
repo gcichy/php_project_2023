@@ -16,7 +16,7 @@ class ProductionSchemaSeeder extends Seeder
     public function run()
     {
         DB::table('production_schema')->insert([
-            'production_schema' => 'pakowanie produktu',
+            'production_schema' => 'Pakowanie produktu',
             'description' => '',
             'tasks_count' => 1,
             'created_by' => 'system',

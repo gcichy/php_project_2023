@@ -2,7 +2,16 @@
     @php
         $viewName = 'Szczegóły zadania';
     @endphp
-    <x-information-panel :viewName="$viewName"></x-information-panel>
+    <x-information-panel :viewName="$viewName">
+        @if(isset($prod_schema) and isset($user) and in_array($user->role,array('admin','manager')))
+            <x-nav-button href="{{route('schema.add-similar', ['id' => $prod_schema->id])}}" class="similar hover:bg-gray-700 ml-1 lg:ml-3">
+                {{ __('Dodaj Podobne') }}
+            </x-nav-button>
+            <x-nav-button href="{{route('schema.add-similar', ['id' => $prod_schema->id])}}" class="edit bg-orange-500 hover:bg-orange-800 ml-1 lg:ml-3 mr-3 lg:mr-5">
+                {{ __('Edytuj') }}
+            </x-nav-button>
+        @endif
+    </x-information-panel>
     @if(isset($prod_schema_tasks) and isset($prod_schema))
         <div class="max-w-7xl mt-[3%] mx-auto sm:px-6 lg:px-8 space-y-6 flex justify-center">
             <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg flex justify-start items-center flex-col w-full">

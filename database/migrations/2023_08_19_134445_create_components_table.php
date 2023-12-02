@@ -15,16 +15,16 @@ return new class extends Migration
     {
         Schema::create('component', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name',100);
             $table->string('description')->nullable();
             $table->boolean('independent');
-            $table->string('material')->nullable();
+            $table->string('material',30)->nullable();
             $table->string('image')->nullable();
             $table->double('height')->nullable();
             $table->double('length')->nullable();
             $table->double('width')->nullable();
-            $table->string('created_by')->nullable();
-            $table->string('updated_by')->nullable();
+            $table->string('created_by',30)->nullable();
+            $table->string('updated_by',30)->nullable();
             $table->timestamps();
         });
     }

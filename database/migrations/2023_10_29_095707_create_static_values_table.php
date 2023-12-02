@@ -15,9 +15,9 @@ return new class extends Migration
     {
         Schema::create('static_value', function (Blueprint $table) {
             $table->id();
-            $table->string('type');
-            $table->string('value');
-            $table->string('value_full')->nullable();
+            $table->string('type',30);
+            $table->string('value',30);
+            $table->string('value_full',100)->nullable();
             $table->string('description')->nullable();
             $table->timestamps();
         });

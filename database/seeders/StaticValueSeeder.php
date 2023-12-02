@@ -25,5 +25,10 @@ class StaticValueSeeder extends Seeder
             'value' => 'MDF',
             'value_full' => 'płyta MDF',
         ]);
+        DB::table('static_value')->insert([
+            'type' => 'pack_schema',
+            'value' => '1',
+            'value_full' => '1',
+        ]);
     }
 }

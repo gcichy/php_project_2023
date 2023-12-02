@@ -88,7 +88,16 @@
     @php
         $viewName = 'Szczegóły produktu';
     @endphp
-    <x-information-panel :viewName="$viewName"></x-information-panel>
+    <x-information-panel :viewName="$viewName">
+        @if(isset($prod) and isset($user) and in_array($user->role,array('admin','manager')))
+            <x-nav-button href="{{route('product.add-similar', ['id' => $prod->id])}}" class="similar hover:bg-gray-700 ml-1 lg:ml-3">
+                {{ __('Dodaj Podobny') }}
+            </x-nav-button>
+            <x-nav-button href="{{route('product.add-similar', ['id' => $prod->id])}}" class="edit bg-orange-500 hover:bg-orange-800 ml-1 lg:ml-3 mr-3 lg:mr-5">
+                {{ __('Edytuj') }}
+            </x-nav-button>
+        @endif
+    </x-information-panel>
     @if(isset($prod) and isset($data) and isset($instruction))
         <div class="w-full md:w-[90%] md:ml-[5%] mt-4 md:mt-8 bg-white border border-gray-200 rounded-md shadow dark:bg-gray-800 dark:border-gray-700">
             <ul class="flex text-sm md:text-lg lg:text-xl font-medium text-center text-gray-500 divide-x divide-gray-200 rounded-lg  dark:divide-gray-600 dark:text-gray-400" id="fullWidthTab" data-tabs-toggle="#fullWidthTabContent" role="tablist">
@@ -172,6 +181,14 @@
                                                 {{is_null($prod->price) ? '' : $prod->price.' zł'}}
                                             </td>
                                         </tr>
+                                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                            <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                Akord
+                                            </th>
+                                            <td class="px-6 py-4">
+                                                {{is_null($prod->piecework_fee) ? '' : $prod->piecework_fee.' zł'}}
+                                            </td>
+                                        </tr>
                                         @if(!empty($prod->description))
                                             <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                                 <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
@@ -184,6 +201,41 @@
                                         @endif
                                         </tbody>
                                     </table>
+                                    @if(isset($pack_prod_std))
+                                        <table class="w-full text-sm md:text-lg text-left text-gray-500 dark:text-gray-400">
+                                            <thead class="text-sm md:text-lg text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                            <tr>
+                                                <th scope="col" class="px-6 py-3">
+                                                    Pakowanie Produktu
+                                                </th>
+                                                <th scope="col" class="px-6 py-3">
+                                                    Czas [h]
+                                                </th>
+                                                <th scope="col" class="px-6 py-3">
+                                                    Ilość
+                                                </th>
+                                                <th scope="col" class="px-6 py-3">
+                                                    Jednostka
+                                                </th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                                <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                </th>
+                                                <td class="px-6 py-4">
+                                                    {{$pack_prod_std->duration_hours}}
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    {{$pack_prod_std->amount}}
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    {{$pack_prod_std->unit}}
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    @endif
                                 </div>
                             </div>
                         </div>

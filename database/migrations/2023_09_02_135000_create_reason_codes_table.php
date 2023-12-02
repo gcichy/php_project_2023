@@ -16,8 +16,8 @@ return new class extends Migration
         Schema::create('reason_code', function (Blueprint $table) {
             $table->bigIncrements('reason_code')->startingValue(100);
             $table->string('description');
-            $table->string('created_by')->nullable();
-            $table->string('updated_by')->nullable();
+            $table->string('created_by',30)->nullable();
+            $table->string('updated_by',30)->nullable();
             $table->timestamps();
         });
     }

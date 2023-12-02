@@ -23,8 +23,8 @@ return new class extends Migration
             $table->unsignedSmallInteger('sequence_no');
             $table->boolean('amount_required');
             $table->string('description')->nullable();
-            $table->string('created_by')->nullable();
-            $table->string('updated_by')->nullable();
+            $table->string('created_by',30)->nullable();
+            $table->string('updated_by',30)->nullable();
             $table->timestamps();
         });
     }

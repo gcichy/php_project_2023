@@ -2,7 +2,16 @@
     @php
         $viewName = 'Szczegóły materiału';
     @endphp
-    <x-information-panel :viewName="$viewName"></x-information-panel>
+    <x-information-panel :viewName="$viewName">
+        @if(isset($comp) and isset($user) and in_array($user->role,array('admin','manager')))
+            <x-nav-button href="{{route('component.add-similar', ['id' => $comp->id])}}" class="similar hover:bg-gray-700 ml-1 lg:ml-3">
+                {{ __('Dodaj Podobny') }}
+            </x-nav-button>
+            <x-nav-button href="{{route('component.add-similar', ['id' => $comp->id])}}" class="edit bg-orange-500 hover:bg-orange-800 ml-1 lg:ml-3 mr-3 lg:mr-5">
+                {{ __('Edytuj') }}
+            </x-nav-button>
+        @endif
+    </x-information-panel>
     @if(isset($comp) and isset($prod_standards) and isset($data) and isset($instruction))
         <div class="w-full md:w-[90%] md:ml-[5%] mt-4 md:mt-8 bg-white border border-gray-200 rounded-md shadow dark:bg-gray-800 dark:border-gray-700">
             <ul class="flex text-sm md:text-lg lg:text-xl font-medium text-center text-gray-500 divide-x divide-gray-200 rounded-lg  dark:divide-gray-600 dark:text-gray-400" id="fullWidthTab" data-tabs-toggle="#fullWidthTabContent" role="tablist">

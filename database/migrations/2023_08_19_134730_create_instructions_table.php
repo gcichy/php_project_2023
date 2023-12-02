@@ -30,11 +30,11 @@ return new class extends Migration
                 ->constrained('production_schema')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
-            $table->string('name');
+            $table->string('name',100);
             $table->string('instruction_pdf')->nullable();
             $table->string('video')->nullable();
-            $table->string('created_by')->nullable();
-            $table->string('updated_by')->nullable();
+            $table->string('created_by',30)->nullable();
+            $table->string('updated_by',30)->nullable();
             $table->timestamps();
         });
     }

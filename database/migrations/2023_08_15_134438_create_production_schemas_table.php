@@ -15,17 +15,17 @@ return new class extends Migration
     {
         Schema::create('production_schema', function (Blueprint $table) {
             $table->id();
-            $table->string('production_schema');
+            $table->string('production_schema',100);
             $table->string('description')->nullable();
             $table->integer('tasks_count');
-            $table->boolean('non_countable')->default('false');
+            $table->boolean('non_countable')->default(0);
             $table->foreignId('parent_id')
                 ->nullable()
                 ->constrained('production_schema')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
-            $table->string('created_by')->nullable();
-            $table->string('updated_by')->nullable();
+            $table->string('created_by',30)->nullable();
+            $table->string('updated_by',30)->nullable();
             $table->timestamps();
         });
     }

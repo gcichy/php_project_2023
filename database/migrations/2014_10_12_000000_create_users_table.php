@@ -14,18 +14,18 @@ return new class () extends Migration {
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id()->autoIncrement();
-            $table->string('firstName');
-            $table->string('lastName');
-            $table->string('employeeNo');
-            $table->string('role')->default('employee');
-            $table->string('phoneNr')->nullable();
-            $table->string('email')->unique();
+            $table->string('firstName',30);
+            $table->string('lastName',30);
+            $table->string('employeeNo',30);
+            $table->string('role',20)->default('employee');
+            $table->string('phoneNr',9)->nullable();
+            $table->string('email',50)->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->double('salary')->default(0);
             $table->rememberToken();
-            $table->string('created_by')->nullable();
-            $table->string('updated_by')->nullable();
+            $table->string('created_by',30)->nullable();
+            $table->string('updated_by',30)->nullable();
             $table->timestamps();
         });
     }

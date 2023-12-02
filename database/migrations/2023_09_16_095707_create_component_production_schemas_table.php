@@ -27,8 +27,8 @@ return new class extends Migration
                 ->constrained('unit')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
-            $table->string('created_by')->nullable();
-            $table->string('updated_by')->nullable();
+            $table->string('created_by',30)->nullable();
+            $table->string('updated_by',30)->nullable();
             $table->timestamps();
             $table->primary(['component_id','production_schema_id']);
         });

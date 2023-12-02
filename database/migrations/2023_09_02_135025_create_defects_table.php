@@ -28,9 +28,9 @@ return new class extends Migration
                 ->constrained('unit')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
-            $table->string('additional_comment');
-            $table->string('created_by')->nullable();
-            $table->string('updated_by')->nullable();
+            $table->string('additional_comment',100);
+            $table->string('created_by',30)->nullable();
+            $table->string('updated_by',30)->nullable();
             $table->timestamps();
         });
     }

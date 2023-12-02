@@ -93,12 +93,14 @@ class ComponentController
                                 where cps.component_id = ' . $id .
             ' order by cps.sequence_no asc, t.sequence_no asc');
 
+        $user = Auth::user();
         if (!is_null($component)) {
             return view('component.component-details', [
                 'comp' => $component,
                 'prod_standards' => $prod_standards,
                 'data' => $data,
                 'instruction' => $instruction,
+                'user' => $user,
                 'storage_path_components' => 'components',
                 'storage_path_instructions' => 'instructions',
             ]);

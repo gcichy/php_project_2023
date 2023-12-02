@@ -305,7 +305,7 @@
                                                 <br><span class="text-green-500 text-xs lg:text-sm"><em>Możesz dodać instrukcję w formacie pdf oraz/lub film</em></span>
                                             </p>
                                         </div>
-                                        <div class="mb-6 w-full">
+                                        <div class="mb-6 w-full p-2">
                                             @php
                                                 $label = 'Instrukcja wykonania schematu';
                                                 $info = 'Format: pdf, docx';
@@ -314,7 +314,7 @@
                                             @endphp
                                             <x-file-input :name="$input_name" :label="$label" :info="$info" :file="$file_to_copy"></x-file-input>
                                         </div>
-                                        <div class="mb-6 w-full">
+                                        <div class="mb-6 w-full p-2">
                                             @php
                                                 $label = 'Film instruktażowy';
                                                 $info = 'Format: mp4, mov, wmv, mkv';

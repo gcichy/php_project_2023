@@ -23,7 +23,7 @@ return new class extends Migration
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
             $table->integer('amount_per_product')->default(1);
-            $table->string('description',200)->nullable();
+            $table->string('description')->nullable();
             $table->string('created_by',30)->nullable();
             $table->string('updated_by',30)->nullable();
             $table->timestamps();

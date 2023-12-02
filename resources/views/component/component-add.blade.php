@@ -63,7 +63,6 @@
 
 
         $(document).ready(function() {
-            checkIndependent();
             getActiveOnLoad('prodschema', $('#prodschema-input').val());
             checkActive();
 
@@ -111,6 +110,7 @@
             });
 
             $('#dropdownSearchButton').on('click', function () {
+                console.log('halo');
                 $('.production-standard').addClass('hidden');
 
                 if($('.list-element-prodschema').hasClass('hidden')) {
@@ -260,7 +260,7 @@
                                 </div>
 
                                 <!-- Right column container with background and description-->
-                                <div class="flex items-center flex-col justify-start rounded-b-lg xl:w-6/12 xl:rounded-r-lg xl:rounded-bl-none p-2 xl:p-0 bg-white/30">
+                                <div class="flex items-center flex-col justify-start rounded-b-lg w-full xl:w-6/12 xl:rounded-r-lg xl:rounded-bl-none p-2 xl:p-0 bg-white/30">
                                     <div class="flex items-center flex-col justify-start md:mx-6 md:px-12 w-full">
                                         <button id="dropdownSearchButton" class="mt-5[%] lg:mt-[7%] text-white bg-blue-450 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-md lg:text-lg px-5 py-2.5 text-center inline-flex items-center justify-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
                                                 type="button"

@@ -5,6 +5,7 @@
         if(!isset($component_input)) $component_input = null;
         if(!isset($selected_prod)) $selected_prod = null;
         if(!isset($selected_prod_instr)) $selected_prod_instr = null;
+        if(!isset($selected_prod_prodstd)) $selected_prod_prodstd = null;
     @endphp
     <script type="module">
 
@@ -62,16 +63,8 @@
             return ids.includes(elem_id)
         }
 
-        function checkIndependent() {
-            if($('#independent').val()) {
-                $('#independent').prop('checked', true);
-            } else {
-                $('#independent').prop('checked', false);
-            }
-        }
 
         $(document).ready(function() {
-            checkIndependent();
             getActiveOnLoad('{{$class_prefix}}', $('#{{$class_prefix}}-input').val());
             checkActive();
 
@@ -165,8 +158,10 @@
                 }
             });
 
-            $('#independent').on('click', function () {
-                $(this).val($(this).prop("checked") ? 1 : 0);
+
+            $('#remove-prodstd-button').on('click', function(){
+                $('#amount').val(null);
+                $('#duration').val(null)
             });
         });
 
@@ -194,7 +189,7 @@
                             <div class="g-0 lg:flex lg:flex-wrap">
                                 <!-- Left column container-->
                                 <div class="flex items-center flex-col justify-start rounded-b-lg w-full xl:w-6/12 xl:rounded-r-lg xl:rounded-bl-none p-2 xl:p-0 bg-white/30">
-                                    <div class="md:mx-6 md:p-12 w-full px-2 py-12 lg:w-[80%] xl:w-full">
+                                    <div class="md:mx-6 md:px-12 w-full px-2 xl:py-12 lg:w-[80%] xl:w-full">
                                         <input type="text" id="product-id" name="product_id" value="{{old('product_id') ? old('product_id') : (empty($selected_prod) ? '' : $selected_prod->id )}}" class="hidden">
                                         <div class="mb-6">
                                             <label for="name" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Nazwa <span class="text-red-700">*</span></label>
@@ -242,6 +237,12 @@
                                             <label for="price" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Cena</label>
                                             <input type="number" id="price" name="price" value="{{old('price') ? old('price') : (empty($selected_prod) || empty($selected_prod->price) ? 0 : $selected_prod->price)}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
                                             <x-input-error :messages="$errors->get('price')" class="mt-2" />
+                                        </div>
+                                        <div class="mb-6">
+                                            <label for="piecework-fee" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Stawka akord</label>
+                                            <input type="number" id="piecework-fee" name="piecework_fee" value="{{old('piecework_fee') ? old('piecework_fee') : (empty($selected_prod) || empty($selected_prod->piecework_fee) ? 0 : $selected_prod->piecework_fee)}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                            <x-input-error :messages="$errors->get('piecework_fee')" class="mt-2"/>
+
                                         </div>
                                         <div class="mb-6">
                                             @php
@@ -494,7 +495,7 @@
                                                 <br><span class="text-green-500 text-xs lg:text-sm"><em>Możesz dodać instrukcję w formacie pdf oraz/lub film</em></span>
                                             </p>
                                         </div>
-                                        <div class="mb-6 w-full">
+                                        <div class="mb-6 w-full p-2">
                                             @php
                                                 $label = 'Instrukcja wykonania produktu';
                                                 $info = 'Format: pdf';
@@ -503,7 +504,7 @@
                                             @endphp
                                             <x-file-input :name="$input_name" :label="$label" :info="$info" :file="$file_to_copy"></x-file-input>
                                         </div>
-                                        <div class="mb-6 w-full">
+                                        <div class="mb-6 w-full p-2">
                                             @php
                                                 $label = 'Film instruktażowy';
                                                 $info = 'Format: mp4, mov, wmv, mkv';
@@ -512,6 +513,64 @@
                                             @endphp
                                             <x-file-input :name="$input_name" :label="$label" :info="$info" :file="$file_to_copy"></x-file-input>
                                         </div>
+                                    </div>
+                                    <div class="flex items-center flex-col justify-start mt-[2%] mb-[5%] md:mx-6 md:px-12 w-full">
+                                        <label for="color" class="w-full px-2 block text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Norma produkcji - pakowanie produktu</label>
+                                        <div class="w-full mx-auto">
+                                            <p id="" class=" w-full text-sm lg:text-lg font-medium text-left text-gray-900 dark:text-white p-2">
+                                                <span class="text-green-500 text-xs lg:text-sm"><em>Opcjonalnie można określić normę dla pakowania tego produktu.</em></span>
+                                            </p>
+                                        </div>
+                                        <div id="production-standard" class="production-standard mt-2 w-full ml-[3%]">
+                                            <div id="production-standard" class="flex flex-row justify-start items-center w-full xl:w-full">
+                                                <div class="w-[20%] mr-[3%]">
+                                                    <label for="duration" class="block mb-2 text-sm lg:text-md xl:text-lg font-medium text-gray-900 dark:text-white">Czas[h]</label>
+                                                    @if(!empty($selected_prod_prodstd))
+                                                        <input type="number" id="duration" name="duration"
+                                                               value="{{old('duration') ? old('duration') : (empty($selected_prod_prodstd->duration_hours) ? '' : $selected_prod_prodstd->duration_hours )}}"
+                                                               class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                    @else
+                                                        <input type="number" id="duration" name="duration" value="{{old('duration')}}"
+                                                               class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                    @endif
+                                                </div>
+                                                <div class="w-[20%] mr-[3%]">
+                                                    <label for="amount" class="block mb-2 text-sm lg:text-md xl:text-lg font-medium text-gray-900 dark:text-white">Ilość</label>
+                                                    @if(!empty($selected_prod_prodstd))
+                                                        <input type="number" id="amount" name="amount"
+                                                               value="{{old('amount') ? old('amount') : (empty($selected_prod_prodstd->amount) ? '' : $selected_prod_prodstd->amount)}}"
+                                                               class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                    @else
+                                                        <input type="number" id="amount" name="amount" value="{{old('amount')}}"
+                                                               class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                    @endif
+                                                </div>
+                                                <div class="w-[35%] mr-[3%]">
+                                                    <label for="unit" class="block mb-2 text-sm lg:text-md xl:text-lg font-medium text-gray-900 dark:text-white">Jednostka</label>
+                                                    <select id="unit" name="unit" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                                        @if(isset($units) and count($units) > 0)
+                                                            @foreach($units as $u)
+                                                                @if(!empty($selected_prod_prodstd) and $u->unit == $selected_prod_prodstd->unit )
+                                                                    <option value="{{$u->unit}}" selected>{{$u->unit}}</option>
+                                                                @else
+                                                                    <option value="{{$u->unit}}">{{$u->unit}}</option>
+                                                                @endif
+                                                            @endforeach
+                                                        @else
+                                                            <option value=""></option>
+                                                        @endif
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="w-full mt-2 px-2">
+                                            <x-input-error :messages="$errors->get('amount')" />
+                                            <x-input-error :messages="$errors->get('duration')" />
+                                            <x-input-error :messages="$errors->get('unit')" />
+                                        </div>
+                                        <button type="button" id="remove-prodstd-button" class="my-5 text-white bg-blue-450 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs lg:text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                                            USUŃ NORMĘ
+                                        </button>
                                     </div>
                                 </div>
                             </div>

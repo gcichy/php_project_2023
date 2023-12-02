@@ -186,7 +186,7 @@
                                         </div>
                                         <p class="inline-block list-element-name ml-[3%]  xl:text-lg text-md">{{$comp->name}} - {{$comp->material}}</p>
                                     </div>
-                                    <div id="expbtn-{{$comp->id}}-comp" class="expand-btn inline-block bg-gray-800 w-4 h-4 lg:w-8 lg:h-8 md:w-6 md:h-6 sm:w-4 sm:h-4 mr-8 md:rounded-md rounded-sm rotate-0 transition-all">
+                                    <div id="expbtn-{{$comp->id}}-comp" class="expand-btn inline-block bg-gray-800 w-4 h-4 lg:w-6 lg:h-6 md:w-5 md:h-5 sm:w-4 sm:h-4 mr-8 md:rounded-md rounded-sm rotate-0 transition-all">
                                         <img src="{{asset('storage/expand-down.png') }}" >
                                     </div>
                                 </div>

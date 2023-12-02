@@ -15,10 +15,10 @@ return new class extends Migration
     {
         Schema::create('unit', function (Blueprint $table) {
             $table->id();
-            $table->string('unit')->unique();
-            $table->string('name')->nullable();
-            $table->string('created_by')->nullable();
-            $table->string('updated_by')->nullable();
+            $table->string('unit',10)->unique();
+            $table->string('name',30)->nullable();
+            $table->string('created_by',30)->nullable();
+            $table->string('updated_by',30)->nullable();
             $table->timestamps();
         });
     }

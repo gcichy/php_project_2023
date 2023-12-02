@@ -53,13 +53,14 @@ class ProdSchemaController
         $prod_schema_tasks = $this->getSchemaData($id);
         $instruction = Instruction::where('production_schema_id', $id)->select('id','name','instruction_pdf','video')->first();
 
-
+        $user = Auth::user();
         if (!empty($prod_schema_tasks) and array_key_exists($id, $prod_schema_tasks)) {
             $prod_schema_tasks = $prod_schema_tasks[$id];
             return view('prod-schema.prod-schema-details', [
                 'prod_schema' => $prod_schema,
                 'prod_schema_tasks' => $prod_schema_tasks,
                 'instruction' => $instruction,
+                'user' => $user,
                 'storage_path_components' => 'components',
                 'storage_path_instructions' => 'instructions',
             ]);
@@ -834,84 +835,6 @@ class ProdSchemaController
                     'updated_at' => date('y-m-d h:i:s'),
                 ]);
             }
-        }
-    }
-
-    private function updateCompProdSchemaAndProdStd(int $comp_id, array $schema_arr, string $employee_no ): void
-    {
-        $old_schemas_id = ComponentProductionSchema::where(['component_id' => $comp_id])
-                            ->select('production_schema_id')->get();
-        $old_schemas_id = collect($old_schemas_id)->map(function (ComponentProductionSchema $arr) { return $arr->production_schema_id; })->toArray();
-
-
-        foreach ($schema_arr as $schema_id => $value) {
-            $unit_id = DB::select("select id from unit where unit = '".$value['unit']."'");
-            $unit_id = collect($unit_id)->map(function (stdClass $arr) { return $arr->id; })->toArray();
-            $unit_id = count($unit_id) > 0 ? $unit_id[0] : 0;
-
-            if(in_array($schema_id, $old_schemas_id)) {
-
-                DB::table('component_production_schema')
-                    ->where(['component_id' => $comp_id,
-                        'production_schema_id' => $schema_id])
-                    ->update([
-                            'sequence_no' => $value['sequence_no'],
-                            'unit_id' => $unit_id,
-                            'updated_by' => $employee_no,
-                            'updated_at' => date('y-m-d h:i:s'),
-                    ]);
-
-                DB::table('production_standard')
-                    ->where(['component_id' => $comp_id,
-                        'production_schema_id' => $schema_id])
-                    ->update([
-                        'name' => '',
-                        'duration_hours' => $value['duration'],
-                        'amount' =>$value['amount'],
-                        'unit_id' => $unit_id,
-                        'updated_by' => $employee_no,
-                        'updated_at' => date('y-m-d h:i:s'),
-                    ]);
-                array_splice($old_schemas_id,array_search($schema_id, $old_schemas_id),1);
-            }
-            else {
-
-                DB::table('component_production_schema')->insert([
-                    'component_id' => $comp_id,
-                    'production_schema_id' => $schema_id,
-                    'sequence_no' => $value['sequence_no'],
-                    'unit_id' => $unit_id,
-                    'created_by' => $employee_no,
-                    'updated_by' => $employee_no,
-                    'created_at' => date('y-m-d h:i:s'),
-                    'updated_at' => date('y-m-d h:i:s'),
-                ]);
-
-                DB::table('production_standard')->insert([
-                    'component_id' => $comp_id,
-                    'production_schema_id' => $schema_id,
-                    'name' => '',
-                    'duration_hours' => $value['duration'],
-                    'amount' => $value['amount'],
-                    'unit_id' => $unit_id,
-                    'created_by' => $employee_no,
-                    'updated_by' => $employee_no,
-                    'created_at' => date('y-m-d h:i:s'),
-                    'updated_at' => date('y-m-d h:i:s'),
-                ]);
-            }
-        }
-
-        foreach ($old_schemas_id as $old_schema_id) {
-            DB::table('component_production_schema')
-                ->where(['component_id' => $comp_id,
-                    'production_schema_id' => $old_schema_id,])
-                ->delete();
-
-            DB::table('production_standard')
-                ->where(['component_id' => $comp_id,
-                    'production_schema_id' => $old_schema_id,])
-                ->delete();
         }
     }
 
