@@ -302,9 +302,9 @@ class ProductionCycleController extends Controller
         order by sub_cycles.parent_id, sub_cycles.component_id, sub_cycles.prod_schema_sequence_no
         ");
 
-        dd($child_cycles);
         return view('production.production', [
             'parent_cycles' => $parent_cycles,
+            'child_cycles' => $child_cycles,
             'user' => $request->user(),
         ]);
     }

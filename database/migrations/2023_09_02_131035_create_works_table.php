@@ -38,14 +38,21 @@ return new class extends Migration
                 ->constrained('product')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
-            $table->foreignId('user_id')
-                ->constrained('users')
-                ->onUpdate('cascade')
-                ->onDelete('restrict');
             $table->dateTime('start_time');
             $table->dateTime('end_time');
             $table->unsignedBigInteger('duration_minute');
             $table->double('amount')->nullable()->default(0);
+            $table->double('defect_amount')->nullable()->default(0);
+            $table->foreignId('defect_unit_id')
+                ->nullable()
+                ->constrained('unit','id')
+                ->onUpdate('cascade')
+                ->onDelete('restrict');
+            $table->foreignId('reason_code')
+                ->nullable()
+                ->constrained('reason_code', 'reason_code')
+                ->onUpdate('cascade')
+                ->onDelete('restrict');
             $table->string('additional_comment')->nullable();
             $table->string('created_by',30)->nullable();
             $table->string('updated_by',30)->nullable();

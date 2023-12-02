@@ -13,7 +13,6 @@ class Work extends Model
      * @var array<int, string, double>
      */
     protected $fillable = [
-        'user_id',                          //id of user reporting the job of himself
         'production_cycle_id',              //id of started production cycle for which the work is submitted
         'task_id',                          //id of completed task
         'production_schema_id',             //id of production schema reported task belongs to
@@ -22,7 +21,10 @@ class Work extends Model
         'start_time',
         'end_time',
         'duration_minute',                  //working time
-        'amount',                           //if necessary, result of work determined in related task's unit
+        'amount',                           //if necessary, result of work determined in prod_schema related unit
+        'defect_amount',                    //amount of defects produced, unit of defect can differ from prod_schema related unit
+        'reason_code',
+        'defect_unit_id',
         'additional_comment'
     ];
 
