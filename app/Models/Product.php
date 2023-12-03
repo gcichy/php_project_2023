@@ -17,6 +17,9 @@ class Product extends Model
         'gtin',
         'name',
         'material',
+        'height',                           //optional dimensions
+        'length',
+        'width',
         'color',
         'description',
         'image',

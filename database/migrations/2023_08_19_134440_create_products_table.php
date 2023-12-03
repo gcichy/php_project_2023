@@ -19,6 +19,9 @@ return new class extends Migration
             $table->string('gtin', 14)->nullable();
             $table->string('description')->nullable();
             $table->string('material', 30)->nullable();
+            $table->double('height')->nullable();
+            $table->double('length')->nullable();
+            $table->double('width')->nullable();
             $table->string('color', 30)->nullable();
             $table->string('image')->nullable();
             $table->string('barcode_image')->nullable();

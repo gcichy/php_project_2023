@@ -167,6 +167,39 @@
                                         </tr>
                                         <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                             <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                @php
+                                                    $name = '';
+                                                    $dim = '';
+                                                    if(!is_null($prod->height)) {
+                                                        $name .= 'wys ';
+                                                        $dim .= $prod->height.' ';
+                                                    }
+                                                    if(!is_null($prod->length)) {
+                                                        if(!empty($name)) {
+                                                            $name .= 'x  ';
+                                                            $dim .= 'x  ';
+                                                        }
+                                                        $name .= 'dług ';
+                                                        $dim .= $prod->length.' ';
+                                                    }
+                                                    if(!is_null($prod->width)) {
+                                                        if(!empty($name)) {
+                                                            $name .= 'x  ';
+                                                            $dim .= 'x  ';
+                                                        }
+                                                        $name .= 'szer';
+                                                        $dim .= $prod->width.' ';
+                                                    }
+                                                    $name .= empty($name) ? 'Wymiary' : ' [cm]';
+                                                @endphp
+                                                {{$name}}
+                                            </th>
+                                            <td class="px-6 py-4">
+                                                {{$dim}}
+                                            </td>
+                                        </tr>
+                                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                            <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                                 Kolor
                                             </th>
                                             <td class="px-6 py-4">
@@ -328,7 +361,7 @@
                                                                     $name .= 'szer';
                                                                     $dim .= $comp->width.' ';
                                                                 }
-                                                                $name .= ' [cm]';
+                                                                $name .= empty($name) ? 'Wymiary' : ' [cm]';
                                                             @endphp
                                                             {{$name}}
                                                         </th>

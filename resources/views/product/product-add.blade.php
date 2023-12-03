@@ -229,6 +229,26 @@
                                             <x-input-error :messages="$errors->get('material')" class="mt-2" />
                                         </div>
                                         <div class="mb-6">
+                                            <label for="dimension" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Wymiary</label>
+                                            <div id="dimension" class="flex flex-row justify-start items-center w-full xl:w-[60%]">
+                                                <div class="w-[30%] mr-[3%]">
+                                                    <label for="height" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Wysokość</label>
+                                                    <input type="number" id="height" name="height" value="{{old('height') ? old('height') : (empty($selected_prod) || empty($selected_prod->height) ? 0 : $selected_prod->height )}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                </div>
+                                                <div class="w-[30%] mr-[3%]">
+                                                    <label for="length" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Długość</label>
+                                                    <input type="number" id="length" name="length" value="{{old('length') ? old('length') : (empty($selected_prod) || empty($selected_prod->length) ? 0 : $selected_prod->length )}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                </div>
+                                                <div class="w-[30%] mr-[3%]">
+                                                    <label for="width" class="block mb-2 text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Szerokość</label>
+                                                    <input type="number" id="width" name="width" value="{{old('width') ? old('width') : (empty($selected_prod) || empty($selected_prod->width) ? 0 : $selected_prod->width )}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
+                                                </div>
+                                            </div>
+                                            <x-input-error :messages="$errors->get('height')" />
+                                            <x-input-error :messages="$errors->get('length')" />
+                                            <x-input-error :messages="$errors->get('width')" />
+                                        </div>
+                                        <div class="mb-6">
                                             <label for="color" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Kolor</label>
                                             <input type="text" id="color" name="color" value="{{old('color') ? old('color') : (empty($selected_prod) ? '' : $selected_prod->color )}}" class="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light">
                                             <x-input-error :messages="$errors->get('color')" class="mt-2" />

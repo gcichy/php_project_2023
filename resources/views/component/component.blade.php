@@ -235,7 +235,8 @@
                                                             $name .= 'szer';
                                                             $dim .= $comp->width.' ';
                                                         }
-                                                        $name .= ' [cm]';
+                                                        $name .= empty($name) ? 'Wymiary' : ' [cm]';
+
                                                     @endphp
                                                     {{$name}}
                                                 </th>

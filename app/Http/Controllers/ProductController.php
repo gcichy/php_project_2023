@@ -224,6 +224,9 @@ class ProductController
         }
 
         $user = Auth::user();
+        $height = doubleval($request->height);
+        $length = doubleval($request->length);
+        $width = doubleval($request->width);
         $price = floatval($request->price);
         $piecework_fee = floatval($request->piecework_fee);
         $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
@@ -234,8 +237,9 @@ class ProductController
 
             $prod_image = !empty($request->file('prod_image')) ? $request->file('prod_image') : $request->prod_image_file_to_copy;
             $barcode_image = !empty($request->file('prod_barcode')) ? $request->file('prod_barcode') : $request->prod_barcode_file_to_copy;
-            $insert_result = $this->insertProduct($employee_no, $request->name, $request->gtin, $request->material, $request->color,
-                                $price, $piecework_fee, $request->description, $prod_image, $barcode_image);
+            $insert_result = $this->insertProduct($employee_no, $request->name, $request->gtin, $request->material,
+                                                    $request->color, $price, $height, $length, $width, $piecework_fee,
+                                                    $request->description, $prod_image, $barcode_image);
 
             if (array_key_exists('SAVED_FILES', $insert_result)) {
                 $saved_files['products'] = $insert_result['SAVED_FILES'];
@@ -336,6 +340,9 @@ class ProductController
         }
 
         $prod_id = $request->product_id;
+        $height = doubleval($request->height);
+        $length = doubleval($request->length);
+        $width = doubleval($request->width);
         $price = floatval($request->price);
         $piecework_fee = floatval($request->piecework_fee);
         $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
@@ -348,7 +355,8 @@ class ProductController
             $prod_image = !empty($request->file('prod_image')) ? $request->file('prod_image') : $request->prod_image_file_to_copy;
             $barcode_image = !empty($request->file('prod_barcode')) ? $request->file('prod_barcode') : $request->prod_barcode_file_to_copy;
             $update_result = $this->updateProduct($prod_id, $employee_no, $request->name, $request->gtin, $request->material,
-                                                  $request->color, $price, $piecework_fee, $request->description, $prod_image, $barcode_image);
+                                                  $request->color, $price, $height, $length, $width,
+                                                  $piecework_fee, $request->description, $prod_image, $barcode_image);
 
             if (array_key_exists('SAVED_FILES', $update_result)) {
                 $saved_files['products'] = $update_result['SAVED_FILES'];
@@ -548,6 +556,9 @@ class ProductController
             'prod_barcode' => ['mimes:jpeg,gif,bmp,png,jpg,svg,pdf', 'max:16384'],
             'instr_pdf' => ['mimes:pdf', 'max:16384'],
             'instr_video' => ['mimes:mp4,mov,mkv,wmv', 'max:51300'],
+            'height' => ['gte:0'],
+            'length' => ['gte:0'],
+            'width' => ['gte:0'],
             'color' => ['max:30'],
             'price' => ['gte:0'],
             'piecework_fee' => ['gte:0'],
@@ -570,8 +581,12 @@ class ProductController
                 'price.gte' => 'Cena musi być liczbą nie mniejszą niż 0.',
                 'piecework_fee' => 'Stawka musi być liczbą nie mniejszą niż 0.',
                 'required' => 'To pole jest wymagane.',
+                'height.gte' => 'Wysokość nie może być ujemna.',
+                'length.gte' => 'Długość nie może być ujemna.',
+                'width.gte' => 'Szerokość nie może być ujemna.',
                 'max' => 'Wpisany tekst ma za dużo znaków.',
                 'min' => 'Wpisany tekst ma za mało znaków.',
+                'unit.in' => 'Wybierz jedną z jednostek: '.$unit_err_mess.'.',
                 'amount.gt' => 'Ilość musi być większa od 0',
                 'duration.gt' => 'Czas trwania musi być większy od 0',
                 'duration.integer' => 'Czas trwania musi być liczbą całkowitą'
@@ -581,7 +596,8 @@ class ProductController
     }
 
     private function insertProduct(string $employee_no, string $name, string|null $gtin, string|null $material, string|null $color,
-                                   float|null $price, float|null $piecework_fee, string|null $description, $prod_image, $barcode_image ): array
+                                   float|null $price, float|null $height, float|null $length, float|null $width,
+                                   float|null $piecework_fee, string|null $description, $prod_image, $barcode_image ): array
     {
 
         $prod_id = DB::table('product')->insertGetId([
@@ -589,6 +605,9 @@ class ProductController
             'gtin' =>$gtin,
             'description' => $description,
             'material' => $material,
+            'height' => $height,
+            'length' => $length,
+            'width' => $width,
             'color' => $color,
             'image' => '',
             'barcode_image' => '',
@@ -666,8 +685,9 @@ class ProductController
     }
 
 
-    private function updateProduct(int $prod_id, string $employee_no, string $name, string|null $gtin, string|null $material, string|null $color,
-                                   float|null $price, float|null $piecework_fee, string|null $description, $prod_image, $barcode_image ): array
+    private function updateProduct(int $prod_id, string $employee_no, string $name, string|null $gtin, string|null $material,
+                                   string|null $color, float|null $price, float|null $height, float|null $length, float|null $width,
+                                   float|null $piecework_fee, string|null $description, $prod_image, $barcode_image ): array
     {
         $prod_old = Product::find($prod_id);
         if($prod_old instanceof Product) {
@@ -678,6 +698,9 @@ class ProductController
                     'gtin' =>$gtin,
                     'description' => $description,
                     'material' => $material,
+                    'height' => $height,
+                    'length' => $length,
+                    'width' => $width,
                     'color' => $color,
                     'image' => '',
                     'barcode_image' => '',

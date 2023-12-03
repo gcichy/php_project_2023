@@ -1,5 +1,8 @@
-
-<div class="mt-6 flex flex-col xl:flex-row border-gray-300 xl:bg-white justify-between items-center z-[100]" data-te-sticky-init>
+<div class="mt-6 flex flex-col xl:flex-row border-gray-300 xl:bg-white justify-between items-center z-[100]"
+     data-te-sticky-init
+     data-te-sticky-offset="63"
+     data-te-sticky-delay="90"
+     data-te-sticky-direction="both">
     <a class ='block w-full xl:w-1/4 py-2 pl-3 pr-4 bg-white border-blue-450 border-l-4 lg:border-l-8 lg:py-6 text-md md:text-lg lg:text-2xl text-left font-medium text-gray-800  transition duration-150 ease-in-out'>
         {{$viewName}}
     </a>
@@ -7,3 +10,4 @@
         {{$slot}}
     </div>
 </div>
+
