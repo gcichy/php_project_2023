@@ -7,15 +7,33 @@
                 let styles = $(this).find('.cycle_styles').text();
                 styles = styles.split(';');
                 if(styles.length === 2) {
-                    let color = '';
-                    if(styles[0] === 'green') {
-                        color = 'ring-green-450 ring-4 ring-offset-4';
-                    } else if(styles[0] === 'red') {
-                        color = 'ring-red-500 ring-4 ring-offset-4';
-                    } else if(styles[0] === 'blue') {
-                        color = 'ring-blue-450 ring-4 ring-offset-4';
+                    let cycleClasses = '';
+                    let cycleTagBg = '';
+                    let cycleTagText = '';
+                    let status = parseInt(styles[0]);
+
+                    if(status === 0) {
+                        cycleClasses = 'ring-green-450 ring-4 ring-offset-4';
+                        cycleTagBg = 'bg-green-450';
+                        cycleTagText = 'Zakończony';
+                    } else if(status === 3) {
+                        cycleClasses = 'ring-red-500 ring-4 ring-offset-4';
+                        cycleTagBg = 'bg-red-500';
+                        cycleTagText = 'Po terminie';
+                    } else if(status === 1) {
+                        cycleClasses = 'ring-blue-450 ring-4 ring-offset-4';
+                        cycleTagBg = 'bg-blue-450';
+                        cycleTagText = 'Aktywny';
+                    } else if(status === 2) {
+                        cycleClasses = 'ring-yellow-300 ring-4 ring-offset-4';
+                        cycleTagBg = 'bg-yellow-300';
+                        cycleTagText = 'Nierozpoczęty';
                     }
-                    $(this).addClass(color);
+                    $(this).addClass(cycleClasses);
+                    let cycleTag = $(this).find('.cycle-tag');
+                    if(cycleTag.length === 1) {
+                        cycleTag.addClass(cycleTagBg).text(cycleTagText);
+                    }
                     let progress = $(this).find('.progress');
                     if(progress.length === 1) {
                         let width = parseInt(styles[1]);
@@ -175,14 +193,83 @@
 {{--                </x-remove-modal>--}}
             @endif
         </x-information-panel>
+            <form method="POST" action="{{ route('production.filter') }}" enctype="multipart/form-data">
+                @csrf
+                <x-select-multiple :unique_id="__('status')" :placeholder="__('Status')" :input_name="__('status')">
+                    <x-slot name="options">
+                        <option value="0">Zakończony</option>
+                        <option value="1">Aktywny</option>
+                        <option value="2">Nierozpoczęty</option>
+                        <option value="3">Po terminie</option>
+                    </x-slot>
+                </x-select-multiple>
+                <button type="submit">dalej</button>
+            </form>
+
         @if(isset($parent_cycles) and isset($child_cycles))
+            <div class="w-full mt-4 flex justify-center">
+                <div class=" flex flex-row justify-center w-[90%] bg-white rounded-lg border-2">
+                    <div class="flex flex-col justify-center bg-gray-800 xl:border-r-2 rounded-l-lg w-1/5">
+                        <a class =' text-sm md:text-lg font-medium text-center text-white'>
+                            Filtry
+                        </a>
+                    </div>
+                    <dl class="grid grid-cols-3 text-left rounded-r-lg w-4/5">
+                        <div class="col-span-1 flex flex-col justify-center xl:border-r-2">
+                            <a class ='block px-2 text-xs md:text-sm bg-gray-800 font-medium text-center text-white'>
+                                Status
+                            </a>
+                            <div class="p-1">
+                                <x-select-multiple :unique_id="__('status')" :placeholder="__('Status')" :input_name="__('status')">
+                                    <x-slot name="options">
+                                        <option value="0">Zakończony</option>
+                                        <option value="1">Aktywny</option>
+                                        <option value="2">Nierozpoczęty</option>
+                                        <option value="3">Po terminie</option>
+                                    </x-slot>
+                                </x-select-multiple>
+                            </div>
+
+                        </div>
+                        <div class="col-span-1 flex flex-col justify-center  bg-gray-800 xl:border-r-2">
+                            <a class ='block px-2 text-xs md:text-sm font-medium text-center text-white'>
+                                Kategoria
+                            </a>
+                        </div>
+                        <div class="col-span-1 flex flex-col justify-center  bg-gray-800 xl:border-r-2">
+                            <a class ='block px-2 text-xs md:text-sm font-medium text-center text-white'>
+                                Nazwa
+                            </a>
+                        </div>
+                        <div class="col-span-1 flex flex-col justify-center  bg-gray-800 xl:border-r-2">
+                            <a class ='block px-2 text-xs md:text-sm font-medium text-center text-white'>
+                                Pracownik
+                            </a>
+                        </div>
+                        <div class="col-span-1 flex justify-center">
+                            <x-select-multiple></x-select-multiple>
+                        </div>
+                        <div class="col-span-1 flex justify-center">
+                            <x-select-multiple></x-select-multiple>
+                        </div>
+                    </dl>
+                </div>
+            </div>
             <div class="flex flex-col justify-center items-center w-full mt-4">
                 @foreach($parent_cycles as $p_cycle)
                     <div id="cycle-{{$p_cycle->cycle_id}}" class="cycle w-[80%] rounded-xl bg-white my-5">
-                        <p class="cycle_styles hidden">{{$p_cycle->cycle_color}};{{$p_cycle->style_progress}}</p>
+                        <p class="cycle_status hidden">{{$p_cycle->status}}</p>
+                        <p class="cycle_styles hidden">{{$p_cycle->status}};{{$p_cycle->style_progress}}</p>
                         <dl class="grid grid-cols-4 xl:grid-cols-8 overflow-hidden text-left rounded-xl">
                             <div class="col-span-4 flex flex-col bg-gray-200/50 xl:border-r-2">
-                                <dt class="order-first text-sm lg:text-lg font-semibold leading-6 bg-gray-800 text-white w-[40%] xl:w-1/2 rounded-tl-xl pl-5 py-2">{{$p_cycle->category}}</dt>
+                                <dt class="order-first text-sm lg:text-lg font-semibold bg-gray-800 text-white w-[45%] xl:w-[50%] xl:w-1/2 rounded-tl-xl pl-5 py-2 flex flex-row justify-between">
+                                    <div class="p-1">
+                                        {{$p_cycle->category}}
+                                    </div>
+                                    <div class="text-xs lg:text-sm flex justify-center items-center">
+                                        <div class="cycle-tag p-1 mx-2 rounded-md"></div>
+                                    </div>
+                                </dt>
                                 <dd class=" text-lg xl:text-xl font-semibold tracking-tight text-gray-900 pl-5 py-4">{{$p_cycle->name}}</dd>
                             </div>
                             <div class="col-span-2 flex flex-col bg-gray-200/50 border-r">
@@ -211,22 +298,32 @@
                                     </dd>
                                 </div>
                             </div>
-{{--                            <div class="flex flex-col bg-gray-200/50 p-2">--}}
-{{--                                <dt class="text-sm font-semibold leading-6 text-gray-600">Happy Customers</dt>--}}
-{{--                                <dd class="order-first text-3xl font-semibold tracking-tight text-gray-900">98%</dd>--}}
-{{--                            </div>--}}
-{{--                            <div class="flex flex-col bg-gray-200/50 p-2">--}}
-{{--                                <dt class="text-sm font-semibold leading-6 text-gray-600">Total Revenue</dt>--}}
-{{--                                <dd class="order-first text-3xl font-semibold tracking-tight text-gray-900">$5.6B</dd>--}}
-{{--                            </div>--}}
-{{--                            <div class="flex flex-col bg-gray-200/50 p-2">--}}
-{{--                                <dt class="text-sm font-semibold leading-6 text-gray-600">Happy Customers</dt>--}}
-{{--                                <dd class="order-first text-3xl font-semibold tracking-tight text-gray-900">98%</dd>--}}
-{{--                            </div>--}}
                             <div class="col-span-4 xl:col-span-8 w-full bg-gray-300 py-2 flex flex-row justify-end">
-                                <button type="button" id="cycle-details-{{$p_cycle->cycle_id}}" class="cycle-details mr-2 text-gray-800 bg-white hover:bg-gray-100 focus:outline-none font-medium rounded-sm text-xs lg:text-sm px-2 py-0.5">
+                                @if($p_cycle->category != 'Zadanie')
+                                    <button type="button" id="sub-cycle-details-{{$p_cycle->cycle_id}}" class="sub-cycle-details mr-2 text-gray-800 bg-white hover:bg-gray-100 focus:outline-none font-medium rounded-sm text-xs lg:text-sm px-2 py-0.5">
+                                        {{($p_cycle->category == 'Produkt') ? 'Materiały i zadania' : 'Zadania'}}
+                                    </button>
+                                @endif
+                                <button type="button" id="cycle-details-{{$p_cycle->cycle_id}}" class="cycle-details mr-4 text-gray-800 bg-white hover:bg-gray-100 focus:outline-none font-medium rounded-sm text-xs lg:text-sm px-2 py-0.5">
                                     Szczegóły
                                 </button>
+                            </div>
+{{--                            ROW 1--}}
+                            <div class="additional-info col-span-4 flex flex-col bg-gray-200/50 border-r-2 hidden">
+                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Uwagi</dt>
+                                <div class="w-full h-full flex justify-center items-center">
+                                    <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
+                                        {{$p_cycle->additional_comment}}
+                                    </dd>
+                                </div>
+                            </div>
+                            <div class="additional-info col-span-4 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2 hidden">
+                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Przypisani pracownicy</dt>
+                                <div class="w-full h-full flex justify-center items-center">
+                                    <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
+                                        {{$p_cycle->assigned_employees}}
+                                    </dd>
+                                </div>
                             </div>
 {{--                            ROW 2--}}
                             <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
@@ -290,55 +387,63 @@
                                 </div>
                             </div>
 {{--                            ROW 3--}}
-                            <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
-                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Cel (szt)</dt>
+                            <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2 hidden">
+                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Produktywność</dt>
                                 <div class="w-full h-full flex justify-center items-center">
-                                    <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                        {{$p_cycle->total_amount}}
-                                    </dd>
-                                </div>
-                            </div>
-                            <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
-                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Wyk. ilość (szt)</dt>
-                                <div class="w-full h-full flex justify-center items-center">
-                                    <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                        {{$p_cycle->current_amount}}
+                                    <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1  {{floatval($p_cycle->productivity) >= 100? 'text-green-450' : 'text-red-500'}}">
+                                        {{$p_cycle->productivity.'%'}}
                                     </dd>
                                 </div>
                             </div>
                             <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
                                 <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Postęp (%)</dt>
                                 <div class="w-full h-full flex justify-center items-center">
-                                    <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                        {{$p_cycle->progress}}
+                                    <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1 {{floatval($p_cycle->time_passed) < floatval($p_cycle->progress)? 'text-green-450' : 'text-red-500'}}">
+                                        {{$p_cycle->progress.'%'}}
+                                    </dd>
+                                </div>
+                            </div>
+                            <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2 hidden">
+                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Czasu upłynęło (%)</dt>
+                                <div class="w-full h-full flex justify-center items-center">
+                                    <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1  {{floatval($p_cycle->time_passed) < floatval($p_cycle->progress)? 'text-green-450' : 'text-red-500'}}">
+                                        {{($p_cycle->finished and floatval($p_cycle->time_passed) > 100)? '100%' : $p_cycle->time_passed.'%'}}
+                                    </dd>
+                                </div>
+                            </div>
+                            <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
+                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Pozostało czasu (h)</dt>
+                                <div class="w-full h-full flex justify-center items-center">
+                                    <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1 {{$p_cycle->status == 3 ? 'text-red-500' : ''}}">
+                                        {{$p_cycle->time_left}}
+                                    </dd>
+                                </div>
+                            </div>
+                            <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
+                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Wyk. ilość (szt)</dt>
+                                <div class="w-full h-full flex justify-center items-center">
+                                    <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1 {{floatval($p_cycle->productivity) >= 100? 'text-green-450' : 'text-red-500'}}">
+                                        {{$p_cycle->current_amount}}
+                                    </dd>
+                                </div>
+                            </div>
+                            <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
+                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Cel (szt)</dt>
+                                <div class="w-full h-full flex justify-center items-center">
+                                    <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
+                                        {{$p_cycle->total_amount}}
                                     </dd>
                                 </div>
                             </div>
                             <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2 hidden">
                                 <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">defekty (?)</dt>
                                 <div class="w-full h-full flex justify-center items-center">
-                                    <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
+                                    <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
                                         {{$p_cycle->defect_amount}}
                                     </dd>
                                 </div>
                             </div>
 {{--                            ROW 4--}}
-                            <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
-                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Czas pracy (h)</dt>
-                                <div class="w-full h-full flex justify-center items-center">
-                                    <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                        {{$p_cycle->time_spent_in_hours}}
-                                    </dd>
-                                </div>
-                            </div>
-                            <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 xl:border-r-2 hidden">
-                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Oczek. ilość (szt)</dt>
-                                <div class="w-full h-full flex justify-center items-center">
-                                    <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                        {{$p_cycle->expected_amount_per_spent_time}}
-                                    </dd>
-                                </div>
-                            </div>
                             <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
                                 @php
                                     $expected_amount_time_frame = 'Ilość na jednostkę czasu(szt)';
@@ -350,23 +455,31 @@
                                 @endphp
                                 <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">{{$expected_amount_time_frame}}</dt>
                                 <div class="w-full h-full flex justify-center items-center">
-                                    <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
+                                    <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
                                         {{$p_cycle->expected_amount_per_time_frame}}
                                     </dd>
                                 </div>
                             </div>
-                            <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2 hidden">
-                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Jakaś miara</dt>
+                            <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 xl:border-r-2 hidden">
+                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Oczek. ilość/Czas pracy (szt)</dt>
                                 <div class="w-full h-full flex justify-center items-center">
-                                    <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                        X
+                                    <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1 {{floatval($p_cycle->productivity) >= 100? 'text-green-450' : 'text-red-500'}}">
+                                        {{$p_cycle->expected_amount_per_spent_time}}
+                                    </dd>
+                                </div>
+                            </div>
+                            <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
+                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Czas pracy (h)</dt>
+                                <div class="w-full h-full flex justify-center items-center">
+                                    <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
+                                        {{$p_cycle->time_spent_in_hours}}
                                     </dd>
                                 </div>
                             </div>
 {{--                            tu jeszcze jakiś ROW 5 z miarami itp--}}
                             <div class="additional-info col-span-4 xl:col-span-8 w-full bg-gray-300 py-2 flex flex-row justify-start hidden">
                                 <p class="pl-5 text-gray-800 focus:outline-none font-medium rounded-sm text-xs lg:text-sm">
-                                    Informacje o produkcie
+                                    Informacje dodatkowe
                                 </p>
                             </div>
 {{--                            ROW 6 - product photo--}}
@@ -376,17 +489,17 @@
                                 @elseif($p_cycle->category == 'Materiał')
                                     @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
                                 @endif
-                                    <div class="additional-info col-span-4 flex flex-col justify-center bg-gray-200/50 border-r-2 hidden">
-                                        <div class="max-w-[70px] lg:max-w-[100px]">
+                                    <div class="additional-info col-span-4 xl:col-span-2 flex justify-center bg-gray-200/50 border-r-2 hidden p-2">
+                                        <div class="max-w-[150px]">
                                             <img src="{{asset('storage/'.$path.$p_cycle->image)}}">
                                         </div>
                                     </div>
                             @endif
                             @if(!is_null($p_cycle->description))
-                                <div class="additional-info col-span-4 flex flex-col bg-gray-200/50 border-r-2 hidden">
+                                <div class="additional-info col-span-4 {{is_null($p_cycle->image)? 'xl:col-span-8' : 'xl:col-span-6'}} flex flex-col bg-gray-200/50 border-r-2 hidden">
                                     <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Opis</dt>
                                     <div class="w-full h-full flex justify-center items-center">
-                                        <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
+                                        <dd class="w-full text-xs font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
                                             {{$p_cycle->description}}
                                         </dd>
                                     </div>

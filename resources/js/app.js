@@ -9,5 +9,5 @@ Alpine.start();
 import jQuery from 'jquery';
 window.$ = jQuery;
 
-import { Datepicker, Input, Stepper, Sticky, Modal, Ripple, initTE } from "tw-elements";
-initTE({ Datepicker, Stepper, Input, Sticky, Modal, Ripple });
+import {Datepicker, Select, Input, Stepper, Sticky, Modal, Ripple, initTE } from "tw-elements";
+initTE({ Datepicker, Select, Stepper, Input, Sticky, Modal, Ripple });

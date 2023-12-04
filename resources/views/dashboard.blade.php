@@ -6,6 +6,8 @@
             </div>
         </div>
     </div>
+
+
     <!-- Table responsive wrapper -->
     <div class="overflow-x-auto h-[380px] overflow-y-scroll w-[80%]">
 

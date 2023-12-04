@@ -85,6 +85,7 @@ Route::middleware(['auth'])->group(function () {
 //production
 Route::middleware('auth')->group(function () {
     Route::get('/produkcja', [ProductionCycleController::class, 'index'])->name('production.index');
+    Route::post('/produkcja', [ProductionCycleController::class, 'index'])->name('production.filter');
 });
 
 //schedule
