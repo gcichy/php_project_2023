@@ -6,7 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\ParentCycleView;
 use App\Models\ProductionCycle;
 use App\Models\User;
+use DateInterval;
+use DateTime;
 use Exception;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -20,27 +23,32 @@ class ProductionCycleController extends Controller
         $user = Auth::user();
         $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
         $users = User::select('employeeNo', 'role')->get();
-        $status = '';
-        $status_err = '';
-
 
         if(is_null($request->exp_end_start) or is_null($request->exp_end_end)) {
-            $end_time = strtotime(date('Y-m-d'));
-            $start_time = date_add($end_time,date_interval_create_from_date_string("-14 days"));
-            dd($start_time);
+            if(!(is_null($request->exp_end_start) and is_null($request->exp_end_end))) {
+                $status_err = 'Nie przefiltrowano terminu. Aby filtrować po terminie podaj początek i koniec.';
+            }
+            $current_time = new DateTime();
+            $end_time = $current_time->format('Y-m-d');
+            $current_time->sub(new DateInterval('P14D'));
+            $start_time = $current_time->format('Y-m-d');
+            $filt_start_time = $start_time;
+            $filt_end_time = $end_time;
+            $parent_cycles = ParentCycleView::whereBetween('expected_end_time', [$start_time." 00:00:00",$end_time." 23:59:59"]);
+        }
+        else {
+            $filt_start_time = $request->exp_end_start;
+            $filt_end_time = $request->exp_end_end;
             $parent_cycles = ParentCycleView::whereBetween('expected_end_time', [$request->exp_end_start." 00:00:00",$request->exp_end_end." 23:59:59"]);
         }
+
         $where_clause = $this->createWhereClause($request);
         if(!empty($where_clause)) {
             try {
-                $parent_cycles = ParentCycleView::all();
-                $parent_cycles = $parent_cycles->whereBetween('expected_end_time', [$request->exp_end_start." 00:00:00",$request->exp_end_end." 23:59:59"]);
-                dd($parent_cycles);
                 foreach ($where_clause as $column => $in_clause) {
                     $parent_cycles = $parent_cycles->whereIn($column, $in_clause);
                 }
-                dd($parent_cycles);
-                $parent_cycles = ParentCycleView::whereIn(['cycle_id'=>[1,5], 'status'=>[0,1,2,3]])->paginate(10);
+                $parent_cycles->paginate(10);
             } catch(Exception $e) {
                 Log::channel('error')->error('Error filtering parent cycles grid: '.$e->getMessage(), [
                     'employeeNo' => $employee_no,
@@ -49,7 +57,7 @@ class ProductionCycleController extends Controller
                 $status_err = 'Nie udało się przefiltrować - błąd systemu.';
             }
         } else {
-            $parent_cycles = ParentCycleView::paginate(10);
+            $parent_cycles = $parent_cycles->paginate(10);
         }
         $child_cycles = DB::select("
             select * from (
@@ -214,26 +222,29 @@ class ProductionCycleController extends Controller
             'time_spend' => 'Czas pracy (h)',
             'expected_amount_per_time_frame' => 'Oczekiwana ilość (szt)',
         );
+
         return view('production.production', [
             'parent_cycles' => $parent_cycles,
             'child_cycles' => $child_cycles,
             'user' => $user,
             'users' => $users,
             'order' => $order_table,
-            'status' => $status,
-            'status_err' => $status_err,
+            'status' => isset($status)? $status : null,
+            'status_err' => isset($status_err)? $status_err : null,
+            'filt_start_time' => $filt_start_time,
+            'filt_end_time' => $filt_end_time,
             'storage_path_products' => 'products',
             'storage_path_components' => 'components',
         ]);
     }
 
-    private function getFilterentParentCycles($request): array
-    {
 
-    }
     private function createWhereClause($request): array
     {
         $where_in_clause = array();
+        if(!is_null($request->name)) {
+            $where_in_clause['name'] = array($request->name);
+        }
         if(!is_null($request->status)) {
             $where_in_clause['status'] = explode(',',$request->status);
         }
@@ -242,9 +253,6 @@ class ProductionCycleController extends Controller
         }
         if(!is_null($request->employees)) {
             $where_in_clause['category'] = explode(',',$request->category);
-        }
-        if(!is_null($request->employees)) {
-            $where_in_clause['name'] = array($request->name);
         }
         return $where_in_clause;
     }

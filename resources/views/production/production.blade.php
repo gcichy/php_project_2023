@@ -277,7 +277,7 @@
                                         data-te-format="yyyy-mm-dd">
                                         <input type="text" name="exp_end_start"
                                             class="p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
-                                            placeholder="Termin od" />
+                                            placeholder="Termin od" value="{{isset($filt_start_time)? $filt_start_time : null}}"/>
                                     </div>
                                 </div>
                             </div>
@@ -293,7 +293,7 @@
                                         data-te-format="yyyy-mm-dd">
                                         <input type="text" name="exp_end_end"
                                             class="p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
-                                            placeholder="Termin do"/>
+                                            placeholder="Termin do" value="{{isset($filt_end_time)? $filt_end_time : null}}"/>
                                     </div>
                                 </div>
                             </div>
