@@ -1,6 +1,5 @@
 <x-app-layout>
     <script type="module">
-
         function addCycleStyles() {
             let cycles = $('.cycle');
             cycles.each(function() {
@@ -112,6 +111,16 @@
         $(document).ready(function() {
             addCycleStyles();
 
+            console.log($('#category-input').val())
+            $('#filter-btn').on('click',function() {
+                let filterGrid = $('#filters');
+                if(filterGrid.hasClass('hidden')) {
+                    filterGrid.removeClass('hidden');
+                } else {
+                    filterGrid.addClass('hidden');
+                }
+            });
+
             $('.cycle-details').on('click',function (){
                 let id = $(this).attr('id');
                 id = id.split('-');
@@ -151,15 +160,15 @@
         @endphp
         <x-information-panel :viewName="$name">
             {{--    routing for details set in java script above   --}}
-            <x-nav-button  class="on-select details bg-blue-450 hover:bg-blue-800">
+            <x-nav-button  id="filter-btn" class="on-select details bg-yellow-300 hover:bg-yellow-600">
+                {{ __('Filtry') }}
+            </x-nav-button>
+            <x-nav-button  class="on-select details bg-blue-450 hover:bg-blue-800 ml-1 lg:ml-3">
                 {{ __('Szczegóły') }}
             </x-nav-button>
             @if(in_array($user->role,array('admin','manager')))
                 <x-nav-button :href="route('product.add')" class="ml-1 lg:ml-3">
                     {{ __('Dodaj') }}
-                </x-nav-button>
-                <x-nav-button class="on-select similar hover:bg-gray-700 ml-1 lg:ml-3">
-                    {{ __('Dodaj Podobny') }}
                 </x-nav-button>
                 <x-nav-button class="on-select edit bg-orange-500 hover:bg-orange-800 ml-1 lg:ml-3">
                     {{ __('Edytuj') }}
@@ -193,68 +202,130 @@
 {{--                </x-remove-modal>--}}
             @endif
         </x-information-panel>
+        @if(isset($parent_cycles) and isset($child_cycles) and isset($users))
             <form method="POST" action="{{ route('production.filter') }}" enctype="multipart/form-data">
                 @csrf
-                <x-select-multiple :unique_id="__('status')" :placeholder="__('Status')" :input_name="__('status')">
-                    <x-slot name="options">
-                        <option value="0">Zakończony</option>
-                        <option value="1">Aktywny</option>
-                        <option value="2">Nierozpoczęty</option>
-                        <option value="3">Po terminie</option>
-                    </x-slot>
-                </x-select-multiple>
-                <button type="submit">dalej</button>
-            </form>
+                <div class="w-full mt-4 flex justify-center">
+                    <div id="filters" class="flex flex-row justify-start w-[90%] border-2 rounded-lg hidden">
+                        <dl class="grid grid-cols-3 bg-white text-left rounded-l-lg w-4/5">
+                            <div class="col-span-1 flex flex-col justify-center">
+                                <a class ='block px-2 text-xs md:text-sm bg-gray-800 rounded-tl-lg font-medium text-center text-white'>
+                                    Status
+                                </a>
+                                <div class="p-1">
+                                    @php $unique_new = 'status' @endphp
+                                    <x-select-multiple :uniqueId="$unique_new" :placeholder="__('Status')">
+                                        <x-slot name="options">
+                                            <option value="0">Zakończony</option>
+                                            <option value="1">Aktywny</option>
+                                            <option value="2">Nierozpoczęty</option>
+                                            <option value="3">Po terminie</option>
+                                        </x-slot>
+                                    </x-select-multiple>
+                                </div>
 
-        @if(isset($parent_cycles) and isset($child_cycles))
-            <div class="w-full mt-4 flex justify-center">
-                <div class=" flex flex-row justify-center w-[90%] bg-white rounded-lg border-2">
-                    <div class="flex flex-col justify-center bg-gray-800 xl:border-r-2 rounded-l-lg w-1/5">
-                        <a class =' text-sm md:text-lg font-medium text-center text-white'>
-                            Filtry
-                        </a>
-                    </div>
-                    <dl class="grid grid-cols-3 text-left rounded-r-lg w-4/5">
-                        <div class="col-span-1 flex flex-col justify-center xl:border-r-2">
-                            <a class ='block px-2 text-xs md:text-sm bg-gray-800 font-medium text-center text-white'>
-                                Status
-                            </a>
-                            <div class="p-1">
-                                <x-select-multiple :unique_id="__('status')" :placeholder="__('Status')" :input_name="__('status')">
-                                    <x-slot name="options">
-                                        <option value="0">Zakończony</option>
-                                        <option value="1">Aktywny</option>
-                                        <option value="2">Nierozpoczęty</option>
-                                        <option value="3">Po terminie</option>
-                                    </x-slot>
-                                </x-select-multiple>
                             </div>
-
+                            <div class="col-span-1 flex flex-col justify-center">
+                                <a class ='block px-2 text-xs md:text-sm font-medium bg-gray-800 text-center text-white'>
+                                    Kategoria
+                                </a>
+                                <div class="p-1">
+                                    @php $unique_id = 'category' @endphp
+                                    <x-select-multiple :uniqueId="$unique_id" :placeholder="__('Kategoria')">
+                                        <x-slot name="options">
+                                            <option value="'product'">Produkty</option>
+                                            <option value="'component'">Materiały</option>
+                                            <option value="'production_schema'">Zadania</option>
+                                        </x-slot>
+                                    </x-select-multiple>
+                                </div>
+                            </div>
+                            <div class="col-span-1 flex flex-col justify-start  border-r-2">
+                                <a class ='block px-2 text-xs md:text-sm font-medium bg-gray-800 text-center text-white'>
+                                    Nazwa
+                                </a>
+                                <div class="p-1 flex justify-center items-center h-full">
+                                    @php $unique_id = 'name' @endphp
+                                    <input type="search" id="{{$unique_id}}"  class="xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                           name="{{$unique_id}}" placeholder="Nazwa">
+                                </div>
+                            </div>
+                            <div class="col-span-1 flex flex-col justify-center">
+                                <a class ='block px-2 text-xs md:text-sm font-medium bg-gray-800 text-center text-white'>
+                                    Pracownicy
+                                </a>
+                                <div class="p-1">
+                                    @php $unique_id = 'employees' @endphp
+                                    <x-select-multiple :uniqueId="$unique_id" :placeholder="__('Pracownicy')">
+                                        <x-slot name="options">
+                                            @foreach($users as $u)
+                                                <option value="'{{$u->employeeNo}}'">{{$u->employeeNo}}</option>
+                                            @endforeach
+                                        </x-slot>
+                                    </x-select-multiple>
+                                </div>
+                            </div>
+                            <div class="col-span-1 flex flex-col justify-start">
+                                <a class ='block px-2 text-xs md:text-sm font-medium bg-gray-800 text-center text-white'>
+                                    Termin od
+                                </a>
+                                <div class="p-1 flex justify-center items-center h-full">
+                                    <div
+                                        id="exp-end-time-start"
+                                        class="relative w-full"
+                                        data-te-input-wrapper-init
+                                        data-te-format="yyyy-mm-dd">
+                                        <input type="text" name="exp_end_start"
+                                            class="p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                            placeholder="Termin od" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-span-1 flex flex-col justify-center border-r-2">
+                                <a class ='block px-2 text-xs md:text-sm font-medium bg-gray-800 text-center text-white'>
+                                    Termin do
+                                </a>
+                                <div class="p-1 flex justify-center items-center h-full">
+                                    <div
+                                        id="exp-end-time-end"
+                                        class="relative w-full"
+                                        data-te-input-wrapper-init
+                                        data-te-format="yyyy-mm-dd">
+                                        <input type="text" name="exp_end_end"
+                                            class="p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                            placeholder="Termin do"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-span-3 flex flex-col justify-start  border-r-2">
+                                <a class ='block px-2 text-xs md:text-sm font-medium bg-gray-800 text-center text-white'>
+                                    Sortuj według
+                                </a>
+                                <div class="p-1 flex justify-center items-center h-full">
+                                    @php $unique_id = 'order' @endphp
+                                    <x-select-multiple :uniqueId="$unique_id" :placeholder="__('Sortuj według')">
+                                        <x-slot name="options">
+                                            @foreach($order as $key => $val)
+                                                <option value="{{$key}};asc">
+                                                    {{$val}} (rosnąco)
+                                                </option>
+                                                <option value="{{$key}};desc">
+                                                    {{$val}} (malejąco)
+                                                </option>
+                                           @endforeach
+                                        </x-slot>
+                                    </x-select-multiple>
+                                </div>
+                            </div>
+                        </dl>
+                        <div class="flex flex-col justify-center items-center bg-white xl:border-r-2 rounded-r-lg w-1/5">
+                            <button type="submit" class ='w-[60%] xl:w-[40%] text-sm md:text-lg bg-gray-800 hover:bg-gray-600 font-medium text-center text-white rounded-lg'>
+                                Filtruj
+                            </button>
                         </div>
-                        <div class="col-span-1 flex flex-col justify-center  bg-gray-800 xl:border-r-2">
-                            <a class ='block px-2 text-xs md:text-sm font-medium text-center text-white'>
-                                Kategoria
-                            </a>
-                        </div>
-                        <div class="col-span-1 flex flex-col justify-center  bg-gray-800 xl:border-r-2">
-                            <a class ='block px-2 text-xs md:text-sm font-medium text-center text-white'>
-                                Nazwa
-                            </a>
-                        </div>
-                        <div class="col-span-1 flex flex-col justify-center  bg-gray-800 xl:border-r-2">
-                            <a class ='block px-2 text-xs md:text-sm font-medium text-center text-white'>
-                                Pracownik
-                            </a>
-                        </div>
-                        <div class="col-span-1 flex justify-center">
-                            <x-select-multiple></x-select-multiple>
-                        </div>
-                        <div class="col-span-1 flex justify-center">
-                            <x-select-multiple></x-select-multiple>
-                        </div>
-                    </dl>
+                    </div>
                 </div>
-            </div>
+            </form>
             <div class="flex flex-col justify-center items-center w-full mt-4">
                 @foreach($parent_cycles as $p_cycle)
                     <div id="cycle-{{$p_cycle->cycle_id}}" class="cycle w-[80%] rounded-xl bg-white my-5">
@@ -264,7 +335,7 @@
                             <div class="col-span-4 flex flex-col bg-gray-200/50 xl:border-r-2">
                                 <dt class="order-first text-sm lg:text-lg font-semibold bg-gray-800 text-white w-[45%] xl:w-[50%] xl:w-1/2 rounded-tl-xl pl-5 py-2 flex flex-row justify-between">
                                     <div class="p-1">
-                                        {{$p_cycle->category}}
+                                        {{($p_cycle->category == 'product')? 'Produkt' : (($p_cycle->category == 'component')? 'Materiał' : 'Zadanie')}}
                                     </div>
                                     <div class="text-xs lg:text-sm flex justify-center items-center">
                                         <div class="cycle-tag p-1 mx-2 rounded-md"></div>
@@ -484,9 +555,10 @@
                             </div>
 {{--                            ROW 6 - product photo--}}
                             @if(!is_null($p_cycle->image))
-                                @if($p_cycle->category == 'Produkt')
+                                @php $path = ''; @endphp
+                                @if($p_cycle->category == 'product')
                                     @php $path = isset($storage_path_products) ? $storage_path_products.'/' : ''; @endphp
-                                @elseif($p_cycle->category == 'Materiał')
+                                @elseif($p_cycle->category == 'component')
                                     @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
                                 @endif
                                     <div class="additional-info col-span-4 xl:col-span-2 flex justify-center bg-gray-200/50 border-r-2 hidden p-2">
@@ -575,6 +647,9 @@
 
                     </div>
                 @endforeach
+                <div class="w-4/5">
+                        {{ $parent_cycles->links() }}
+                </div>
             </div>
         @endif
     @endif

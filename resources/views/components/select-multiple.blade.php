@@ -1,68 +1,66 @@
-@props(['unique_id','placeholder', 'options', 'input_name'])
-<script>
-    function dropdown() {
-        return {
-            options: [],
-            selected: [],
-            show: false,
-            open() { this.show = true },
-            close() { this.show = false },
-            isOpen() { return this.show === true },
-            select(index, event) {
+@if(isset($placeholder) and isset($options) and isset($uniqueId))
+    <script>
+        function dropdown() {
+            return {
+                options: [],
+                selected: [],
+                show: false,
+                open() { this.show = true },
+                close() { this.show = false },
+                isOpen() { return this.show === true },
+                select(index, event) {
+                    if (!this.options[index].selected) {
 
-                if (!this.options[index].selected) {
+                        this.options[index].selected = true;
+                        this.options[index].element = event.target;
+                        this.selected.push(index);
 
-                    this.options[index].selected = true;
-                    this.options[index].element = event.target;
-                    this.selected.push(index);
+                    } else {
+                        this.selected.splice(this.selected.lastIndexOf(index), 1);
+                        this.options[index].selected = false
+                    }
+                },
+                remove(index, option) {
+                    this.options[option].selected = false;
+                    this.selected.splice(index, 1);
 
-                } else {
-                    this.selected.splice(this.selected.lastIndexOf(index), 1);
-                    this.options[index].selected = false
+
+                },
+                loadOptions(id) {
+                    let options = document.getElementById(id).options;
+                    for (let i = 0; i < options.length; i++) {
+                        this.options.push({
+                            value: options[i].value,
+                            text: options[i].innerText,
+                            selected: options[i].getAttribute('selected') != null
+                        });
+                    }
+
+
+                },
+                selectedValues(){
+                    return this.selected.map((option)=>{
+                        return this.options[option].value;
+                    })
                 }
-            },
-            remove(index, option) {
-                this.options[option].selected = false;
-                this.selected.splice(index, 1);
-
-
-            },
-            loadOptions() {
-                const options = document.getElementById('select').options;
-                for (let i = 0; i < options.length; i++) {
-                    this.options.push({
-                        value: options[i].value,
-                        text: options[i].innerText,
-                        selected: options[i].getAttribute('selected') != null ? options[i].getAttribute('selected') : false
-                    });
-                }
-
-
-            },
-            selectedValues(){
-                return this.selected.map((option)=>{
-                    return this.options[option].value;
-                })
             }
         }
-    }
-</script>
+    </script>
 <style>
     [x-cloak] {
         display: none;
     }
 </style>
-@if(isset($placeholder) and isset($options) and isset($unique_id) and isset($input_name))
-    <select x-cloak id="select">
+    <select x-cloak id="select-{{$uniqueId}}">
         {{$options}}
     </select>
 
-    <div x-data="dropdown()" x-init="loadOptions()" class="w-full flex flex-col items-center mx-auto">
-        <input name="{{$input_name}}" type="text" class="hidden" x-bind:value="selectedValues()">
+    <div x-data="dropdown()" x-init="loadOptions('select-{{$uniqueId}}')" class="w-full flex flex-col items-center mx-auto">
+        <input name="{{$uniqueId}}" id="{{$uniqueId}}-input" type="text" class="hidden" x-bind:value="selectedValues()">
         <div class="inline-block relative w-full">
             <div class="flex flex-col items-center relative">
                 <div x-on:click="open" class="w-full  svelte-1l8159u">
-                    <div class="my-2 p-1 flex border border-gray-200 bg-white rounded svelte-1l8159u">
+                    <div class="my-2 xl:p-1 flex border border-gray-200 bg-white rounded text-xs xl:text-sm svelte-1l8159u">
                         <div x-show="selected.length    == 0" class="flex-1">
                             <input placeholder="{{$placeholder}}"
                                    class="bg-transparent p-1 px-0.5 appearance-none outline-none h-full w-full text-gray-800"
@@ -72,7 +70,7 @@
                         <div class="flex flex-auto overflow-hidden">
                             <template x-for="(option,index) in selected" :key="options[option].value">
                                 <div
-                                    class="flex justify-center items-center m-1 font-medium py-1 px-2 rounded-full text-blue-800 bg-blue-150 border border-blue-800 ">
+                                    class="flex justify-center items-center m-1 font-medium px-2 rounded-full text-blue-800 bg-blue-150 border border-blue-800 ">
                                     <div class="text-xs font-normal leading-none max-w-full flex-initial x-model="
                                          options[option]" x-text="options[option].text"></div>
                                 <div class="flex flex-auto flex-row-reverse">
@@ -122,9 +120,9 @@ c0.27-0.268,0.707-0.268,0.979,0l7.908,7.83c0.27,0.268,0.27,0.701,0,0.969c-0.271,
                             <div>
                                 <div class="cursor-pointer w-full border-gray-100 rounded-t border-b hover:bg-blue-150"
                                      @click="select(index,$event)">
-                                    <div x-bind:class="option.selected ? 'border-blue-800' : ''"
-                                         class="flex w-full items-center p-2 pl-2 border-transparent border-l-4 relative">
-                                        <div class="w-full items-center flex">
+                                    <div x-bind:class="option.selected ? 'border-blue-450' : ''"
+                                         class="flex w-full items-center p-2 pl-2 border-l-4 relative">
+                                        <div class="w-full items-center flex text-xs xl:text-sm">
                                             <div class="mx-2 leading-6" x-model="option" x-text="option.text"></div>
                                         </div>
                                     </div>
