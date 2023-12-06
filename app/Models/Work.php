@@ -23,8 +23,10 @@ class Work extends Model
         'duration_minute',                  //working time
         'amount',                           //if necessary, result of work determined in prod_schema related unit
         'defect_amount',                    //amount of defects produced, unit of defect can differ from prod_schema related unit
-        'reason_code',
-        'defect_unit_id',
+        'defect_reason_code',
+        'waste_amount',                            //amount of material wasted for instance 1 m3 of wood
+        'waste_unit_id',
+        'waste_reason_code',
         'additional_comment'
     ];
 

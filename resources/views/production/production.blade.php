@@ -67,51 +67,9 @@
 
             });
         }
-
-        function checkActive() {
-            let similar = $('.similar');
-            let remove = $('.remove');
-            let details = $('.details');
-            let edit = $('.edit');
-            //check if any element is active, if not details button's href is set to current url
-            if($('.list-element.active-list-elem').length === 0) {
-                remove.removeClass('bg-red-600').addClass('bg-gray-400')
-                details.removeClass('bg-blue-450').addClass('bg-gray-400').attr('href', $(location).attr('href'));
-                similar.removeClass('bg-gray-800').addClass('bg-gray-400').attr('href', $(location).attr('href'));
-                edit.removeClass('bg-orange-500').addClass('bg-gray-400').attr('href', $(location).attr('href'));
-            }
-            //else if id is set properly, url is set to be classified as product.details route
-            else {
-                let id = $('.list-element.active-list-elem').attr('id').split('-');
-                if(id.length > 1) {
-                    id = id[1];
-                    let newUrl = '';
-                    let similarUrl = '';
-                    let editUrl = '';
-                    //if products div has display block, then create route to products, else to components
-
-                    newUrl = $(location).attr('href') + '/' + id;
-                    similarUrl = $(location).attr('href').replace('produkty','dodaj-produkt') + '/' + id;
-                    editUrl = $(location).attr('href').replace('produkty','edytuj-produkt') + '/' + id;
-
-                    remove.removeClass('bg-gray-400').addClass('bg-red-600').prop('disabled', false)
-                    details.removeClass('bg-gray-400').addClass('bg-blue-450').attr('href', newUrl);
-                    similar.removeClass('bg-gray-400').addClass('bg-gray-800').attr('href', similarUrl);
-                    edit.removeClass('bg-gray-400').addClass('bg-orange-500').attr('href', editUrl);
-                }
-                else {
-                    remove.removeClass('bg-red-600').addClass('bg-gray-400')
-                    details.removeClass('bg-blue-450').addClass('bg-gray-400').attr('href', $(location).attr('href'));
-                    similar.removeClass('bg-gray-800').addClass('bg-gray-400').attr('href', $(location).attr('href'));
-                    edit.removeClass('bg-orange-500').addClass('bg-gray-400').attr('href', $(location).attr('href'));
-                }
-            }
-        }
-
         $(document).ready(function() {
             addCycleStyles();
 
-            console.log($('#category-input').val())
             $('#filter-btn').on('click',function() {
                 let filterGrid = $('#filters');
                 if(filterGrid.hasClass('hidden')) {
@@ -148,10 +106,10 @@
                 </p>
             </div>
         @endif
-        @if(session('status_err'))
+        @if(isset($status_err))
             <div class="flex justify-center items-center">
                 <p class="w-full !text-md lg:text-xl font-medium text-center p-6 text-red-700 space-y-1">
-                    {{session('status_err')}}
+                    {{$status_err}}
                 </p>
             </div>
         @endif
@@ -202,7 +160,7 @@
 {{--                </x-remove-modal>--}}
             @endif
         </x-information-panel>
-        @if(isset($parent_cycles) and isset($child_cycles) and isset($users))
+        @if(isset($parent_cycles) and isset($users) and isset($filt_items))
             <form method="POST" action="{{ route('production.filter') }}" enctype="multipart/form-data">
                 @csrf
                 <div class="w-full mt-4 flex justify-center">
@@ -212,30 +170,43 @@
                                 <a class ='block px-2 text-xs md:text-sm bg-gray-800 rounded-tl-lg font-medium text-center text-white'>
                                     Status
                                 </a>
-                                <div class="p-1">
-                                    @php $unique_new = 'status' @endphp
-                                    <x-select-multiple :uniqueId="$unique_new" :placeholder="__('Status')">
+                                <div class="p-1 h-full">
+                                    @php $unique_id = 'status' @endphp
+                                    <x-select-multiple :uniqueId="$unique_id" :placeholder="__('Status')">
                                         <x-slot name="options">
-                                            <option value="0">Zakończony</option>
-                                            <option value="1">Aktywny</option>
-                                            <option value="2">Nierozpoczęty</option>
-                                            <option value="3">Po terminie</option>
+                                            <option value="0" {{(array_key_exists($unique_id,$filt_items) and in_array('0', $filt_items[$unique_id]))? 'selected' : ''}}>
+                                                Zakończony
+                                            </option>
+                                            <option value="1" {{(array_key_exists($unique_id,$filt_items) and in_array('1', $filt_items[$unique_id]))? 'selected' : ''}}>
+                                                Aktywny
+                                            </option>
+                                            <option value="2" {{(array_key_exists($unique_id,$filt_items) and in_array('2', $filt_items[$unique_id]))? 'selected' : ''}}>
+                                                Nierozpoczęty
+                                            </option>
+                                            <option value="3" {{(array_key_exists($unique_id,$filt_items) and in_array('3', $filt_items[$unique_id]))? 'selected' : ''}}>
+                                                Po terminie
+                                            </option>
                                         </x-slot>
                                     </x-select-multiple>
                                 </div>
-
                             </div>
                             <div class="col-span-1 flex flex-col justify-center">
                                 <a class ='block px-2 text-xs md:text-sm font-medium bg-gray-800 text-center text-white'>
                                     Kategoria
                                 </a>
-                                <div class="p-1">
+                                <div class="p-1 h-full">
                                     @php $unique_id = 'category' @endphp
                                     <x-select-multiple :uniqueId="$unique_id" :placeholder="__('Kategoria')">
                                         <x-slot name="options">
-                                            <option value="'product'">Produkty</option>
-                                            <option value="'component'">Materiały</option>
-                                            <option value="'production_schema'">Zadania</option>
+                                            <option value="0" {{(array_key_exists($unique_id,$filt_items) and in_array('0', $filt_items[$unique_id]))? 'selected' : ''}}>
+                                                Produkty
+                                            </option>
+                                            <option value="1" {{(array_key_exists($unique_id,$filt_items) and in_array('1', $filt_items[$unique_id]))? 'selected' : ''}}>
+                                                Materiały
+                                            </option>
+                                            <option value="2" {{(array_key_exists($unique_id,$filt_items) and in_array('2', $filt_items[$unique_id]))? 'selected' : ''}}>
+                                                Zadania
+                                            </option>
                                         </x-slot>
                                     </x-select-multiple>
                                 </div>
@@ -246,11 +217,12 @@
                                 </a>
                                 <div class="p-1 flex justify-center items-center h-full">
                                     @php $unique_id = 'name' @endphp
-                                    <input type="search" id="{{$unique_id}}"  class="xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                    <input type="search" id="{{$unique_id}}" value="{{array_key_exists($unique_id,$filt_items)? $filt_items[$unique_id] : ''}}"
+                                           class="xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
                                            name="{{$unique_id}}" placeholder="Nazwa">
                                 </div>
                             </div>
-                            <div class="col-span-1 flex flex-col justify-center">
+                            <div class="col-span-1 flex flex-col justify-center h-full">
                                 <a class ='block px-2 text-xs md:text-sm font-medium bg-gray-800 text-center text-white'>
                                     Pracownicy
                                 </a>
@@ -259,7 +231,9 @@
                                     <x-select-multiple :uniqueId="$unique_id" :placeholder="__('Pracownicy')">
                                         <x-slot name="options">
                                             @foreach($users as $u)
-                                                <option value="'{{$u->employeeNo}}'">{{$u->employeeNo}}</option>
+                                                <option value="{{$u->id}}" {{(array_key_exists($unique_id,$filt_items) and in_array($u->id, $filt_items[$unique_id]))? 'selected' : ''}}>
+                                                    {{$u->employeeNo}}
+                                                </option>
                                             @endforeach
                                         </x-slot>
                                     </x-select-multiple>
@@ -306,10 +280,10 @@
                                     <x-select-multiple :uniqueId="$unique_id" :placeholder="__('Sortuj według')">
                                         <x-slot name="options">
                                             @foreach($order as $key => $val)
-                                                <option value="{{$key}};asc">
+                                                <option value="{{$key}};asc" {{(isset($order_items) and in_array($key.';asc', $order_items))? 'selected' : ''}}>
                                                     {{$val}} (rosnąco)
                                                 </option>
-                                                <option value="{{$key}};desc">
+                                                <option value="{{$key}};desc" {{(isset($order_items) and in_array($key.';desc', $order_items))? 'selected' : ''}}>
                                                     {{$val}} (malejąco)
                                                 </option>
                                            @endforeach
@@ -335,7 +309,7 @@
                             <div class="col-span-4 flex flex-col bg-gray-200/50 xl:border-r-2">
                                 <dt class="order-first text-sm lg:text-lg font-semibold bg-gray-800 text-white w-[45%] xl:w-[50%] xl:w-1/2 rounded-tl-xl pl-5 py-2 flex flex-row justify-between">
                                     <div class="p-1">
-                                        {{($p_cycle->category == 'product')? 'Produkt' : (($p_cycle->category == 'component')? 'Materiał' : 'Zadanie')}}
+                                        {{($p_cycle->category == 0)? 'Produkt' : (($p_cycle->category == 1)? 'Materiał' : 'Zadanie')}}
                                     </div>
                                     <div class="text-xs lg:text-sm flex justify-center items-center">
                                         <div class="cycle-tag p-1 mx-2 rounded-md"></div>
@@ -370,13 +344,14 @@
                                 </div>
                             </div>
                             <div class="col-span-4 xl:col-span-8 w-full bg-gray-300 py-2 flex flex-row justify-end">
-                                @if($p_cycle->category != 'Zadanie')
-                                    <button type="button" id="sub-cycle-details-{{$p_cycle->cycle_id}}" class="sub-cycle-details mr-2 text-gray-800 bg-white hover:bg-gray-100 focus:outline-none font-medium rounded-sm text-xs lg:text-sm px-2 py-0.5">
-                                        {{($p_cycle->category == 'Produkt') ? 'Materiały i zadania' : 'Zadania'}}
-                                    </button>
+                                @if($p_cycle->category != 2)
+                                    <a href="produkcja/ {{$p_cycle->cycle_id}}"  id="sub-cycle-details-{{$p_cycle->cycle_id}}" class="sub-cycle-details mr-2 text-gray-800 bg-white hover:bg-gray-100 focus:outline-none font-medium rounded-sm text-xs lg:text-sm px-2 py-0.5">
+{{--                                        {{($p_cycle->category == 0) ? 'Materiały i zadania' : 'Zadania'}}--}}
+                                        Więcej
+                                    </a>
                                 @endif
                                 <button type="button" id="cycle-details-{{$p_cycle->cycle_id}}" class="cycle-details mr-4 text-gray-800 bg-white hover:bg-gray-100 focus:outline-none font-medium rounded-sm text-xs lg:text-sm px-2 py-0.5">
-                                    Szczegóły
+                                    Statystyki
                                 </button>
                             </div>
 {{--                            ROW 1--}}
@@ -392,7 +367,7 @@
                                 <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Przypisani pracownicy</dt>
                                 <div class="w-full h-full flex justify-center items-center">
                                     <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                        {{$p_cycle->assigned_employees}}
+                                        {{$p_cycle->assigned_employee_no}}
                                     </dd>
                                 </div>
                             </div>
@@ -507,7 +482,7 @@
                                 </div>
                             </div>
                             <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2 hidden">
-                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">defekty (?)</dt>
+                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">defekty (szt)</dt>
                                 <div class="w-full h-full flex justify-center items-center">
                                     <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
                                         {{$p_cycle->defect_amount}}
@@ -547,6 +522,14 @@
                                     </dd>
                                 </div>
                             </div>
+                            <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
+                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Defekty (%)</dt>
+                                <div class="w-full h-full flex justify-center items-center">
+                                    <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
+                                        {{$p_cycle->defect_percent}}
+                                    </dd>
+                                </div>
+                            </div>
 {{--                            tu jeszcze jakiś ROW 5 z miarami itp--}}
                             <div class="additional-info col-span-4 xl:col-span-8 w-full bg-gray-300 py-2 flex flex-row justify-start hidden">
                                 <p class="pl-5 text-gray-800 focus:outline-none font-medium rounded-sm text-xs lg:text-sm">
@@ -556,9 +539,9 @@
 {{--                            ROW 6 - product photo--}}
                             @if(!is_null($p_cycle->image))
                                 @php $path = ''; @endphp
-                                @if($p_cycle->category == 'product')
+                                @if($p_cycle->category == 0)
                                     @php $path = isset($storage_path_products) ? $storage_path_products.'/' : ''; @endphp
-                                @elseif($p_cycle->category == 'component')
+                                @elseif($p_cycle->category == 1)
                                     @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
                                 @endif
                                     <div class="additional-info col-span-4 xl:col-span-2 flex justify-center bg-gray-200/50 border-r-2 hidden p-2">

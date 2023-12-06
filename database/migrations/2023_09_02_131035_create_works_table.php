@@ -43,12 +43,18 @@ return new class extends Migration
             $table->unsignedBigInteger('duration_minute');
             $table->double('amount')->nullable()->default(0);
             $table->double('defect_amount')->nullable()->default(0);
-            $table->foreignId('defect_unit_id')
+            $table->foreignId('defect_reason_code')
                 ->nullable()
-                ->constrained('unit','id')
+                ->constrained('reason_code', 'reason_code')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
-            $table->foreignId('reason_code')
+            $table->double('waste_amount')->nullable()->default(0);
+            $table->foreignId('waste_unit_id')
+                ->nullable()
+                ->constrained('unit')
+                ->onUpdate('cascade')
+                ->onDelete('restrict');
+            $table->foreignId('waste_reason_code')
                 ->nullable()
                 ->constrained('reason_code', 'reason_code')
                 ->onUpdate('cascade')

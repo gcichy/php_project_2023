@@ -8,9 +8,10 @@
                 open() { this.show = true },
                 close() { this.show = false },
                 isOpen() { return this.show === true },
-                select(index, event) {
-                    if (!this.options[index].selected) {
+                select(index, event, onStart) {
 
+                    if (!this.options[index].selected || onStart) {
+                        console.log(event);
                         this.options[index].selected = true;
                         this.options[index].element = event.target;
                         this.selected.push(index);
@@ -42,7 +43,14 @@
                     return this.selected.map((option)=>{
                         return this.options[option].value;
                     })
-                }
+                },
+                checkAndSelectOption(option, index) {
+                    if (option.selected) {
+                        if (this.$el.classList.contains('item-to-select')) {
+                            this.select(index, { target: this.$el },true);
+                        }
+                    }
+                },
             }
         }
     </script>
@@ -118,8 +126,9 @@ c0.27-0.268,0.707-0.268,0.979,0l7.908,7.83c0.27,0.268,0.27,0.701,0,0.969c-0.271,
                     <div class="flex flex-col w-full">
                         <template x-for="(option,index) in options" :key="option">
                             <div>
-                                <div class="cursor-pointer w-full border-gray-100 rounded-t border-b hover:bg-blue-150"
-                                     @click="select(index,$event)">
+                                <div x-bind:class="{ 'item-to-select' : option.selected }" class="cursor-pointer w-full border-gray-100 rounded-t border-b hover:bg-blue-150"
+                                     @click="select(index,$event,false)" x-init="checkAndSelectOption(option, index)">
+{{--                                    if option.selected (from the line below) is true I want to trigger @click="select(index,$event) event from the line above--}}
                                     <div x-bind:class="option.selected ? 'border-blue-450' : ''"
                                          class="flex w-full items-center p-2 pl-2 border-l-4 relative">
                                         <div class="w-full items-center flex text-xs xl:text-sm">
