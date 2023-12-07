@@ -84,19 +84,6 @@
                     $(list_id).addClass('just-hidden');
                 }
             });
-
-            $('#remove-comp-modal').on('click', function(){
-                $('.element-remove').addClass('hidden');
-                let activeElem = $('.list-element.active-list-elem');
-                if(typeof activeElem.attr('id') === "string") {
-                    let id = activeElem.attr('id').split('-');
-                    if(id.length > 1) {
-                        id = '#component-remove-' + id[1];
-                        $(id).removeClass('hidden')
-                    }
-                }
-            });
-
         });
     </script>
     @if(isset($user) and $user instanceof \App\Models\User)

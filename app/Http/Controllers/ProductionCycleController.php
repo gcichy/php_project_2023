@@ -4,8 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\ChildCycleView;
+use App\Models\Component;
 use App\Models\ParentCycleView;
+use App\Models\Product;
 use App\Models\ProductionCycle;
+use App\Models\ProductionSchema;
+use App\Models\StaticValue;
 use App\Models\User;
 use DateInterval;
 use DateTime;
@@ -25,7 +29,6 @@ class ProductionCycleController extends Controller
         $user = Auth::user();
         $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
         $users = User::select('id','employeeNo', 'role')->get();
-
         try {
             $filt_by_exp_end_table = $this->filterByExpectedEndTimeParentCycles($request);
             $parent_cycles = $filt_by_exp_end_table['parent_cycles'];
@@ -96,6 +99,59 @@ class ProductionCycleController extends Controller
             'p_cycle' => $parent_cycle,
             'child_cycles' => $child_cycles,
             'user' => $user,
+            'storage_path_products' => 'products',
+            'storage_path_components' => 'components',
+        ]);
+    }
+
+    public function cycleAddWrapper(Request $request): RedirectResponse
+    {
+        return redirect()->route('production.add-cycle',['category' => $request->category]);
+    }
+
+    public function cycleAdd(Request $request, $category): View
+    {
+        $user = Auth::user();
+        $users = User::all();
+        if($category == 1) {
+            $category_name = 'Materiał';
+            $elements = Component::where('indepentent', 1);
+            if(is_string($request->filter_elem)) {
+                $elements = $elements->where('name', 'like', '%'.$request->filter_elem.'%')
+                                    ->orWhere('material', 'like', '%'.$request->filter_elem.'%');
+            }
+            $elements = $elements->paginate(10);
+        } else if($category == 2 ) {
+            $pack_product_id = StaticValue::where('type', 'pack_schema')->select('value')->first();
+            $products = Product::select('id', 'name', 'image', 'material')->paginate(10);
+            $category_name = 'Zadanie';
+            $independent_schemas_id = DB::select('select distinct production_schema_id from production_standard pstd where component_id is null');
+            $independent_schemas_id = collect($independent_schemas_id)->map(function ($arr) { return $arr->production_schema_id; })->toArray();
+            $elements = ProductionSchema::whereIn('id',$independent_schemas_id);
+            if(is_string($request->filter_elem)) {
+                $elements = $elements->where('production_schema', 'like', '%' . $request->filter_elem . '%');
+            }
+            $elements = $elements->paginate(10);
+        } else {
+            $category_name = 'Produkt';
+            if(is_string($request->filter_elem)) {
+                $elements = Product::where('name', 'like', '%'.$request->filter_elem.'%')
+                                    ->orWhere('material', 'like', '%'.$request->filter_elem.'%')
+                                    ->paginate(10);
+                ;
+            } else {
+                $elements = Product::paginate(10);
+            }
+        }
+        return view('production.cycle-add', [
+            'user' => $user,
+            'users' => $users,
+            'category' => $category,
+            'category_name' => $category_name,
+            'elements' => $elements,
+            'filter_elem' => $request->filter_elem,
+            'products' => isset($products)? $products : null,
+            'pack_product_id' => isset($pack_product_id )? $pack_product_id : null,
             'storage_path_products' => 'products',
             'storage_path_components' => 'components',
         ]);

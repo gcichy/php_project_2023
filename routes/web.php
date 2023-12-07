@@ -1,5 +1,6 @@
 <?php
 
+use App\Helpers\fileTrait;
 use App\Http\Controllers\ComponentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeController;
@@ -86,7 +87,11 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/produkcja', [ProductionCycleController::class, 'index'])->name('production.index');
     Route::get('/produkcja/{id}', [ProductionCycleController::class, 'cycleDetails'])->name('production.cycle-detail');
-    Route::post('/produkcja', [ProductionCycleController::class, 'index'])->name('production.filter');
+    Route::patch('/produkcja', [ProductionCycleController::class, 'index'])->name('production.filter');
+    Route::post('/produkcja', [ProductionCycleController::class, 'cycleAddWrapper'])->name('production.add-cycle-wrapper');
+    Route::get('/dodaj-cykl/{category}', [ProductionCycleController::class, 'cycleAdd'])->name('production.add-cycle');
+    Route::patch('/dodaj-cykl/{category}', [ProductionCycleController::class, 'cycleAdd'])->name('production.add-cycle-filter');
+    Route::post('/dodaj-cykl', [ProductionCycleController::class, 'cycleStore'])->name('production.store-cycle');
 });
 
 //schedule

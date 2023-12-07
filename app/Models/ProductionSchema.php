@@ -19,7 +19,7 @@ class ProductionSchema extends Model
         'tasks_count',                      //number of tasks for production schema
         'parent_id',                        //id of parent production schema
     ];
-
+    //independency of production_schema is determined by having row in production_standard table where component_id is null
     /**
      * The attributes that should be hidden for serialization.
      *

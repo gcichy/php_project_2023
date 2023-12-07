@@ -70,6 +70,26 @@
         $(document).ready(function() {
             addCycleStyles();
 
+            $('.next-modal').on('click', function (){
+                $('.next-modal').removeClass('selected bg-blue-800 ring-2');
+                $(this).addClass('bg-blue-800 ring-2');
+                $(this).delay(300).queue(function() {
+                    // $("#close-modal-button-1").trigger( "click" );
+                    // $("#modal-background-2, #modal-2").removeClass("hidden");
+                    // $(this).removeClass('bg-blue-800 ring-2');
+                    // $('#new-cycle-cat').text($(this).text());
+                    let category = 0;
+                    if($(this).attr('id') === 'category-1') {
+                        category = 1;
+                    } else if($(this).attr('id') === 'category-2') {
+                        category = 2;
+                    }
+                    $('#new-category').val(category);
+                    $('#add-cycle-sumbit').trigger('click');
+                    $(this).dequeue();
+                });
+            });
+
             $('#filter-btn').on('click',function() {
                 let filterGrid = $('#filters');
                 if(filterGrid.hasClass('hidden')) {
@@ -121,47 +141,41 @@
             <x-nav-button  id="filter-btn" class="on-select details bg-yellow-300 hover:bg-yellow-600">
                 {{ __('Filtry') }}
             </x-nav-button>
-            <x-nav-button  class="on-select details bg-blue-450 hover:bg-blue-800 ml-1 lg:ml-3">
-                {{ __('Szczegóły') }}
-            </x-nav-button>
             @if(in_array($user->role,array('admin','manager')))
-                <x-nav-button :href="route('product.add')" class="ml-1 lg:ml-3">
-                    {{ __('Dodaj') }}
-                </x-nav-button>
+                @php
+                    $name = 'Dodaj cykl produkcji';
+                    $button_id = 'add-cycle-1';
+                    $id = '1';
+                    $bg_classes = 'bg-green-450 hover:bg-green-700';
+                    $button_text = 'Dodaj'
+                @endphp
+                <x-modal :name="$name" :button_id="$button_id" :id="$id" :bg_classes="$bg_classes" :button_text="$button_text">
+                    <div class="flex flex-row justify-center items-center my-16">
+                        <x-nav-button id="category-0" class="next-modal text-sm bg-blue-450 hover:bg-blue-800">
+                            {{ __('Produkt') }}
+                        </x-nav-button>
+                        <x-nav-button id="category-1" class="next-modal text-sm bg-blue-450 hover:bg-blue-800 ml-4 lg:ml-10">
+                            {{ __('Materiał') }}
+                        </x-nav-button>
+                        <x-nav-button id="category-2" class="next-modal text-sm bg-blue-450 hover:bg-blue-800 ml-4 lg:ml-10">
+                            {{ __('Zadanie') }}
+                        </x-nav-button>
+                        <form method="POST" action="{{ route('production.add-cycle-wrapper') }}" enctype="multipart/form-data">
+                            @csrf
+                            <input id="new-category" name="category" class="hidden" type="number">
+                            <button id="add-cycle-sumbit" type="submit" class="hidden">
+                            </button>
+                        </form>
+                    </div>
+                </x-modal>
                 <x-nav-button class="on-select edit bg-orange-500 hover:bg-orange-800 ml-1 lg:ml-3">
                     {{ __('Edytuj') }}
                 </x-nav-button>
-{{--                @php--}}
-{{--                    $name = 'produkt';--}}
-{{--                    $route = 'product.destroy';--}}
-{{--                    $button_id = 'remove-prod-modal';--}}
-{{--                    $id = '2';--}}
-{{--                    $remove_elem_class = 'element-remove';--}}
-{{--                    $remove_elem_id = 'product-remove-';--}}
-{{--                @endphp--}}
-{{--                <x-remove-modal :name="$name" :button_id="$button_id" :route="$route" :id="$id" :remove_elem_class="$remove_elem_class" :remove_elem_id="$remove_elem_id">--}}
-{{--                    @foreach($products as $prod)--}}
-{{--                        <div class="{{$remove_elem_class}} hidden" id="{{$remove_elem_id}}{{$prod->id}}">--}}
-{{--                            <x-list-element class="flex-col">--}}
-{{--                                <div class="w-full flex justify-between items-center">--}}
-{{--                                    <div class="w-full flex justify-left items-center">--}}
-{{--                                        <div class="border-2 inline-block w-[50px] h-[50px] md:w-[70px] md:h-[70px] lg:w-[100px] lg:h-[100px]">--}}
-{{--                                            @if(!empty($prod->image))--}}
-{{--                                                @php $path = isset($storage_path_products) ? $storage_path_products.'/' : ''; @endphp--}}
-{{--                                                <img src="{{asset('storage/'.$path.$prod->image)}}">--}}
-{{--                                            @endif--}}
-{{--                                        </div>--}}
-{{--                                        <p class="inline-block list-element-name ml-[3%]  xl:text-lg text-md">{{$prod->name}} - {{$prod->material}}</p>--}}
-{{--                                    </div>--}}
-{{--                                </div>--}}
-{{--                            </x-list-element>--}}
-{{--                        </div>--}}
-{{--                    @endforeach--}}
-{{--                </x-remove-modal>--}}
             @endif
         </x-information-panel>
         @if(isset($parent_cycles) and isset($users) and isset($filt_items))
             <form method="POST" action="{{ route('production.filter') }}" enctype="multipart/form-data">
+                @method('PATCH')
                 @csrf
                 <div class="w-full mt-4 flex justify-center">
                     <div id="filters" class="flex flex-row justify-start w-[90%] border-2 rounded-lg hidden">
@@ -634,6 +648,115 @@
                         {{ $parent_cycles->links() }}
                 </div>
             </div>
+{{--            @php--}}
+{{--                $name = 'Dodaj cykl produkcji';--}}
+{{--                $button_id = 'add-cycle-2';--}}
+{{--                $id = '2';--}}
+{{--                $bg_classes = 'hidden';--}}
+{{--                $button_text = ''--}}
+{{--            @endphp--}}
+{{--            <x-modal :name="$name" :button_id="$button_id" :id="$id" :bg_classes="$bg_classes" :button_text="$button_text">--}}
+{{--                @if(isset($products) and isset($components) and isset($prod_schemas))--}}
+{{--                    <div class="w-full flex justify-center p-2 flex-col h-[300px] overflow-y-scroll">--}}
+{{--                        @foreach($components as $comp)--}}
+{{--                            <x-list-element class="flex-col">--}}
+{{--                                <div class="w-full flex justify-between items-center">--}}
+{{--                                    <div class="w-full flex justify-left items-center">--}}
+{{--                                        <div class="border-2 inline-block w-[50px] h-[50px] md:w-[70px] md:h-[70px] lg:w-[100px] lg:h-[100px]">--}}
+{{--                                            @if(!empty($comp->image))--}}
+{{--                                                @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp--}}
+{{--                                                <img src="{{asset('storage/'.$path.$comp->image)}}">--}}
+{{--                                            @endif--}}
+{{--                                        </div>--}}
+{{--                                        <p class="inline-block list-element-name ml-[3%]  xl:text-lg text-md">{{$comp->name}} - {{$comp->material}}</p>--}}
+{{--                                    </div>--}}
+{{--                                </div>--}}
+{{--                            </x-list-element>--}}
+{{--                        @endforeach--}}
+{{--                        <div class="w-full border-red-600 border-2">--}}
+{{--                            {{ $components->links() }}--}}
+{{--                        </div>--}}
+{{--                    </div>--}}
+{{--                @endif--}}
+{{--                <div class="flex justify-center text-center">--}}
+{{--                    <button--}}
+{{--                        class="inline-block rounded-b-lg px-6 py-2 md:py-4 text-xs font-medium uppercase w-full text-md md:text-lg xl:text-xl bg-blue-800 hover:bg-blue-950 leading-normal text-white focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-[0_4px_9px_-4px_rgba(0,0,0,0.2)] transition duration-150 ease-in-out hover:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] focus:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] active:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)]"--}}
+{{--                        data-te-ripple-init--}}
+{{--                        data-te-ripple-color="light">--}}
+{{--                        {{ __('Dalej') }}--}}
+{{--                    </button>--}}
+{{--                </div>--}}
+{{--            </x-modal>--}}
+{{--            @php--}}
+{{--                $name = 'Dodaj cykl produkcji';--}}
+{{--                $button_id = 'add-cycle-3';--}}
+{{--                $id = '3';--}}
+{{--                $bg_classes = 'hidden';--}}
+{{--                $button_text = ''--}}
+{{--            @endphp--}}
+{{--            <x-modal :name="$name" :button_id="$button_id" :id="$id" :bg_classes="$bg_classes" :button_text="$button_text">--}}
+{{--                <form method="POST" action="{{ route('production.add-cycle') }}" enctype="multipart/form-data">--}}
+{{--                    @csrf--}}
+{{--                    <div class="flex flex-row justify-center items-center my-16">--}}
+{{--                        <div id="new-cycle" class="cycle w-[80%] rounded-xl bg-white my-5">--}}
+{{--                            <p class="cycle_status hidden"></p>--}}
+{{--                            <p class="cycle_styles hidden"></p>--}}
+{{--                            <dl class="grid grid-cols-4 xl:grid-cols-8 overflow-hidden text-left rounded-xl">--}}
+{{--                                <div class="col-span-4 flex flex-col bg-gray-200/50 xl:border-r-2">--}}
+{{--                                    <dt class="order-first text-sm lg:text-lg font-semibold bg-gray-800 text-white w-[70%] rounded-tl-xl pl-5 py-2 flex flex-row justify-between">--}}
+{{--                                        <input id="new-cycle-cat-input" name="category" type="number" class="hidden">--}}
+{{--                                        <div id="new-cycle-cat" class="p-1">--}}
+{{--                                        </div>--}}
+{{--                                        <div class="text-xs lg:text-sm flex justify-center items-center">--}}
+{{--                                            <div class="p-1 mx-2 text-white bg-blue-800 rounded-md">--}}
+{{--                                                Nowy--}}
+{{--                                            </div>--}}
+{{--                                        </div>--}}
+{{--                                    </dt>--}}
+{{--                                    <dd class=" text-lg xl:text-xl font-semibold tracking-tight text-gray-900 pl-5 py-4"></dd>--}}
+{{--                                </div>--}}
+{{--                                <div class="col-span-2 flex flex-col bg-gray-200/50 border-r">--}}
+{{--                                    <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Planowany start</dt>--}}
+{{--                                    <div class="p-1 flex justify-center items-center h-full">--}}
+{{--                                        <div--}}
+{{--                                            id="exp-end-time-start"--}}
+{{--                                            class="relative w-full"--}}
+{{--                                            data-te-input-wrapper-init--}}
+{{--                                            data-te-format="yyyy-mm-dd">--}}
+{{--                                            <input type="text" name="exp_end_start"--}}
+{{--                                                   class="p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"--}}
+{{--                                                   placeholder="Start"/>--}}
+{{--                                        </div>--}}
+{{--                                    </div>--}}
+{{--                                </div>--}}
+{{--                                <div class="col-span-2 flex flex-col bg-gray-200/50">--}}
+{{--                                    <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Zakładany termin</dt>--}}
+{{--                                    <div class="p-1 flex justify-center items-center h-full">--}}
+{{--                                        <div--}}
+{{--                                            id="exp-end-time-end"--}}
+{{--                                            class="relative w-full"--}}
+{{--                                            data-te-input-wrapper-init--}}
+{{--                                            data-te-format="yyyy-mm-dd">--}}
+{{--                                            <input type="text" name="exp_end_end"--}}
+{{--                                                   class="p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"--}}
+{{--                                                   placeholder="Termin"/>--}}
+{{--                                        </div>--}}
+{{--                                    </div>--}}
+{{--                                </div>--}}
+{{--                            </dl>--}}
+{{--                        </div>--}}
+{{--                    </div>--}}
+{{--                    <div class="text-center">--}}
+{{--                        <button--}}
+{{--                            class="inline-block rounded-b-lg px-6 py-2 md:py-4 text-xs font-medium uppercase w-full text-md md:text-lg xl:text-xl bg-blue-800 hover:bg-blue-950 leading-normal text-white focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-[0_4px_9px_-4px_rgba(0,0,0,0.2)] transition duration-150 ease-in-out hover:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] focus:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] active:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)]"--}}
+{{--                            type="submit"--}}
+{{--                            data-te-ripple-init--}}
+{{--                            data-te-ripple-color="light">--}}
+{{--                            {{ __('Dodaj') }}--}}
+{{--                        </button>--}}
+{{--                    </div>--}}
+{{--                </form>--}}
+{{--            </x-modal>--}}
         @endif
     @endif
 </x-app-layout>

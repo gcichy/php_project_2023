@@ -19,6 +19,7 @@ class ProductionSchemaSeeder extends Seeder
             'production_schema' => 'Pakowanie produktu',
             'description' => '',
             'tasks_count' => 1,
+            'independent' => 1,
             'created_by' => 'system',
             'updated_by' => 'system',
             'created_at' => date('y-m-d h:i:s'),
