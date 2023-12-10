@@ -806,6 +806,7 @@ class ProdSchemaController
         else {
             throw new Exception('Error inserting production_schema: error occurred in ProdSchema->insertProdSchemaProdStd method. Id not found for provided unit.');
         }
+
         if((is_null($duration) and is_null($amount)) or $non_countable) {
             if(ProductionStandard::where('production_schema_id', $schema_id)->first() instanceof ProductionStandard) {
                 ProductionStandard::where('production_schema_id', $schema_id)->delete();
@@ -813,7 +814,7 @@ class ProdSchemaController
         } else {
             $duration = floatval($duration);
             $amount = floatval($amount);
-            if(ProductionStandard::where('production_schema_id', $schema_id)->first() instanceof ProductionStandard) {
+            if(ProductionStandard::where(['production_schema_id' => $schema_id, 'component_id' => null])->first() instanceof ProductionStandard) {
                 DB::table('production_standard')
                     ->where('production_schema_id', $schema_id)
                     ->update([

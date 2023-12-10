@@ -7,6 +7,7 @@ use App\Models\ChildCycleView;
 use App\Models\Component;
 use App\Models\ParentCycleView;
 use App\Models\Product;
+use App\Models\ProductComponent;
 use App\Models\ProductionCycle;
 use App\Models\ProductionSchema;
 use App\Models\StaticValue;
@@ -113,34 +114,59 @@ class ProductionCycleController extends Controller
     {
         $user = Auth::user();
         $users = User::all();
-        if($category == 1) {
+        if($category == 2) {
+            //get components with minutes per one pcs calculated
+            $elements = Component::where('independent',1)
+                ->join('production_standard', 'component.id', '=', 'production_standard.component_id')
+                ->select('component.id', 'component.name', 'component.material', 'component.height', 'component.length',
+                    'component.width', 'component.description', 'component.image',
+                    DB::raw('truncate(60/(1/sum(duration_hours/amount)),2) as minutes_per_pcs'))
+                ->groupBy('component.id', 'component.name', 'component.material', 'component.height', 'component.length',
+                        'component.width','component.description', 'component.image');
             $category_name = 'Materiał';
-            $elements = Component::where('indepentent', 1);
             if(is_string($request->filter_elem)) {
                 $elements = $elements->where('name', 'like', '%'.$request->filter_elem.'%')
                                     ->orWhere('material', 'like', '%'.$request->filter_elem.'%');
             }
             $elements = $elements->paginate(10);
-        } else if($category == 2 ) {
+        } else if($category == 3) {
             $pack_product_id = StaticValue::where('type', 'pack_schema')->select('value')->first();
-            $products = Product::select('id', 'name', 'image', 'material')->paginate(10);
+            $pack_prod_show = (bool) $request->query('pak-prod');
+
+            $products = Product::select('product.id', 'product.name', 'product.image', 'product.material', DB::raw('truncate(60/(amount/duration_hours),2) as minutes_per_pcs'))
+                ->join('production_standard', 'product.id', '=','production_standard.product_id' )
+                ->orderBy('name')->paginate(2,['*'],'pak-prod');
             $category_name = 'Zadanie';
-            $independent_schemas_id = DB::select('select distinct production_schema_id from production_standard pstd where component_id is null');
-            $independent_schemas_id = collect($independent_schemas_id)->map(function ($arr) { return $arr->production_schema_id; })->toArray();
-            $elements = ProductionSchema::whereIn('id',$independent_schemas_id);
+            $union = ProductionSchema::select('id','production_schema', 'description', DB::raw('null as minutes_per_pcs'))
+                ->where('id', $pack_product_id->value);
+            $elements = ProductionSchema::join('production_standard', 'production_schema.id', '=','production_standard.production_schema_id')
+                ->where(['production_standard.component_id' => null,
+                         'production_standard.product_id' => null])
+                ->select('production_schema.id','production_schema.production_schema', 'production_schema.description', DB::raw('truncate(60/(amount/duration_hours),2) as minutes_per_pcs'))
+                ->union($union);
             if(is_string($request->filter_elem)) {
                 $elements = $elements->where('production_schema', 'like', '%' . $request->filter_elem . '%');
             }
-            $elements = $elements->paginate(10);
+            $elements = $elements->paginate(10,['*'],'dodaj-cykl');
         } else {
+            $elements = Product::join('product_component', 'product.id', '=', 'product_component.product_id')
+                ->join('production_standard', 'production_standard.component_id', '=', 'product_component.component_id')
+                ->select('product.id','product.name', 'product.gtin', 'product.description', 'product.material',
+                    'product.height', 'product.length', 'product.width', 'product.color', 'product.image',
+                    'product.barcode_image', 'product.price', 'product.piecework_fee',
+                    DB::raw('truncate(60/(1/sum(duration_hours/amount)),2) as minutes_per_pcs'))
+                ->groupBy('product.id','product.name', 'product.gtin', 'product.description', 'product.material',
+                    'product.height', 'product.length', 'product.width', 'product.color', 'product.image',
+                    'product.barcode_image', 'product.price', 'product.piecework_fee');
+
             $category_name = 'Produkt';
             if(is_string($request->filter_elem)) {
-                $elements = Product::where('name', 'like', '%'.$request->filter_elem.'%')
+                $elements = $elements->where('name', 'like', '%'.$request->filter_elem.'%')
                                     ->orWhere('material', 'like', '%'.$request->filter_elem.'%')
                                     ->paginate(10);
                 ;
             } else {
-                $elements = Product::paginate(10);
+                $elements = $elements->paginate(10);
             }
         }
         return view('production.cycle-add', [
@@ -152,11 +178,87 @@ class ProductionCycleController extends Controller
             'filter_elem' => $request->filter_elem,
             'products' => isset($products)? $products : null,
             'pack_product_id' => isset($pack_product_id )? $pack_product_id : null,
+            'pack_prod_show' => isset($pack_prod_show)? $pack_prod_show : false,
             'storage_path_products' => 'products',
             'storage_path_components' => 'components',
         ]);
     }
 
+    public function cycleStore(Request $request): RedirectResponse
+    {
+        $user = Auth::user();
+        $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
+
+        $request->validate([
+            'id' => ['required'],
+            'exp_start' => ['date', 'required'],
+            'exp_end' => ['date','required','after:yesterday', 'after_or_equal:exp_start'],
+            'pack_prod_id' => ['nullable', 'integer'],
+            'comment' => ['max:255'],
+        ],
+            [
+                'id.required' => 'Aby dodać cykl wybierz produkt/materiał/zadanie.',
+                'exp_start.required' => 'Aby dodać cykl ustaw jego przewidywany start.',
+                'exp_start.date' => "Pole 'Start' powinno być datą w formacie 'yyyy-mm-dd'.",
+                'exp_end.after' => "'Termin' musi być ustawiony w przyszłości.",
+                'exp_end.after_or_equal' => "'Termin' musi być później niż 'Start'",
+                'exp_end.required' => 'Aby dodać cykl ustaw termin wykonania.',
+                'exp_end.date' => "Pole 'Termin' powinno być datą w formacie 'yyyy-mm-dd'.",
+                'comment.max' => 'Pole uwagi zawiera zbyt dużo znaków.',
+            ]);
+
+
+        $insert_result = $this->insertProductionCycle($request, $employee_no);
+        if (array_key_exists('ERROR', $insert_result)) {
+            $insert_result = $insert_result['ERROR'];
+            return back()->with('status_err', $insert_result)->withInput();
+        }
+        dd($insert_result);
+        return back();
+    }
+
+
+    private function insertProductionCycle($request, string $employee_no) : array
+    {
+        $category = intval($request->category);
+        $id = intval($request->id);
+        if(!in_array($category, [1,2,3])) {
+            Log::channel('error')->error('Error inserting cycle: incorrect $request->category value: '.$request->category, [
+                'employeeNo' => $employee_no,
+            ]);
+            return array('ERROR' => 'Nie udało się dodać cyklu. Błąd systemu przy ustalaniu kategorii.');
+        }
+        try {
+            //product
+            if($category == 1) {
+                if(!Product::find($id) instanceof Product) {
+                    Log::channel('error')->error('Error inserting cycle: incorrect $request->id value: '.$request->id.'. Product with provided id not found.', [
+                        'employeeNo' => $employee_no,
+                    ]);
+                    return array('ERROR' => 'Nie udało się dodać cyklu. Błąd systemu.');
+                }
+
+                $parent_id = DB::table('production_cycle')->insertGetId([
+                    'level' => 1,
+                    'product_id' => $id,
+                    'expected_start_time' => $request->exp_start.' 00:00:00',
+                    'expected_end_time' => $request->exp_end.' 23:59:59',
+                    'created_by' => $employee_no,
+                    'updated_by' => $employee_no,
+                    'created_at' => date('y-m-d h:i:s'),
+                    'updated_at' => date('y-m-d h:i:s'),]
+
+                );
+                $components = ProductComponent::where('product_id', $id);
+
+            }
+        }
+        catch(Exception $e) {
+
+        }
+
+        return [];
+    }
     private function filterByExpectedEndTimeParentCycles(Request $request): array
     {
         if(is_null($request->exp_end_start) or is_null($request->exp_end_end)) {

@@ -78,7 +78,7 @@
                     // $("#modal-background-2, #modal-2").removeClass("hidden");
                     // $(this).removeClass('bg-blue-800 ring-2');
                     // $('#new-cycle-cat').text($(this).text());
-                    let category = 0;
+                    let category = 3;
                     if($(this).attr('id') === 'category-1') {
                         category = 1;
                     } else if($(this).attr('id') === 'category-2') {
@@ -151,13 +151,13 @@
                 @endphp
                 <x-modal :name="$name" :button_id="$button_id" :id="$id" :bg_classes="$bg_classes" :button_text="$button_text">
                     <div class="flex flex-row justify-center items-center my-16">
-                        <x-nav-button id="category-0" class="next-modal text-sm bg-blue-450 hover:bg-blue-800">
+                        <x-nav-button id="category-1" class="next-modal text-sm bg-blue-450 hover:bg-blue-800">
                             {{ __('Produkt') }}
                         </x-nav-button>
-                        <x-nav-button id="category-1" class="next-modal text-sm bg-blue-450 hover:bg-blue-800 ml-4 lg:ml-10">
+                        <x-nav-button id="category-2" class="next-modal text-sm bg-blue-450 hover:bg-blue-800 ml-4 lg:ml-10">
                             {{ __('Materiał') }}
                         </x-nav-button>
-                        <x-nav-button id="category-2" class="next-modal text-sm bg-blue-450 hover:bg-blue-800 ml-4 lg:ml-10">
+                        <x-nav-button id="category-3" class="next-modal text-sm bg-blue-450 hover:bg-blue-800 ml-4 lg:ml-10">
                             {{ __('Zadanie') }}
                         </x-nav-button>
                         <form method="POST" action="{{ route('production.add-cycle-wrapper') }}" enctype="multipart/form-data">
