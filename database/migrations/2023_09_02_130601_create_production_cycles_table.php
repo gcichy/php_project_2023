@@ -36,6 +36,7 @@ return new class extends Migration
                 ->constrained('production_cycle')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
+            $table->unsignedSmallInteger('sequence_no')->nullable();
             $table->dateTime('start_time')->nullable();
             $table->dateTime('end_time')->nullable();
             $table->dateTime('expected_start_time')->nullable();

@@ -18,6 +18,7 @@ class ProductionCycle extends Model
         'product_id',                       //id of product for which production cycle is created
         'component_id',                     //if production cycle is created for component (not for product), then component id must be supplied
         'parent_id',                        //if cycle is created for product, then subcycles are created for its components and prod schemas
+        'sequence_no',                      //if needed determines order of execution
         'start_time',                       //cycle real start time
         'end_time',                         //cycle real end time
         'expected_start_time',              //cycle expected start time - determined on creation

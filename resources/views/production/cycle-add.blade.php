@@ -1,6 +1,11 @@
 <x-app-layout>
     @if(isset($category) and isset($category_name) and isset($elements))
         <script type="module">
+
+            function checkActive() {
+
+            }
+
             function formatTimeSpent(timeSpent) {
                 if (timeSpent < 60) {
                     let duration = "0:"
@@ -14,6 +19,15 @@
                         duration += "0";
                     }
                     return duration + (timeSpent % 60).toString();
+                }
+            }
+
+            function getPackProdDuration() {
+                let prod_id = $('.pack-prod-row.active');
+                if(prod_id.length > 0) {
+                    prod_id = prod_id.attr('id').split('-')[3];;
+                    let element = $('#pack-prod-row-'+prod_id);
+                    return element.find('.pack-prod-minutes-per-pcs').text();
                 }
             }
 
@@ -35,30 +49,39 @@
                     if (is_active && !packProdRowClicked) {
                         if(category == 3 && id == pack_product_id) {
                             packProdTable.addClass('hidden');
+                            let activeProdRow = packProdTable.find('.active')
+                            if(activeProdRow.length > 0) {
+                                activeProdRow.removeClass('bg-gray-800 text-white active').addClass('bg-gray-200 text-gray-600');
+                            }
                         }
                         else {
                             removeActiveProdRows();
                             if(!packProdTable.hasClass('hidden')) {
                                 packProdTable.addClass('hidden');
                             }
-                            $('#new-cycle-id-input').val(null);
-                            $('#new-cycle-name-input').val(null).removeClass('bg-blue-150 ring-2 ring-blue-600');
                         }
+                        $('#new-cycle-id-input').val(null);
+                        $('#new-cycle-name-input').val(null).removeClass('bg-blue-150 ring-2 ring-blue-600');
                         $('.list-element').removeClass('active-list-elem');
+                        $('#new-cycle-exp-duration').text('0:00');
 
                     } else if(!packProdRowClicked){
                         if(category == 3 && id == pack_product_id) {
                             packProdTable.removeClass('hidden');
+                            $('#new-cycle-id-input').val(null);
+                            $('#new-cycle-name-input').val(null).removeClass('bg-blue-150 ring-2 ring-blue-600');
                         } else {
                             removeActiveProdRows();
                             if(!packProdTable.hasClass('hidden')) {
                                 packProdTable.addClass('hidden');
                             }
-                            console.log($(this).find('.list-element-id'));
                             $('#new-cycle-id-input').val($(this).find('.list-element-id').val());
                             $('#new-cycle-name-input').val($(this).find('.list-element-name').text());
                             $('#new-cycle-name-input').addClass('bg-blue-150 ring-2 ring-blue-600');
                         }
+                        let minutesPerPcs = $(this).find('.list-element-minute-per-pcs').val();
+                        let duration = formatTimeSpent(Math.ceil($('#new-cycle-amount-input').val() * minutesPerPcs));
+                        $('#new-cycle-exp-duration').text(duration);
                     }
                 });
 
@@ -70,14 +93,18 @@
                         let parentListElem = $(this).closest('.list-element')
                         let name = parentListElem.find('.list-element-name').text();
                         name += ': ' + $(this).find('.pack-prod-name').text().trim();
+                        let minutesPerPcs = getPackProdDuration();
+                        let duration = formatTimeSpent(Math.ceil($('#new-cycle-amount-input').val() * minutesPerPcs));
+                        $('#new-cycle-exp-duration').text(duration);
                         $('#new-cycle-name-input').val(name).addClass('bg-blue-150 ring-2 ring-blue-600');
                         $('#new-cycle-id-input').val(parentListElem.find('.list-element-id').val());
-                        $('#new-cycle-pack-prod-id-input').val($(this).find('.pack-prod-id').text())
+                        $('#new-cycle-pack-prod-id-input').val($(this).find('.pack-prod-id').text());
                     } else {
                         $(this).removeClass('bg-gray-800 text-white active').addClass('bg-gray-200 text-gray-600');
                         $('#new-cycle-id-input').val(null);
                         $('#new-cycle-name-input').val(null).removeClass('bg-blue-150 ring-2 ring-blue-600');
-                        $('#new-cycle-pack-prod-id-input').val(null)
+                        $('#new-cycle-pack-prod-id-input').val(null);
+                        $('#new-cycle-exp-duration').text('0:00');
                     }
                 });
 
@@ -85,7 +112,14 @@
                     let id = $('#new-cycle-id-input').val();
                     let element = $('#elem-'+id);
                     if(element.length > 0) {
-                        let minutesPerPcs = element.find('.list-element-minute-per-pcs').val();
+                        let category = $('#new-cycle-cat-input').val();
+                        let pack_product_id = 1;
+                        let minutesPerPcs = 0;
+                        if(category == 3 && id == pack_product_id) {
+                             minutesPerPcs = getPackProdDuration();
+                        } else {
+                            minutesPerPcs = element.find('.list-element-minute-per-pcs').val();
+                        }
                         let duration = formatTimeSpent(Math.ceil($(this).val() * minutesPerPcs));
                         $('#new-cycle-exp-duration').text(duration);
                     }
@@ -125,7 +159,7 @@
                                     <input type="number" name="id" id="new-cycle-id-input" class="hidden">
                                     <input type="number" name="pack_prod_id" id="new-cycle-pack-prod-id-input" class="hidden">
                                     <div id="new-cycle-cat" class="p-1">
-                                        {{$category_name}}
+{{$category_name}}
                                     </div>
                                     <div class="text-xs lg:text-sm flex justify-center items-center">
                                         <div class="p-1 mx-2 text-white bg-blue-800 rounded-md">
@@ -148,7 +182,7 @@
                                          data-te-datepicker-init
                                          data-te-format="yyyy-mm-dd"
                                          data-te-input-wrapper-init>
-                                        <input name="exp_start"
+                                        <input name="exp_start" value="{{old('exp_start')}}"
                                                class="p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
                                                placeholder="Start"/>
                                     </div>
@@ -161,7 +195,7 @@
                                         data-te-datepicker-init
                                          data-te-format="yyyy-mm-dd"
                                         data-te-input-wrapper-init>
-                                        <input name="exp_end"
+                                        <input name="exp_end" value="{{old('exp_end')}}"
                                                class="p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
                                                placeholder="Termin"/>
                                     </div>
@@ -175,7 +209,9 @@
                                         <x-slot name="options">
                                             @if(isset($users))
                                                 @foreach($users as $u)
-                                                    <option value="{{$u->id}}">{{$u->employeeNo}}</option>
+                                                    <option value="{{$u->id}}" {{(old($unique_id) and str_contains(old($unique_id), $u->id))? 'selected' : ''}}>
+                                                        {{$u->employeeNo}}
+                                                    </option>
                                                 @endforeach
                                             @else
                                                 <option value=""></option>
@@ -189,7 +225,7 @@
                                 <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2 border-r">Ilość (szt)</dt>
                                 <div class="p-1 flex justify-center flex-row items-center h-full">
                                     <div class="w-full p-1 flex justify-center items-center h-full w-full">
-                                        <input id="new-cycle-amount-input" type="number" min="0"
+                                        <input id="new-cycle-amount-input" type="number" min="0" value="{{old('amount')}}"
                                                   class="xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
                                                   name="amount" placeholder="Ilość (szt)">
                                     </div>
@@ -215,6 +251,7 @@
                                         <textarea id="new-cycle-comm-input"
                                                class="xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
                                                   name="{{$unique_id}}" placeholder="Dodtakowe uwagi">
+                                            {{old($unique_id)}}
                                         </textarea>
                                     </div>
                                 </div>
@@ -277,8 +314,9 @@
                                                 </thead>
                                                 <tbody>
                                                 @foreach($products as $prod)
-                                                    <tr class="pack-prod-row bg-gray-200 font-medium text-gray-600 border border-slate-300 ">
+                                                    <tr id="pack-prod-row-{{$prod->id}}" class="pack-prod-row bg-gray-200 font-medium text-gray-600 border border-slate-300 ">
                                                         <td class="pack-prod-id hidden">{{$prod->id}}</td>
+                                                        <td class="pack-prod-minutes-per-pcs hidden">{{$prod->minutes_per_pcs}}</td>
                                                         <td class="pack-prod-name px-6 py-4 whitespace-nowrap sm:rounded-md">
                                                             {{$prod->name}}
                                                         </td>
