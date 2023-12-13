@@ -39,7 +39,7 @@
 					</svg>
                     </button>
                     <!-- Dropdown menu -->
-                    <div class="hidden z-50 my-4 w-56 text-sm lg:text-lg list-none bg-white divide-y divide-gray-100 dark:bg-gray-700 dark:divide-gray-600 " id="dropdown">
+                    <div class="hidden z-[100] my-4 w-56 text-sm lg:text-lg list-none bg-white divide-y divide-gray-100 dark:bg-gray-700 dark:divide-gray-600 " id="dropdown">
                         <div class="py-3 px-4">
                             <span class="block font-semibold text-gray-900 dark:text-white">{{$user->firstName}} {{$user->lastName}}</span>
                             <span class="block text-gray-900 truncate dark:text-white">{{$user->role}}</span>

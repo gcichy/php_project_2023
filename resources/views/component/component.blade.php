@@ -124,14 +124,15 @@
 {{--                </button>--}}
                 @php
                     $name = 'materiał';
-                    $route = 'component.destroy';
+                    $route = route('component.destroy');
                     $button_id = 'remove-comp-modal';
                     $id = '2';
                     $remove_elem_class = 'element-remove';
-                    $remove_elem_id = 'comp-remove-'
+                    $remove_elem_id = 'comp-remove-';
+                    $disabled = 'disabled';
                 @endphp
 {{--                <x-remove-modal-button :name="__('Usuń')" :id="$button_id" :remove_elem_class="$remove_elem_class" :remove_elem_id="$remove_elem_id"></x-remove-modal-button>--}}
-                <x-remove-modal :name="$name" :button_id="$button_id" :route="$route" :id="$id" :remove_elem_class="$remove_elem_class" :remove_elem_id="$remove_elem_id">
+                <x-remove-modal :name="$name" :button_id="$button_id" :route="$route" :id="$id" :remove_elem_class="$remove_elem_class" :remove_elem_id="$remove_elem_id" :disabled="$disabled">
                     @foreach($components as $comp)
                         <div class="{{$remove_elem_class}} hidden" id="{{$remove_elem_id}}{{$comp->id}}">
                             <x-list-element class="flex-col">

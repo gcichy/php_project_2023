@@ -121,13 +121,14 @@
                         </x-nav-button>
                         @php
                             $name = 'produkt';
-                            $route = 'product.destroy';
+                            $route = route('product.destroy');
                             $button_id = 'remove-prod-modal';
                             $id = '2';
                             $remove_elem_class = 'element-remove';
                             $remove_elem_id = 'product-remove-';
+                            $disabled = 'disabled';
                         @endphp
-                        <x-remove-modal :name="$name" :button_id="$button_id" :route="$route" :id="$id" :remove_elem_class="$remove_elem_class" :remove_elem_id="$remove_elem_id">
+                        <x-remove-modal :name="$name" :button_id="$button_id" :route="$route" :id="$id" :remove_elem_class="$remove_elem_class" :remove_elem_id="$remove_elem_id" :disabled="$disabled">
                             @foreach($products as $prod)
                                 <div class="{{$remove_elem_class}} hidden" id="{{$remove_elem_id}}{{$prod->id}}">
                                     <x-list-element class="flex-col">

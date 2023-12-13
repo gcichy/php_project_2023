@@ -444,6 +444,7 @@ class ProductController
 
                 DB::beginTransaction();
 
+                ProductionStandard::where('product_id', $prod_id)->delete();
                 ProductComponent::where('product_id', $prod_id)->delete();
 
                 $instr= Instruction::where('product_id',$prod_id)

@@ -1,4 +1,4 @@
-<div class="mt-6 flex flex-col xl:flex-row border-gray-300 xl:bg-white justify-between items-center z-[100]"
+<div class="mt-6 flex flex-col xl:flex-row border-gray-300 xl:bg-white justify-between items-center z-[50]"
      data-te-sticky-init
      data-te-sticky-offset="61"
      data-te-sticky-delay="90"

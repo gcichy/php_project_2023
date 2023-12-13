@@ -123,13 +123,14 @@
                     </x-nav-button>
                     @php
                         $name = 'zadanie';
-                        $route = 'schema.destroy';
+                        $route = route('schema.destroy');
                         $button_id = 'remove-schema-modal';
                         $id = '1';
                         $remove_elem_class = 'element-remove';
-                        $remove_elem_id = 'schema-remove-'
+                        $remove_elem_id = 'schema-remove-';
+                        $disabled = 'disabled';
                     @endphp
-                   <x-remove-modal :name="$name" :button_id="$button_id" :route="$route" :id="$id" :remove_elem_class="$remove_elem_class" :remove_elem_id="$remove_elem_id">
+                   <x-remove-modal :name="$name" :button_id="$button_id" :route="$route" :id="$id" :remove_elem_class="$remove_elem_class" :remove_elem_id="$remove_elem_id" :disabled="$disabled">
                         @foreach($schema_data as $prod_schema_tasks)
                             @if(count($prod_schema_tasks) > 0)
                                 <div class="{{$remove_elem_class}} hidden" id="{{$remove_elem_id}}{{$prod_schema_tasks[0]->prod_schema_id}}">

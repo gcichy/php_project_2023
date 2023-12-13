@@ -17,7 +17,7 @@
 
                     <div>
                         <x-primary-button>
-                            {{ __('Wyslij ponownie') }}
+                            {{ __('Wyślij ponownie') }}
                         </x-primary-button>
                     </div>
                 </form>

@@ -183,7 +183,7 @@
                                          data-te-format="yyyy-mm-dd"
                                          data-te-input-wrapper-init>
                                         <input name="exp_start" value="{{old('exp_start')}}"
-                                               class="p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                               class="exp-start-time p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
                                                placeholder="Start"/>
                                     </div>
                                 </div>
@@ -191,7 +191,7 @@
                             <div class="col-span-2 flex flex-col bg-gray-200/50 xl:rounded-tr-xl">
                                 <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2 xl:rounded-tr-xl">Zakładany termin</dt>
                                 <div class="p-1 flex justify-center items-center h-full">
-                                    <div id="exp-end-time" class="relative w-full xl:mt-4"
+                                    <div id="exp-end-time" class="exp-end-time relative w-full xl:mt-4"
                                         data-te-datepicker-init
                                          data-te-format="yyyy-mm-dd"
                                         data-te-input-wrapper-init>
@@ -209,7 +209,7 @@
                                         <x-slot name="options">
                                             @if(isset($users))
                                                 @foreach($users as $u)
-                                                    <option value="{{$u->id}}" {{(old($unique_id) and str_contains(old($unique_id), $u->id))? 'selected' : ''}}>
+                                                    <option value="{{$u->id}}" {{(old($unique_id) and preg_match("/(^|,)$u->id($|,)/",old($unique_id)))? 'selected' : ''}}>
                                                         {{$u->employeeNo}}
                                                     </option>
                                                 @endforeach

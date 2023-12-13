@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('production_cycle', function (Blueprint $table) {
             $table->id();
             $table->smallInteger('level');
+            $table->smallInteger('category');
             $table->foreignId('production_schema_id')
                 ->nullable()
                 ->constrained('production_schema')

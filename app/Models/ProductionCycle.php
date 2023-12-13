@@ -14,6 +14,7 @@ class ProductionCycle extends Model
      */
     protected $fillable = [
         'level',                            //determines hierarchy: 1 - parent (prod,comp,schema), 2 - child (comp, schema), 3 - subchild (schema)
+        'category',                         //determines if cycle is fro product, component or prod_schema
         'production_schema_id',             //id of production schema for which production cycle is created
         'product_id',                       //id of product for which production cycle is created
         'component_id',                     //if production cycle is created for component (not for product), then component id must be supplied

@@ -113,39 +113,6 @@
             $name = "Szczegóły cyklu";
         @endphp
         <x-information-panel :viewName="$name">
-            {{--    routing for details set in java script above   --}}
-            @if(in_array($user->role,array('admin','manager')))
-                <x-nav-button class="on-select edit bg-orange-500 hover:bg-orange-800 ml-1 lg:ml-3">
-                    {{ __('Edytuj') }}
-                </x-nav-button>
-{{--                @php--}}
-{{--                    $name = 'produkt';--}}
-{{--                    $route = 'product.destroy';--}}
-{{--                    $button_id = 'remove-prod-modal';--}}
-{{--                    $id = '2';--}}
-{{--                    $remove_elem_class = 'element-remove';--}}
-{{--                    $remove_elem_id = 'product-remove-';--}}
-{{--                @endphp--}}
-{{--                <x-remove-modal :name="$name" :button_id="$button_id" :route="$route" :id="$id" :remove_elem_class="$remove_elem_class" :remove_elem_id="$remove_elem_id">--}}
-{{--                    @foreach($products as $prod)--}}
-{{--                        <div class="{{$remove_elem_class}} hidden" id="{{$remove_elem_id}}{{$prod->id}}">--}}
-{{--                            <x-list-element class="flex-col">--}}
-{{--                                <div class="w-full flex justify-between items-center">--}}
-{{--                                    <div class="w-full flex justify-left items-center">--}}
-{{--                                        <div class="border-2 inline-block w-[50px] h-[50px] md:w-[70px] md:h-[70px] lg:w-[100px] lg:h-[100px]">--}}
-{{--                                            @if(!empty($prod->image))--}}
-{{--                                                @php $path = isset($storage_path_products) ? $storage_path_products.'/' : ''; @endphp--}}
-{{--                                                <img src="{{asset('storage/'.$path.$prod->image)}}">--}}
-{{--                                            @endif--}}
-{{--                                        </div>--}}
-{{--                                        <p class="inline-block list-element-name ml-[3%]  xl:text-lg text-md">{{$prod->name}} - {{$prod->material}}</p>--}}
-{{--                                    </div>--}}
-{{--                                </div>--}}
-{{--                            </x-list-element>--}}
-{{--                        </div>--}}
-{{--                    @endforeach--}}
-{{--                </x-remove-modal>--}}
-            @endif
         </x-information-panel>
         @if(isset($p_cycle) and isset($child_cycles))
             <div class="flex flex-col justify-center items-center w-full mt-4">
@@ -156,7 +123,7 @@
                         <div class="col-span-4 flex flex-col bg-gray-200/50 xl:border-r-2">
                             <dt class="order-first text-sm lg:text-lg font-semibold bg-gray-800 text-white w-[45%] xl:w-1/2 rounded-tl-xl pl-5 py-2 flex flex-row justify-between">
                                 <div class="p-1">
-                                    {{($p_cycle->category == 0)? 'Produkt' : (($p_cycle->category == 1)? 'Materiał' : 'Zadanie')}}
+                                    {{($p_cycle->category == 1)? 'Produkt' : (($p_cycle->category == 2)? 'Materiał' : 'Zadanie')}}
                                 </div>
                                 <div class="text-xs lg:text-sm flex justify-center items-center">
                                     <div class="cycle-tag p-1 mx-2 rounded-md"></div>
@@ -208,8 +175,8 @@
                             </div>
                         </div>
                         <div class="col-span-4 xl:col-span-8 w-full bg-gray-300 py-2 flex flex-row justify-end">
-                            <button type="button" id="cycle-details-{{$p_cycle->cycle_id}}" class="cycle-details mr-4 text-gray-800 bg-white hover:bg-gray-100 focus:outline-none font-medium rounded-sm text-xs lg:text-sm px-2 py-0.5">
-                                Szczegóły
+                            <button type="button" id="cycle-details-{{$p_cycle->cycle_id}}" class="cycle-details mr-4 text-gray-800 bg-white uppercase hover:bg-gray-100 focus:outline-none font-medium rounded-md text-xs lg:text-sm px-2 py-1 shadow-md">
+                                Statystyki
                             </button>
                         </div>
 {{--                            ROW 2--}}
@@ -322,15 +289,6 @@
                                 </dd>
                             </div>
                         </div>
-                        <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2 hidden">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">defekty (szt)</dt>
-                            <div class="w-full h-full flex justify-center items-center">
-                                <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                    {{$p_cycle->defect_amount}}
-                                </dd>
-                            </div>
-                        </div>
-{{--                            ROW 4--}}
                         <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
                             @php
                                 $expected_amount_time_frame = 'Ilość na jednostkę czasu(szt)';
@@ -344,6 +302,14 @@
                             <div class="w-full h-full flex justify-center items-center">
                                 <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
                                     {{$p_cycle->expected_amount_per_time_frame}}
+                                </dd>
+                            </div>
+                        </div>
+                        <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2 hidden">
+                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">defekty (szt)</dt>
+                            <div class="w-full h-full flex justify-center items-center">
+                                <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
+                                    {{$p_cycle->defect_amount}}
                                 </dd>
                             </div>
                         </div>
@@ -364,6 +330,14 @@
                             </div>
                         </div>
                         <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
+                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Oczek. czas wyk. (h)</dt>
+                            <div class="w-full h-full flex justify-center items-center">
+                                <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
+                                    {{$p_cycle->expected_time_to_complete_in_hours}}
+                                </dd>
+                            </div>
+                        </div>
+                        <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
                             <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Defekty (%)</dt>
                             <div class="w-full h-full flex justify-center items-center">
                                 <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
@@ -379,9 +353,9 @@
 {{--                            ROW 6 - product photo--}}
                         @if(!is_null($p_cycle->image))
                             @php $path = ''; @endphp
-                            @if($p_cycle->category == 0)
+                            @if($p_cycle->category == 1)
                                 @php $path = isset($storage_path_products) ? $storage_path_products.'/' : ''; @endphp
-                            @elseif($p_cycle->category == 1)
+                            @elseif($p_cycle->category == 2)
                                 @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
                             @endif
                                 <div class="additional-info col-span-4 xl:col-span-2 flex justify-center bg-gray-200/50 border-r-2 hidden p-2">
@@ -473,7 +447,7 @@
                 <div class="w-[95%]">
                     <div class="w-full text-lg lg:text-xl font-semibold bg-gray-800 text-white rounded-t-xl pl-5 py-2 flex flex-row justify-between">
                         <div class="p-3">
-                            {{($p_cycle->category == 0)? 'Materiały i zadania' : 'Zadania'}}
+                            {{($p_cycle->category == 1)? 'Materiały i zadania' : 'Zadania'}}
                         </div>
                     </div>
                     <div class="relative overflow-x-auto shadow-md sm:rounded-b-xl">
@@ -523,6 +497,9 @@
                                     Oczek. ilość/ dzień (szt)
                                 </th>
                                 <th scope="col" class="px-6 py-3">
+                                    Oczek. czas wyk. (h)
+                                </th>
+                                <th scope="col" class="px-6 py-3">
                                     Defekty (szt)
                                 </th>
                                 <th scope="col" class="px-6 py-3">
@@ -542,7 +519,7 @@
                                 @if($c_cycle != $current_id)
 {{--                                    coś tu na odróżnienie--}}
                                 @endif
-                                <tr class="{{$c_cycle->category == 1 ? 'bg-gray-200' : 'bg-white' }} font-medium text-gray-600 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border border-slate-300 ">
+                                <tr class="{{$c_cycle->category == 2 ? 'bg-gray-200' : 'bg-white' }} font-medium text-gray-600 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border border-slate-300 ">
                                     <td class="px-1 py-1 rounded-md">
                                         <div class="flex justify-center">
                                             <a id="open-modal-{{$c_cycle->cycle_id}}" type="button"
@@ -593,10 +570,10 @@
 {{--                                        </div>--}}
 {{--                                    </th>--}}
                                     <td class="px-6 py-4 whitespace-nowrap rounded-md">
-                                        {{$c_cycle->category == 1? 'Materiał' : 'Zadanie'}}
+                                        {{$c_cycle->category == 2? 'Materiał' : 'Zadanie'}}
                                     </td>
                                     <td class="p-1 rounded-md">
-                                        @if(!is_null($c_cycle->image) and $c_cycle->category == 1)
+                                        @if(!is_null($c_cycle->image) and $c_cycle->category == 2)
                                             <div class="flex justify-center">
                                                 <div class="max-w-[100px]">
                                                     <img src="{{asset('storage/components/'.$c_cycle->image)}}" alt="">
@@ -611,7 +588,7 @@
                                         {{$c_cycle->productivity.'%'}}
                                     </td>
                                     <td class="px-6 py-4 text-center">
-                                        {{$p_cycle->time_spent_in_hours}}
+                                        {{$c_cycle->time_spent_in_hours}}
                                     </td>
                                     <td class="px-6 py-4 text-center {{floatval($p_cycle->productivity) >= 100? 'text-green-450' : 'text-red-500'}}">
                                         {{$c_cycle->current_amount}}
@@ -633,6 +610,9 @@
                                     </td>
                                     <td class="px-6 py-4">
                                         {{$c_cycle->expected_amount_per_time_frame}}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        {{$c_cycle->expected_time_to_complete_in_hours}}
                                     </td>
                                     <td class="px-6 py-4 text-center">
                                         {{$c_cycle->defect_amount}}

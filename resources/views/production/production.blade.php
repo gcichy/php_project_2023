@@ -5,12 +5,12 @@
             cycles.each(function() {
                 let styles = $(this).find('.cycle_styles').text();
                 styles = styles.split(';');
+                console.log(styles);
                 if(styles.length === 2) {
                     let cycleClasses = '';
                     let cycleTagBg = '';
                     let cycleTagText = '';
                     let status = parseInt(styles[0]);
-
                     if(status === 0) {
                         cycleClasses = 'ring-green-450 ring-4 ring-offset-4';
                         cycleTagBg = 'bg-green-450';
@@ -113,7 +113,6 @@
                         additionalInfo.addClass('hidden');
                     }
                 }
-
             });
 
         });
@@ -133,6 +132,13 @@
                 </p>
             </div>
         @endif
+        @if(session('status_err'))
+            <div class="flex justify-center items-center">
+                <p class="w-full !text-md lg:text-xl font-medium text-center p-6 text-red-700 space-y-1">
+                    {{session('status_err')}}
+                </p>
+            </div>
+        @endif
         @php
             $name = "Produkcja";
         @endphp
@@ -141,37 +147,32 @@
             <x-nav-button  id="filter-btn" class="on-select details bg-yellow-300 hover:bg-yellow-600">
                 {{ __('Filtry') }}
             </x-nav-button>
-            @if(in_array($user->role,array('admin','manager')))
-                @php
-                    $name = 'Dodaj cykl produkcji';
-                    $button_id = 'add-cycle-1';
-                    $id = '1';
-                    $bg_classes = 'bg-green-450 hover:bg-green-700';
-                    $button_text = 'Dodaj'
-                @endphp
-                <x-modal :name="$name" :button_id="$button_id" :id="$id" :bg_classes="$bg_classes" :button_text="$button_text">
-                    <div class="flex flex-row justify-center items-center my-16">
-                        <x-nav-button id="category-1" class="next-modal text-sm bg-blue-450 hover:bg-blue-800">
-                            {{ __('Produkt') }}
-                        </x-nav-button>
-                        <x-nav-button id="category-2" class="next-modal text-sm bg-blue-450 hover:bg-blue-800 ml-4 lg:ml-10">
-                            {{ __('Materiał') }}
-                        </x-nav-button>
-                        <x-nav-button id="category-3" class="next-modal text-sm bg-blue-450 hover:bg-blue-800 ml-4 lg:ml-10">
-                            {{ __('Zadanie') }}
-                        </x-nav-button>
-                        <form method="POST" action="{{ route('production.add-cycle-wrapper') }}" enctype="multipart/form-data">
-                            @csrf
-                            <input id="new-category" name="category" class="hidden" type="number">
-                            <button id="add-cycle-sumbit" type="submit" class="hidden">
-                            </button>
-                        </form>
-                    </div>
-                </x-modal>
-                <x-nav-button class="on-select edit bg-orange-500 hover:bg-orange-800 ml-1 lg:ml-3">
-                    {{ __('Edytuj') }}
-                </x-nav-button>
-            @endif
+            @php
+                $name = 'Dodaj cykl produkcji';
+                $button_id = 'add-cycle';
+                $id = '';
+                $bg_classes = 'bg-green-450 hover:bg-green-700';
+                $button_text = 'Dodaj'
+            @endphp
+            <x-modal :name="$name" :button_id="$button_id" :id="$id" :bg_classes="$bg_classes" :button_text="$button_text">
+                <div class="flex flex-row justify-center items-center my-16">
+                    <x-nav-button id="category-1" class="next-modal text-sm bg-blue-450 hover:bg-blue-800">
+                        {{ __('Produkt') }}
+                    </x-nav-button>
+                    <x-nav-button id="category-2" class="next-modal text-sm bg-blue-450 hover:bg-blue-800 ml-4 lg:ml-10">
+                        {{ __('Materiał') }}
+                    </x-nav-button>
+                    <x-nav-button id="category-3" class="next-modal text-sm bg-blue-450 hover:bg-blue-800 ml-4 lg:ml-10">
+                        {{ __('Zadanie') }}
+                    </x-nav-button>
+                    <form method="POST" action="{{ route('production.add-cycle-wrapper') }}" enctype="multipart/form-data">
+                        @csrf
+                        <input id="new-category" name="category" class="hidden" type="number">
+                        <button id="add-cycle-sumbit" type="submit" class="hidden">
+                        </button>
+                    </form>
+                </div>
+            </x-modal>
         </x-information-panel>
         @if(isset($parent_cycles) and isset($users) and isset($filt_items))
             <form method="POST" action="{{ route('production.filter') }}" enctype="multipart/form-data">
@@ -258,14 +259,13 @@
                                     Termin od
                                 </a>
                                 <div class="p-1 flex justify-center items-center h-full">
-                                    <div
-                                        id="exp-end-time-start"
-                                        class="relative w-full"
-                                        data-te-input-wrapper-init
-                                        data-te-format="yyyy-mm-dd">
-                                        <input type="text" name="exp_end_start"
-                                            class="p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
-                                            placeholder="Termin od" value="{{isset($filt_start_time)? $filt_start_time : null}}"/>
+                                    <div id="exp-start-time" class="relative w-full xl:mt-4"
+                                         data-te-datepicker-init
+                                         data-te-format="yyyy-mm-dd"
+                                         data-te-input-wrapper-init>
+                                        <input name="exp_start" value="{{isset($filt_start_time)? $filt_start_time : null}}"
+                                               class="exp-start-time p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                               placeholder="Start"/>
                                     </div>
                                 </div>
                             </div>
@@ -274,14 +274,13 @@
                                     Termin do
                                 </a>
                                 <div class="p-1 flex justify-center items-center h-full">
-                                    <div
-                                        id="exp-end-time-end"
-                                        class="relative w-full"
-                                        data-te-input-wrapper-init
-                                        data-te-format="yyyy-mm-dd">
-                                        <input type="text" name="exp_end_end"
-                                            class="p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
-                                            placeholder="Termin do" value="{{isset($filt_end_time)? $filt_end_time : null}}"/>
+                                    <div id="exp-end-time" class="exp-end-time relative w-full xl:mt-4"
+                                         data-te-datepicker-init
+                                         data-te-format="yyyy-mm-dd"
+                                         data-te-input-wrapper-init>
+                                        <input name="exp_end" value="{{isset($filt_end_time)? $filt_end_time : null}}"
+                                               class="p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                               placeholder="Termin"/>
                                     </div>
                                 </div>
                             </div>
@@ -314,6 +313,24 @@
                     </div>
                 </div>
             </form>
+            @if(session('edit_err'))
+                <div class="flex justify-center items-center flex-col">
+                    @foreach(session('edit_err') as $err)
+                        <p class="w-full text-xs text-center text-red-700 space-y-1">
+                            {{$err}}
+                        </p>
+                    @endforeach
+                </div>
+            @endif
+            @if(session('delete_err'))
+                <div class="flex justify-center items-center flex-col">
+                    @foreach(session('edit_err') as $err)
+                        <p class="w-full text-xs text-center text-red-700 space-y-1">
+                            {{$err}}
+                        </p>
+                    @endforeach
+                </div>
+            @endif
             <div class="flex flex-col justify-center items-center w-full mt-4">
                 @foreach($parent_cycles as $p_cycle)
                     <div id="cycle-{{$p_cycle->cycle_id}}" class="cycle w-[80%] rounded-xl bg-white my-5">
@@ -321,12 +338,12 @@
                         <p class="cycle_styles hidden">{{$p_cycle->status}};{{$p_cycle->style_progress}}</p>
                         <dl class="grid grid-cols-4 xl:grid-cols-8 overflow-hidden text-left rounded-xl">
                             <div class="col-span-4 flex flex-col bg-gray-200/50 xl:border-r-2">
-                                <dt class="order-first text-sm lg:text-lg font-semibold bg-gray-800 text-white w-[45%] xl:w-[50%] xl:w-1/2 rounded-tl-xl pl-5 py-2 flex flex-row justify-between">
+                                <dt class="order-first text-sm lg:text-lg font-semibold bg-gray-800 text-white w-[45%] xl:w-1/2 rounded-tl-xl pl-5 py-2 flex flex-row justify-between">
                                     <div class="p-1">
-                                        {{($p_cycle->category == 0)? 'Produkt' : (($p_cycle->category == 1)? 'Materiał' : 'Zadanie')}}
+                                        {{($p_cycle->category == 1)? 'Produkt' : (($p_cycle->category == 2)? 'Materiał' : 'Zadanie')}}
                                     </div>
                                     <div class="text-xs lg:text-sm flex justify-center items-center">
-                                        <div class="cycle-tag p-1 mx-2 rounded-md"></div>
+                                        <div class="cycle-tag p-1 mx-2 rounded-md whitespace-nowrap"></div>
                                     </div>
                                 </dt>
                                 <dd class=" text-lg xl:text-xl font-semibold tracking-tight text-gray-900 pl-5 py-4">{{$p_cycle->name}}</dd>
@@ -358,13 +375,219 @@
                                 </div>
                             </div>
                             <div class="col-span-4 xl:col-span-8 w-full bg-gray-300 py-2 flex flex-row justify-end">
-                                @if($p_cycle->category != 2)
-                                    <a href="produkcja/ {{$p_cycle->cycle_id}}"  id="sub-cycle-details-{{$p_cycle->cycle_id}}" class="sub-cycle-details mr-2 text-gray-800 bg-white hover:bg-gray-100 focus:outline-none font-medium rounded-sm text-xs lg:text-sm px-2 py-0.5">
-{{--                                        {{($p_cycle->category == 0) ? 'Materiały i zadania' : 'Zadania'}}--}}
+                                @if($p_cycle->status == 2 and in_array($user->role,array('admin','manager')))
+                                    @php
+                                        $name = 'Edytuj cykl produkcji';
+                                        $id = $p_cycle->cycle_id;
+                                        $button_id = 'edit-cycle-'.$id;
+                                        $bg_classes = 'bg-orange-500 hover:bg-orange-700';
+                                        $button_text = 'Edytuj';
+                                        $button_classes = 'mr-2 rounded-md text-xs lg:text-sm px-2 py-1';
+                                    @endphp
+                                    <x-modal :name="$name" :button_id="$button_id" :id="$id" :bg_classes="$bg_classes" :button_text="$button_text" :button_classes="$button_classes">
+                                        <form action="{{ 'produkcja/'.$p_cycle->cycle_id }}" method="POST">
+                                            @csrf
+                                            <div class="flex flex-col justify-center items-center mt-8 w-full">
+                                                <dl class="grid grid-cols-4 xl:grid-cols-8 overflow-visible text-left rounded-xl w-[90%] shadow-md">
+                                                    <div class="col-span-4 flex flex-col bg-gray-200/50 xl:border-r-2 rounded-t-xl xl:rounded-tl-xl xl:rounded-tr-none">
+                                                        <dt class="order-first text-sm lg:text-lg font-semibold bg-gray-800 text-white w-[70%] rounded-tl-xl pl-5 py-2 flex flex-row justify-between">
+                                                            <input id="edit-cycle-id-input-{{$p_cycle->cycle_id}}" name="id" type="number" class="hidden" value="{{$p_cycle->cycle_id}}">
+                                                            <input id="edit-cycle-cat-input-{{$p_cycle->cycle_id}}" name="category" type="number" class="hidden" value="{{$p_cycle->category}}">
+                                                            <div id="edit-cycle-cat-{{$p_cycle->cycle_id}}" class="p-1">
+                                                                {{($p_cycle->category == 1)? 'Produkt' : (($p_cycle->category == 2)? 'Materiał' : 'Zadanie')}}
+                                                            </div>
+                                                            <div class="text-xs lg:text-sm flex justify-center items-center">
+                                                                <div class="p-1 mx-2 text-white bg-yellow-300 rounded-md">
+                                                                    Nierozpoczęty
+                                                                </div>
+                                                            </div>
+                                                        </dt>
+                                                        <dd class=" text-lg xl:text-xl font-semibold tracking-tight text-gray-900 pl-5 py-4">
+                                                            {{$p_cycle->name}}
+                                                        </dd>
+                                                    </div>
+                                                    <div class="col-span-2 flex flex-col bg-gray-200/50 border-r">
+                                                        <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Planowany start</dt>
+                                                        <div class="p-1 flex justify-center items-center h-full">
+                                                            <div id="exp-start-time" class="relative w-full xl:mt-4"
+                                                                 data-te-datepicker-init
+                                                                 data-te-format="yyyy-mm-dd"
+                                                                 data-te-input-wrapper-init>
+                                                                <input name="exp_start" value="{{explode(' ',$p_cycle->expected_start_time)[0]}}"
+                                                                       class="p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                                                       placeholder="Start"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-span-2 flex flex-col bg-gray-200/50 xl:rounded-tr-xl">
+                                                        <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2 xl:rounded-tr-xl">Zakładany termin</dt>
+                                                        <div class="p-1 flex justify-center items-center h-full">
+                                                            <div id="exp-end-time" class="relative w-full xl:mt-4"
+                                                                 data-te-datepicker-init
+                                                                 data-te-format="yyyy-mm-dd"
+                                                                 data-te-input-wrapper-init>
+                                                                <input name="exp_end" value="{{explode(' ',$p_cycle->expected_end_time)[0]}}"
+                                                                       class="p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                                                       placeholder="Termin"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-span-2 xl:col-span-4 flex flex-col bg-gray-200/50 border-r">
+                                                        <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Pracownicy</dt>
+                                                        <div class="p-1 pl-5 flex justify-center items-center h-full">
+                                                            @php $unique_id = 'employees'.$p_cycle->cycle_id @endphp
+                                                            <x-select-multiple :uniqueId="$unique_id" :placeholder="__('Pracownicy')">
+                                                                <x-slot name="options">
+                                                                    @if(isset($users))
+                                                                        @foreach($users as $u)
+                                                                            <option value="{{$u->id}}" {{(preg_match("/(^|,)$u->id($|,)/",$p_cycle->assigned_employees))? 'selected' : ''}}>
+                                                                                {{$u->employeeNo}}
+                                                                            </option>
+                                                                        @endforeach
+                                                                    @else
+                                                                        <option value=""></option>
+                                                                    @endif
+
+                                                                </x-slot>
+                                                            </x-select-multiple>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-span-1 xl:col-span-2 flex flex-col bg-gray-200/50">
+                                                        <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2 border-r">Ilość (szt)</dt>
+                                                        <div class="p-1 flex justify-center flex-row items-center h-full">
+                                                            <div class="w-full p-1 flex justify-center items-center h-full w-full">
+                                                                <input id="new-cycle-amount-input-{{$p_cycle->cycle_id}}" type="number" min="0" value="{{$p_cycle->total_amount}}"
+                                                                       class="xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                                                       name="amount" placeholder="Ilość (szt)">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-span-1 xl:col-span-2 flex flex-col bg-gray-200/50">
+                                                        <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Czas [h]</dt>
+                                                        <div class="p-1 flex justify-center flex-row items-center h-full">
+                                                            <div class="w-full p-1 flex flex-row justify-center items-center h-full">
+                                                                <div class="w-4/5 px-2 bg-orange-500 text-white rounded-md font-semibold h-[30px] xl:h-[42px] flex justify-center items-center">
+                                                                    <div id="new-cycle-exp-duration" class="text-sm">
+                                                                        0:00
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-span-4 xl:col-span-8 flex flex-col bg-gray-200/50 md:rounded-b-xl">
+                                                        <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Dodatkowe Uwagi</dt>
+                                                        <div class="p-1 flex justify-center items-center h-full md:rounded-b-xl">
+                                                            <div class="p-1 flex justify-center items-center h-full w-full">
+                                                                <textarea id="new-cycle-comm-input-{{$p_cycle->cycle_id}}"
+                                                                          class="xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                                                          name="comment" placeholder="Dodtakowe uwagi">{{$p_cycle->additional_comment}}
+                                                            </textarea>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </dl>
+                                                <div class="mt-4 w-[100%] flex flex-row justify-center items-center bg-gray-200 p-2 rounded-b-lg">
+                                                    <x-submit-button id="submit-edit-{{$p_cycle->cycle_id}}" type="submit" class="ml-[5%] bg-orange-500 hover:bg-orange-700 text-sm">
+                                                        {{__('Edytuj')}}
+                                                    </x-submit-button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </x-modal>
+                                    @php
+                                        $name = 'cykl produkcji';
+                                        $id = $p_cycle->cycle_id;
+                                        $route = '/produkcja/'.$id;
+                                        $button_id = 'cycle-remove-modal-'.$id;
+                                        $remove_elem_class = 'element-remove';
+                                        $remove_elem_id = 'cycle-remove-';
+                                        $disabled = '';
+                                        $button_classes = 'mr-2 rounded-md text-xs lg:text-sm px-2 py-1'
+                                    @endphp
+                                    <x-remove-modal :name="$name" :button_id="$button_id" :route="$route" :id="$id" :remove_elem_class="$remove_elem_class"
+                                                    :remove_elem_id="$remove_elem_id" :disabled="$disabled" :button_classes="$button_classes">
+                                        <div class="flex flex-col justify-center items-center w-full mt-4">
+                                            <div id="cycle-remove-{{$p_cycle->cycle_id}}" class="w-[95%] rounded-xl bg-gray-200/50 my-5">
+                                                <dl class="grid grid-cols-4 xl:grid-cols-8 overflow-hidden text-left rounded-xl shadow-md">
+                                                    <div class="col-span-4 flex flex-col bg-gray-200/50 xl:border-r-2">
+                                                        <dt class="order-first text-sm lg:text-lg font-semibold bg-gray-800 text-white w-[45%] xl:w-1/2 rounded-tl-xl pl-5 py-2 flex flex-row justify-between">
+                                                            <div class="p-1">
+                                                                {{($p_cycle->category == 1)? 'Produkt' : (($p_cycle->category == 2)? 'Materiał' : 'Zadanie')}}
+                                                            </div>
+                                                            <div class="text-xs lg:text-sm flex justify-center items-center">
+                                                                <div class="p-1 mx-2 rounded-md bg-yellow-300">
+                                                                    Nierozpoczęty
+                                                                </div>
+                                                            </div>
+                                                        </dt>
+                                                        <dd class=" text-lg xl:text-xl font-semibold tracking-tight text-gray-900 pl-5 py-4">{{$p_cycle->name}}</dd>
+                                                    </div>
+                                                    <div class="col-span-2 flex flex-col bg-gray-200/50 border-r">
+                                                        <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Zakładany start</dt>
+                                                        <div class="w-full h-full flex justify-center items-center">
+                                                            <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
+                                                                <svg fill="#000000" width="30px" height="20px" viewBox="0 0 1920 1920" xmlns="http://www.w3.org/2000/svg">
+                                                                    <g fill-rule="evenodd">
+                                                                        <path d="M1439.667 1226.667H1333V1440c0 14.187 5.653 27.733 15.573 37.76l123.414 123.306 75.413-75.413-107.733-107.733v-191.253Z"/>
+                                                                        <path d="M1386.333 1813.333C1180.467 1813.333 1013 1645.867 1013 1440c0-205.867 167.467-373.333 373.333-373.333 205.867 0 373.334 167.466 373.334 373.333 0 205.867-167.467 373.333-373.334 373.333m0-853.333c-264.64 0-480 215.36-480 480s215.36 480 480 480 480-215.36 480-480-215.36-480-480-480"/>
+                                                                        <path d="M1546.333 426.667H159.666v-160c0-29.44 24-53.334 53.334-53.334h160v53.334c0 29.44 23.894 53.333 53.333 53.333 29.44 0 53.333-23.893 53.333-53.333v-53.334h746.667v53.334c0 29.44 23.894 53.333 53.334 53.333 29.44 0 53.333-23.893 53.333-53.333v-53.334h160c29.333 0 53.333 23.894 53.333 53.334v160Zm-53.333-320h-160V53.333C1333 23.893 1309.107 0 1279.667 0c-29.44 0-53.334 23.893-53.334 53.333v53.334H479.666V53.333C479.666 23.893 455.773 0 426.333 0 396.894 0 373 23.893 373 53.333v53.334H213c-88.213 0-160 71.786-160 160v1546.666h746.666v-106.666h-640V533.333h1386.667v320H1653V266.667c0-88.214-71.787-160-160-160Z"/>
+                                                                    </g>
+                                                                </svg>
+                                                                {{$p_cycle->expected_start_time}}
+                                                            </dd>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-span-2 flex flex-col bg-gray-200/50">
+                                                        <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Zakładany termin</dt>
+                                                        <div class="w-full h-full flex justify-center items-center">
+                                                            <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
+                                                                <svg fill="#000000" width="30px" height="20px" viewBox="0 0 1920 1920" xmlns="http://www.w3.org/2000/svg">
+                                                                    <g fill-rule="evenodd">
+                                                                        <path d="M1439.667 1226.667H1333V1440c0 14.187 5.653 27.733 15.573 37.76l123.414 123.306 75.413-75.413-107.733-107.733v-191.253Z"/>
+                                                                        <path d="M1386.333 1813.333C1180.467 1813.333 1013 1645.867 1013 1440c0-205.867 167.467-373.333 373.333-373.333 205.867 0 373.334 167.466 373.334 373.333 0 205.867-167.467 373.333-373.334 373.333m0-853.333c-264.64 0-480 215.36-480 480s215.36 480 480 480 480-215.36 480-480-215.36-480-480-480"/>
+                                                                        <path d="M1546.333 426.667H159.666v-160c0-29.44 24-53.334 53.334-53.334h160v53.334c0 29.44 23.894 53.333 53.333 53.333 29.44 0 53.333-23.893 53.333-53.333v-53.334h746.667v53.334c0 29.44 23.894 53.333 53.334 53.333 29.44 0 53.333-23.893 53.333-53.333v-53.334h160c29.333 0 53.333 23.894 53.333 53.334v160Zm-53.333-320h-160V53.333C1333 23.893 1309.107 0 1279.667 0c-29.44 0-53.334 23.893-53.334 53.333v53.334H479.666V53.333C479.666 23.893 455.773 0 426.333 0 396.894 0 373 23.893 373 53.333v53.334H213c-88.213 0-160 71.786-160 160v1546.666h746.666v-106.666h-640V533.333h1386.667v320H1653V266.667c0-88.214-71.787-160-160-160Z"/>
+                                                                    </g>
+                                                                </svg>
+                                                                {{$p_cycle->expected_end_time}}
+                                                            </dd>
+                                                        </div>
+                                                    </div>
+                                                    {{--                            ROW 1--}}
+                                                    <div class="additional-info xl:col-span-4 col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2">
+                                                        <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Przypisani pracownicy</dt>
+                                                        <div class="w-full h-full flex justify-center items-center">
+                                                            <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
+                                                                {{$p_cycle->assigned_employee_no}}
+                                                            </dd>
+                                                        </div>
+                                                    </div>
+                                                    <div class="additional-info xl:col-span-4 col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2">
+                                                        <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Ilość (szt)</dt>
+                                                        <div class="w-full h-full flex justify-center items-center">
+                                                            <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
+                                                                {{$p_cycle->total_amount}}
+                                                            </dd>
+                                                        </div>
+                                                    </div>
+                                                    <div class="additional-info xl:col-span-8 col-span-4 flex flex-col bg-gray-200/50 border-r-2">
+                                                        <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Dodatkowe Uwagi</dt>
+                                                        <div class="w-full h-full flex justify-center items-center">
+                                                            <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
+                                                                {{$p_cycle->additional_comment}}
+                                                            </dd>
+                                                        </div>
+                                                    </div>
+                                                </dl>
+                                            </div>
+                                        </div>
+                                    </x-remove-modal>
+                                @endif
+                                @if($p_cycle->category != 3)
+                                    <a href="produkcja/{{$p_cycle->cycle_id}}"  id="sub-cycle-details-{{$p_cycle->cycle_id}}" class="sub-cycle-details flex justify-center items-center mr-2 text-gray-800 bg-white hover:bg-gray-100 uppercase focus:outline-none font-medium rounded-md text-xs lg:text-sm px-2 py-1 shadow-md">
                                         Więcej
                                     </a>
                                 @endif
-                                <button type="button" id="cycle-details-{{$p_cycle->cycle_id}}" class="cycle-details mr-4 text-gray-800 bg-white hover:bg-gray-100 focus:outline-none font-medium rounded-sm text-xs lg:text-sm px-2 py-0.5">
+                                <button type="button" id="cycle-details-{{$p_cycle->cycle_id}}" class="cycle-details mr-4 text-gray-800 bg-white uppercase hover:bg-gray-100 focus:outline-none font-medium rounded-md text-xs lg:text-sm px-2 py-1 shadow-md">
                                     Statystyki
                                 </button>
                             </div>
@@ -495,15 +718,6 @@
                                     </dd>
                                 </div>
                             </div>
-                            <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2 hidden">
-                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">defekty (szt)</dt>
-                                <div class="w-full h-full flex justify-center items-center">
-                                    <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                        {{$p_cycle->defect_amount}}
-                                    </dd>
-                                </div>
-                            </div>
-{{--                            ROW 4--}}
                             <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
                                 @php
                                     $expected_amount_time_frame = 'Ilość na jednostkę czasu(szt)';
@@ -517,6 +731,14 @@
                                 <div class="w-full h-full flex justify-center items-center">
                                     <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
                                         {{$p_cycle->expected_amount_per_time_frame}}
+                                    </dd>
+                                </div>
+                            </div>
+                            <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2 hidden">
+                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">defekty (szt)</dt>
+                                <div class="w-full h-full flex justify-center items-center">
+                                    <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
+                                        {{$p_cycle->defect_amount}}
                                     </dd>
                                 </div>
                             </div>
@@ -537,6 +759,14 @@
                                 </div>
                             </div>
                             <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
+                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Oczek. czas wyk. (h)</dt>
+                                <div class="w-full h-full flex justify-center items-center">
+                                    <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
+                                        {{$p_cycle->expected_time_to_complete_in_hours}}
+                                    </dd>
+                                </div>
+                            </div>
+                            <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
                                 <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Defekty (%)</dt>
                                 <div class="w-full h-full flex justify-center items-center">
                                     <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
@@ -553,9 +783,9 @@
 {{--                            ROW 6 - product photo--}}
                             @if(!is_null($p_cycle->image))
                                 @php $path = ''; @endphp
-                                @if($p_cycle->category == 0)
+                                @if($p_cycle->category == 1)
                                     @php $path = isset($storage_path_products) ? $storage_path_products.'/' : ''; @endphp
-                                @elseif($p_cycle->category == 1)
+                                @elseif($p_cycle->category == 2)
                                     @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
                                 @endif
                                     <div class="additional-info col-span-4 xl:col-span-2 flex justify-center bg-gray-200/50 border-r-2 hidden p-2">
@@ -648,115 +878,6 @@
                         {{ $parent_cycles->links() }}
                 </div>
             </div>
-{{--            @php--}}
-{{--                $name = 'Dodaj cykl produkcji';--}}
-{{--                $button_id = 'add-cycle-2';--}}
-{{--                $id = '2';--}}
-{{--                $bg_classes = 'hidden';--}}
-{{--                $button_text = ''--}}
-{{--            @endphp--}}
-{{--            <x-modal :name="$name" :button_id="$button_id" :id="$id" :bg_classes="$bg_classes" :button_text="$button_text">--}}
-{{--                @if(isset($products) and isset($components) and isset($prod_schemas))--}}
-{{--                    <div class="w-full flex justify-center p-2 flex-col h-[300px] overflow-y-scroll">--}}
-{{--                        @foreach($components as $comp)--}}
-{{--                            <x-list-element class="flex-col">--}}
-{{--                                <div class="w-full flex justify-between items-center">--}}
-{{--                                    <div class="w-full flex justify-left items-center">--}}
-{{--                                        <div class="border-2 inline-block w-[50px] h-[50px] md:w-[70px] md:h-[70px] lg:w-[100px] lg:h-[100px]">--}}
-{{--                                            @if(!empty($comp->image))--}}
-{{--                                                @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp--}}
-{{--                                                <img src="{{asset('storage/'.$path.$comp->image)}}">--}}
-{{--                                            @endif--}}
-{{--                                        </div>--}}
-{{--                                        <p class="inline-block list-element-name ml-[3%]  xl:text-lg text-md">{{$comp->name}} - {{$comp->material}}</p>--}}
-{{--                                    </div>--}}
-{{--                                </div>--}}
-{{--                            </x-list-element>--}}
-{{--                        @endforeach--}}
-{{--                        <div class="w-full border-red-600 border-2">--}}
-{{--                            {{ $components->links() }}--}}
-{{--                        </div>--}}
-{{--                    </div>--}}
-{{--                @endif--}}
-{{--                <div class="flex justify-center text-center">--}}
-{{--                    <button--}}
-{{--                        class="inline-block rounded-b-lg px-6 py-2 md:py-4 text-xs font-medium uppercase w-full text-md md:text-lg xl:text-xl bg-blue-800 hover:bg-blue-950 leading-normal text-white focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-[0_4px_9px_-4px_rgba(0,0,0,0.2)] transition duration-150 ease-in-out hover:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] focus:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] active:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)]"--}}
-{{--                        data-te-ripple-init--}}
-{{--                        data-te-ripple-color="light">--}}
-{{--                        {{ __('Dalej') }}--}}
-{{--                    </button>--}}
-{{--                </div>--}}
-{{--            </x-modal>--}}
-{{--            @php--}}
-{{--                $name = 'Dodaj cykl produkcji';--}}
-{{--                $button_id = 'add-cycle-3';--}}
-{{--                $id = '3';--}}
-{{--                $bg_classes = 'hidden';--}}
-{{--                $button_text = ''--}}
-{{--            @endphp--}}
-{{--            <x-modal :name="$name" :button_id="$button_id" :id="$id" :bg_classes="$bg_classes" :button_text="$button_text">--}}
-{{--                <form method="POST" action="{{ route('production.add-cycle') }}" enctype="multipart/form-data">--}}
-{{--                    @csrf--}}
-{{--                    <div class="flex flex-row justify-center items-center my-16">--}}
-{{--                        <div id="new-cycle" class="cycle w-[80%] rounded-xl bg-white my-5">--}}
-{{--                            <p class="cycle_status hidden"></p>--}}
-{{--                            <p class="cycle_styles hidden"></p>--}}
-{{--                            <dl class="grid grid-cols-4 xl:grid-cols-8 overflow-hidden text-left rounded-xl">--}}
-{{--                                <div class="col-span-4 flex flex-col bg-gray-200/50 xl:border-r-2">--}}
-{{--                                    <dt class="order-first text-sm lg:text-lg font-semibold bg-gray-800 text-white w-[70%] rounded-tl-xl pl-5 py-2 flex flex-row justify-between">--}}
-{{--                                        <input id="new-cycle-cat-input" name="category" type="number" class="hidden">--}}
-{{--                                        <div id="new-cycle-cat" class="p-1">--}}
-{{--                                        </div>--}}
-{{--                                        <div class="text-xs lg:text-sm flex justify-center items-center">--}}
-{{--                                            <div class="p-1 mx-2 text-white bg-blue-800 rounded-md">--}}
-{{--                                                Nowy--}}
-{{--                                            </div>--}}
-{{--                                        </div>--}}
-{{--                                    </dt>--}}
-{{--                                    <dd class=" text-lg xl:text-xl font-semibold tracking-tight text-gray-900 pl-5 py-4"></dd>--}}
-{{--                                </div>--}}
-{{--                                <div class="col-span-2 flex flex-col bg-gray-200/50 border-r">--}}
-{{--                                    <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Planowany start</dt>--}}
-{{--                                    <div class="p-1 flex justify-center items-center h-full">--}}
-{{--                                        <div--}}
-{{--                                            id="exp-end-time-start"--}}
-{{--                                            class="relative w-full"--}}
-{{--                                            data-te-input-wrapper-init--}}
-{{--                                            data-te-format="yyyy-mm-dd">--}}
-{{--                                            <input type="text" name="exp_end_start"--}}
-{{--                                                   class="p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"--}}
-{{--                                                   placeholder="Start"/>--}}
-{{--                                        </div>--}}
-{{--                                    </div>--}}
-{{--                                </div>--}}
-{{--                                <div class="col-span-2 flex flex-col bg-gray-200/50">--}}
-{{--                                    <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Zakładany termin</dt>--}}
-{{--                                    <div class="p-1 flex justify-center items-center h-full">--}}
-{{--                                        <div--}}
-{{--                                            id="exp-end-time-end"--}}
-{{--                                            class="relative w-full"--}}
-{{--                                            data-te-input-wrapper-init--}}
-{{--                                            data-te-format="yyyy-mm-dd">--}}
-{{--                                            <input type="text" name="exp_end_end"--}}
-{{--                                                   class="p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"--}}
-{{--                                                   placeholder="Termin"/>--}}
-{{--                                        </div>--}}
-{{--                                    </div>--}}
-{{--                                </div>--}}
-{{--                            </dl>--}}
-{{--                        </div>--}}
-{{--                    </div>--}}
-{{--                    <div class="text-center">--}}
-{{--                        <button--}}
-{{--                            class="inline-block rounded-b-lg px-6 py-2 md:py-4 text-xs font-medium uppercase w-full text-md md:text-lg xl:text-xl bg-blue-800 hover:bg-blue-950 leading-normal text-white focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-[0_4px_9px_-4px_rgba(0,0,0,0.2)] transition duration-150 ease-in-out hover:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] focus:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] active:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)]"--}}
-{{--                            type="submit"--}}
-{{--                            data-te-ripple-init--}}
-{{--                            data-te-ripple-color="light">--}}
-{{--                            {{ __('Dodaj') }}--}}
-{{--                        </button>--}}
-{{--                    </div>--}}
-{{--                </form>--}}
-{{--            </x-modal>--}}
         @endif
     @endif
 </x-app-layout>

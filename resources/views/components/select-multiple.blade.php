@@ -11,7 +11,6 @@
                 select(index, event, onStart) {
 
                     if (!this.options[index].selected || onStart) {
-                        console.log(event);
                         this.options[index].selected = true;
                         this.options[index].element = event.target;
                         this.selected.push(index);
