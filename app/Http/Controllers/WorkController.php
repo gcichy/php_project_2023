@@ -15,6 +15,7 @@ use App\Models\ProductionCycleUser;
 use App\Models\ProductionSchema;
 use App\Models\StaticValue;
 use App\Models\User;
+use App\Models\WorkView;
 use DateInterval;
 use DateTime;
 use Exception;
@@ -27,7 +28,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
-class ProductionCycleController extends Controller
+class WorkController extends Controller
 {
     public function index(Request $request): View
     {
@@ -35,26 +36,26 @@ class ProductionCycleController extends Controller
         $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
         $users = User::select('id','employeeNo', 'role')->get();
         try {
-
-            $filt_by_exp_end_table = $this->filterByExpectedEndTimeParentCycles($request);
-            $parent_cycles = $filt_by_exp_end_table['parent_cycles'];
-            $filt_start_time = $filt_by_exp_end_table['filt_start_time'];
-            $filt_end_time = $filt_by_exp_end_table['filt_end_time'];
-            $status_err = $filt_by_exp_end_table['status_err'];
-
-            $where_clause = $this->createWhereClause($request);
-            $parent_cycles = $this->filterParentCycles($request, $parent_cycles, $where_clause);
-            $filt_items = array_merge($where_clause['where_in'], $where_clause['where_like']);
-            $parent_cycles = $this->orderParentCycles($parent_cycles, $request->order);
-            $parent_cycles = $parent_cycles->paginate(10);
+            $works = WorkView::paginate(5);
+//            $filt_by_exp_end_table = $this->filterByExpectedEndTimeParentCycles($request);
+//            $parent_cycles = $filt_by_exp_end_table['parent_cycles'];
+//            $filt_start_time = $filt_by_exp_end_table['filt_start_time'];
+//            $filt_end_time = $filt_by_exp_end_table['filt_end_time'];
+//            $status_err = $filt_by_exp_end_table['status_err'];
+//
+//            $where_clause = $this->createWhereClause($request);
+//            $parent_cycles = $this->filterParentCycles($request, $parent_cycles, $where_clause);
+//            $filt_items = array_merge($where_clause['where_in'], $where_clause['where_like']);
+//            $parent_cycles = $this->orderParentCycles($parent_cycles, $request->order);
+//            $parent_cycles = $parent_cycles->paginate(10);
         } catch(Exception $e) {
             Log::channel('error')->error('Error filtering parent cycles grid: '.$e->getMessage(), [
                 'employeeNo' => $employee_no,
             ]);
-            if(isset($parent_cycles) and $parent_cycles instanceof Builder) {
-                $parent_cycles = $parent_cycles->paginate(10);
+            if(isset($works) and $works instanceof Builder) {
+                $works = $works->paginate(10);
             } else {
-                $parent_cycles = ParentCycleView::paginate(10);
+                $works = WorkView::paginate(10);
             }
             $status_err = 'Nie udało się przefiltrować - błąd systemu.';
             $filt_start_time = isset($filt_start_time)? $filt_start_time : null;
@@ -78,17 +79,17 @@ class ProductionCycleController extends Controller
             'expected_amount_per_time_frame' => 'Oczekiwana ilość (szt)',
         );
 
-        return view('production.production', [
-            'parent_cycles' => $parent_cycles,
+        return view('work.work', [
+            'works' => $works,
             'user' => $user,
             'users' => $users,
             'order' => $order_table,
             'status' => isset($status)? $status : null,
             'status_err' => isset($status_err)? $status_err : null,
-            'filt_start_time' => $filt_start_time,
-            'filt_end_time' => $filt_end_time,
-            'filt_items' => $filt_items,
-            'order_items' => $order_items,
+//            'filt_start_time' => $filt_start_time,
+//            'filt_end_time' => $filt_end_time,
+//            'filt_items' => $filt_items,
+//            'order_items' => $order_items,
             'storage_path_products' => 'products',
             'storage_path_components' => 'components',
         ]);
@@ -550,7 +551,7 @@ class ProductionCycleController extends Controller
                 ]);
                 throw new Exception('Nie udało się dodać cyklu dla zadania. Błąd systemu.',1);
             }
-            $pack_prod_id = Product::where('id', $request->pack_prod_id)->first() instanceof Product? $request->pack_prod_id : null;
+            $pack_prod_id = Product::where('id', $request->pack_prod_id) instanceof Product? $request->pack_prod_id : null;
             $parent_id = DB::table('production_cycle')->insertGetId([
                 'level' => 1,
                 'category' => 3,

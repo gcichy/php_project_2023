@@ -11,6 +11,7 @@ use App\Http\Controllers\ProductionCycleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StatisticsController;
+use App\Http\Controllers\WorkController;
 use App\Http\Middleware\CheckUserRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -98,10 +99,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/dodaj-cykl', [ProductionCycleController::class, 'storeCycle'])->name('production.store-cycle');
 });
 
-//schedule
+//work
 Route::middleware('auth')->group(function () {
-    Route::get('/harmonogram', [ScheduleController::class, 'index'])->name('schedule.index');
+    Route::get('/praca', [WorkController::class, 'index'])->name('work.index');
+    Route::patch('/praca', [WorkController::class, 'index'])->name('work.filter');
 });
+
+
 
 //boss statistics
 Route::middleware('auth')->group(function () {

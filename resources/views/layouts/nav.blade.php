@@ -134,8 +134,8 @@
                         </x-responsive-nav-link>
                     </li>
                     <li>
-                        <x-responsive-nav-link :href="route('schedule.index')" :active="request()->routeIs('schedule.index')">
-                            {{ __('Harmonogram') }}
+                        <x-responsive-nav-link :href="route('work.index')" :active="request()->routeIs('work.index')">
+                            {{ __('Praca') }}
                         </x-responsive-nav-link>
                     </li>
                     <li>
