@@ -16,6 +16,7 @@ use App\Models\ProductionSchema;
 use App\Models\StaticValue;
 use App\Models\User;
 use App\Models\WorkView;
+use Carbon\Carbon;
 use DateInterval;
 use DateTime;
 use Exception;
@@ -36,18 +37,16 @@ class WorkController extends Controller
         $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
         $users = User::select('id','employeeNo', 'role')->get();
         try {
-            $works = WorkView::paginate(5);
-//            $filt_by_exp_end_table = $this->filterByExpectedEndTimeParentCycles($request);
-//            $parent_cycles = $filt_by_exp_end_table['parent_cycles'];
-//            $filt_start_time = $filt_by_exp_end_table['filt_start_time'];
-//            $filt_end_time = $filt_by_exp_end_table['filt_end_time'];
-//            $status_err = $filt_by_exp_end_table['status_err'];
-//
-//            $where_clause = $this->createWhereClause($request);
-//            $parent_cycles = $this->filterParentCycles($request, $parent_cycles, $where_clause);
-//            $filt_items = array_merge($where_clause['where_in'], $where_clause['where_like']);
-//            $parent_cycles = $this->orderParentCycles($parent_cycles, $request->order);
-//            $parent_cycles = $parent_cycles->paginate(10);
+            $filt_by_time_table = $this->filterWorkByEndTime($request);
+            $works = $filt_by_time_table['works'];
+            $filt_start_time = $filt_by_time_table['filt_start_time'];
+            $filt_end_time = $filt_by_time_table['filt_end_time'];
+            $status_err = $filt_by_time_table['status_err'];
+            $where_clause = $this->createWhereClause($request);
+            $works = $this->filterWorks($request, $works, $where_clause);
+            $filt_items = array_merge($where_clause['where_in'], $where_clause['where_like']);
+            $works = $this->orderWorks($works, $request->order);
+            $works = $works->paginate(3);
         } catch(Exception $e) {
             Log::channel('error')->error('Error filtering parent cycles grid: '.$e->getMessage(), [
                 'employeeNo' => $employee_no,
@@ -63,20 +62,23 @@ class WorkController extends Controller
         }
 
         $order_items = is_string($request->order)? explode(',',$request->order) : null;
+
         $order_table = array(
-            'status' => 'Status',
-            'name' => 'Nazwa',
+            'start_time' => 'Początek pracy',
+            'end_time' => 'Koniec pracy',
+            'amount' => 'Ilość (szt)',
             'productivity' => 'Produktywność (%)',
-            'expected_end_time' => 'Termin',
-            'progress' => 'Postęp (%)',
-            'start_time' => 'Start cyklu',
-            'end_time' => 'Koniec cyklu',
-            'expected_start_time' => 'Planowany start',
-            'current_amount' => 'Ilość',
-            'total_amount' => 'Cel',
-            'defect_amount' => 'Defekty',
-            'time_spent' => 'Czas pracy (h)',
-            'expected_amount_per_time_frame' => 'Oczekiwana ilość (szt)',
+            'duration_minute' => 'Czas pracy (h)',
+            'cycle_category' => 'Kategoria cyklu',
+            'production_schema' => 'Zadanie',
+            'task_name' => 'Podzadanie',
+            'component_name' => 'Materiał',
+            'product_name' => 'Produkt',
+            'defect_amount' => 'Defekty (szt)',
+            'defect_percent' => 'Defekty (%)',
+            'exp_amount_per_time_spent' => 'Oczek. ilość/Czas pracy',
+            'exp_amount_per_hour' => 'Oczek. ilość/godzina (szt)',
+            'waste_amount' => 'Odpady',
         );
 
         return view('work.work', [
@@ -86,10 +88,10 @@ class WorkController extends Controller
             'order' => $order_table,
             'status' => isset($status)? $status : null,
             'status_err' => isset($status_err)? $status_err : null,
-//            'filt_start_time' => $filt_start_time,
-//            'filt_end_time' => $filt_end_time,
-//            'filt_items' => $filt_items,
-//            'order_items' => $order_items,
+            'filt_start_time' => $filt_start_time,
+            'filt_end_time' => $filt_end_time,
+            'filt_items' => isset($filt_items)? $filt_items : [],
+            'order_items' => $order_items,
             'storage_path_products' => 'products',
             'storage_path_components' => 'components',
         ]);
@@ -654,79 +656,92 @@ class WorkController extends Controller
                 'updated_at' => date('y-m-d h:i:s'),]);
         }
     }
-    private function filterByExpectedEndTimeParentCycles(Request $request): array
+    private function filterWorkByEndTime(Request $request): array
     {
-        if(is_null($request->exp_end_start) or is_null($request->exp_end_end)) {
-            if(!(is_null($request->exp_end_start) and is_null($request->exp_end_end))) {
-                $status_err = 'Nie przefiltrowano terminu. Aby filtrować po terminie podaj początek i koniec.';
+        $work_start_from = Carbon::parse($request->work_start_from);
+        $work_start_to = Carbon::parse($request->work_start_to);
+
+        if(is_null($request->work_start_from) or is_null($request->work_start_to) or $work_start_from->gt($work_start_to)) {
+            if($work_start_from->gt($work_start_to)) {
+                $status_err = 'Nie przefiltrowano Startu. Data "Start pracy od" nie może być później od daty "Start pracy do".';
+            }
+            else if(!(is_null($request->work_start_from) and is_null($request->work_start_to))) {
+                $status_err = 'Nie przefiltrowano Startu. Aby filtrować po starcie podaj początek i koniec.';
             }
             $current_time = new DateTime();
-            $current_time->add(new DateInterval('P14D'));
             $end_time = $current_time->format('Y-m-d');
-            $current_time->sub(new DateInterval('P28D'));
+            $current_time->sub(new DateInterval('P7D'));
             $start_time = $current_time->format('Y-m-d');
             $filt_start_time = $start_time;
             $filt_end_time = $end_time;
-            $parent_cycles = ParentCycleView::whereBetween('expected_end_time', [$start_time." 00:00:00",$end_time." 23:59:59"]);
+            $works = WorkView::whereBetween('start_time', [$start_time." 00:00:00",$end_time." 23:59:59"]);
         }
         else {
-            $filt_start_time = $request->exp_end_start;
-            $filt_end_time = $request->exp_end_end;
-            $parent_cycles = ParentCycleView::whereBetween('expected_end_time', [$request->exp_end_start." 00:00:00",$request->exp_end_end." 23:59:59"]);
+            $filt_start_time = $request->work_start_from;
+            $filt_end_time = $request->work_start_to;
+            $works = WorkView::whereBetween('start_time', [$request->work_start_from." 00:00:00",$request->work_start_to." 23:59:59"]);
         }
         return array(
             'filt_end_time' => $filt_end_time,
             'filt_start_time' => $filt_start_time,
             'status_err' => isset($status_err)? $status_err : null,
-            'parent_cycles' => $parent_cycles);
+            'works' => $works);
     }
 
-    private function filterParentCycles(Request $request, Builder $parent_cycles, array $where_clause): Builder
+    private function filterWorks(Request $request, Builder $works, array $where_clause): Builder
     {
         $where_in_clause = $where_clause['where_in'];
         $where_like_clause = $where_clause['where_like'];
 
-
         if(!empty($where_in_clause)) {
             foreach ($where_in_clause as $column => $in_clause) {
-                $parent_cycles = $parent_cycles->whereIn($column, $in_clause);
+                $works = $works->whereIn($column, $in_clause);
             }
         }
         if(!empty($where_like_clause)) {
-            if(array_key_exists('name', $where_like_clause)) {
-                $parent_cycles = $parent_cycles->where('name', 'like', '%'.$where_like_clause['name'].'%');
-            }
-            if(array_key_exists('employees', $where_like_clause)) {
-                foreach ($where_like_clause['employees'] as $employee){
-                    $parent_cycles = $parent_cycles->where('assigned_employees', 'like', '%'.$employee.'%');
+            foreach ($where_like_clause as $column => $like_clause) {
+                if($column == 'employees') {
+                    foreach ($like_clause as $employee){
+                        $works = $works->where('exec_employees', 'like', '%'.$employee.'%');
+                    }
+                }
+                else {
+                    $works = $works->where($column, 'like', '%'.$like_clause.'%');
                 }
             }
         }
-        return  $parent_cycles;
+        return  $works;
     }
-    private function orderParentCycles(Builder $parent_cycles, $order_table): Builder
+    private function orderWorks(Builder $works, $order_table): Builder
     {
         $columns = explode(',',$order_table);
         foreach ($columns as $col) {
             $col_and_dir = explode(';',$col);
             if(count($col_and_dir) == 2) {
-                $parent_cycles = $parent_cycles->orderBy($col_and_dir[0], $col_and_dir[1]);
+                $works = $works->orderBy($col_and_dir[0], $col_and_dir[1]);
             }
         }
-        return $parent_cycles;
+        return $works;
     }
     private function createWhereClause($request): array
     {
+
         $where_in_clause = array();
         $where_like_clause = array();
-        if(!is_null($request->name)) {
-            $where_like_clause['name'] = $request->name;
+        if(!is_null($request->product_name)) {
+            $where_like_clause['product_name'] = $request->product_name;
         }
-        if(!is_null($request->status)) {
-            $where_in_clause['status'] = explode(',',$request->status);
+        if(!is_null($request->component_name)) {
+            $where_like_clause['component_name'] = $request->component_name;
         }
-        if(!is_null($request->category)) {
-            $where_in_clause['category'] = explode(',',$request->category);
+        if(!is_null($request->production_schema)) {
+            $where_like_clause['production_schema'] = $request->production_schema;
+        }
+        if(!is_null($request->task_name)) {
+            $where_like_clause['task_name'] = $request->task_name;
+        }
+        if(!is_null($request->cycle_category)) {
+            $where_in_clause['cycle_category'] = explode(',',$request->cycle_category);
         }
         if(!is_null($request->employees)) {
             $where_like_clause['employees'] = explode(',',$request->employees);

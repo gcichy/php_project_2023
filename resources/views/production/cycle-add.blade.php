@@ -191,7 +191,7 @@
                             <div class="col-span-2 flex flex-col bg-gray-200/50 xl:rounded-tr-xl">
                                 <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2 xl:rounded-tr-xl">Zakładany termin</dt>
                                 <div class="p-1 flex justify-center items-center h-full">
-                                    <div id="exp-end-time" class="exp-end-time relative w-full xl:mt-4"
+                                    <div id="exp-end-time2" class="exp-end-time relative w-full xl:mt-4"
                                         data-te-datepicker-init
                                          data-te-format="yyyy-mm-dd"
                                         data-te-input-wrapper-init>

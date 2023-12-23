@@ -65,6 +65,55 @@ const datepickerTranslated = new Datepicker(
 const datepickerTranslated2 = new Datepicker(
     document.querySelector("#exp-end-time"),
     {
+        title: "Data",
+        monthsFull: [
+            "Styczeń",
+            "Luty",
+            "Marzec",
+            "Kwiecień",
+            "Maj",
+            "Czerwiec",
+            "Lipiec",
+            "Sierpień",
+            "Wrzesień",
+            "Październik",
+            "Listopad",
+            "Grudzień",
+        ],
+        monthsShort: [
+            "Sty",
+            "Lut",
+            "Mar",
+            "Kwi",
+            "Maj",
+            "Cze",
+            "Lip",
+            "Sie",
+            "Wrz",
+            "Paź",
+            "Lis",
+            "Gru",
+        ],
+        weekdaysFull: [
+            "Niedziela",
+            "Poniedziałek",
+            "Wtorek",
+            "Środa",
+            "Czwartek",
+            "Piątek",
+            "Sobota",
+        ],
+        weekdaysShort: ["Nd", "Pn", "Wt", "Śr", "Czw", "Pt", "Sb"],
+        weekdaysNarrow: ["N", "P", "W", "Ś", "C", "P", "S"],
+        okBtnText: "Ok",
+        clearBtnText: "Wyczyść",
+        cancelBtnText: "Anuluj",
+    }
+);
+
+const datepickerTranslated3 = new Datepicker(
+    document.querySelector("#exp-end-time2"),
+    {
         disablePast: true,
         title: "Data",
         monthsFull: [

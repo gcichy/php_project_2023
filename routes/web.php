@@ -12,6 +12,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\WorkController;
+use App\Http\Controllers\WorkCycleController;
 use App\Http\Middleware\CheckUserRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -103,6 +104,8 @@ Route::middleware('auth')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/praca', [WorkController::class, 'index'])->name('work.index');
     Route::patch('/praca', [WorkController::class, 'index'])->name('work.filter');
+    Route::get('/praca-w-cyklu', [ProductionCycleController::class, 'index'])->name('work-cycle.index');
+    Route::patch('/praca-w-cyklu', [ProductionCycleController::class, 'index'])->name('work-cycle.filter');
 });
 
 

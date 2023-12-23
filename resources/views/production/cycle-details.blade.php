@@ -2,7 +2,7 @@
     <script type="module">
         function getRowData(id) {
             let row = $('#row-'+id).find('.col-value');
-            let modalDetailsTable = $('#modal-detais-table');
+            let modalDetailsTable = $('#modal-details-table');
             let productivity = $('#row-'+id).find('.col-value.productivity');
             let productivityStyle = 'text-red-500';
             if(productivity.length === 1 && parseInt(productivity.text().trim()) > 100 ) {
@@ -499,9 +499,9 @@
                             {{($p_cycle->category == 1)? 'Materiały i zadania' : 'Zadania'}}
                         </div>
                     </div>
-                    <div class="shadow-md sm:rounded-b-xl mb-4">
+                    <div class="shadow-md rounded-b-xl mb-4">
                         <div class="relative overflow-x-auto">
-                            <table class="w-full text-sm text-left rtl:text-right pb-2 text-gray-500 dark:text-gray-400 border-separate border-spacing-1 border-slate-300">
+                            <table class="w-full text-sm text-left rtl:text-right pb-2 bg-gray-100 text-gray-500 dark:text-gray-400 border-separate border-spacing-1 border-slate-300">
                                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 whitespace-nowrap">
                                 <tr>
                                     <th scope="col" class="px-6 py-3">
@@ -624,9 +624,10 @@
                                         </td>
                                         <td class="p-1 rounded-md">
                                             @if(!is_null($c_cycle->image) and $c_cycle->category == 2)
+                                                @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
                                                 <div class="flex justify-center">
                                                     <div class="max-w-[100px]">
-                                                        <img src="{{asset('storage/components/'.$c_cycle->image)}}" alt="">
+                                                        <img src="{{asset('storage/'.$path.$c_cycle->image)}}" alt="">
                                                     </div>
                                                 </div>
                                             @endif
@@ -634,16 +635,16 @@
                                         <td class="col-value name px-6 py-4 whitespace-nowrap rounded-md">
                                             {{$c_cycle->name}}
                                         </td>
-                                        <td class="col-value productivity px-6 py-4 text-center {{floatval($p_cycle->productivity) >= 100? 'text-green-450' : 'text-red-500'}}">
+                                        <td class="col-value productivity px-6 py-4 text-center {{floatval($c_cycle->productivity) >= 100? 'text-green-450' : 'text-red-500'}}">
                                             {{$c_cycle->productivity.'%'}}
                                         </td>
                                         <td class="col-value time-spent-in-hours px-6 py-4 text-center">
                                             {{$c_cycle->time_spent_in_hours}}
                                         </td>
-                                        <td class="col-value current-amount px-6 py-4 text-center {{floatval($p_cycle->productivity) >= 100? 'text-green-450' : 'text-red-500'}}">
+                                        <td class="col-value current-amount px-6 py-4 text-center {{floatval($c_cycle->productivity) >= 100? 'text-green-450' : 'text-red-500'}}">
                                             {{$c_cycle->current_amount}}
                                         </td>
-                                        <td class="col-value expected-amount-per-spent-time px-6 py-4 text-center {{floatval($p_cycle->productivity) >= 100? 'text-green-450' : 'text-red-500'}}">
+                                        <td class="col-value expected-amount-per-spent-time px-6 py-4 text-center {{floatval($c_cycle->productivity) >= 100? 'text-green-450' : 'text-red-500'}}">
                                             {{$c_cycle->expected_amount_per_spent_time}}
                                         </td>
                                         <td class="col-value total-amount px-6 py-4 text-center">
@@ -681,7 +682,7 @@
                                 </tbody>
                             </table>
                         </div>
-                        <div class="w-full mx-2 p-2 bg-gray-50">
+                        <div class="w-full p-2 bg-gray-50 rounded-b-xl">
                             {{ $child_cycles->links() }}
                         </div>
                     </div>
@@ -699,7 +700,7 @@
                         </x-nav-button>
                     </div>
                     <div class="flex justify-center items-start max-h-[500px] overflow-y-scroll mt-6">
-                        <div id="modal-detais-table" class="cycle w-[95%] rounded-xl bg-white my-5 shadow-md">
+                        <div id="modal-details-table" class="cycle w-[95%] rounded-xl bg-white my-5 shadow-md">
                             <dl class="grid grid-cols-4 xl:grid-cols-8 overflow-hidden text-left rounded-xl">
                                 <div class="col-span-4 flex flex-col bg-gray-200/50 xl:border-r-2">
                                     <dt class="order-first text-sm lg:text-lg font-semibold bg-gray-800 text-white w-[45%] xl:w-1/2 rounded-tl-xl pl-5 py-2 flex flex-row justify-between">

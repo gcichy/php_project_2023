@@ -15,6 +15,9 @@ use App\Models\ProductionCycleUser;
 use App\Models\ProductionSchema;
 use App\Models\StaticValue;
 use App\Models\User;
+use App\Models\Work;
+use App\Models\WorkView;
+use Carbon\Carbon;
 use DateInterval;
 use DateTime;
 use Exception;
@@ -31,6 +34,8 @@ class ProductionCycleController extends Controller
 {
     public function index(Request $request): View
     {
+        //if is work cycle then work.work-cycle view is handled
+        $is_work_cycle = $request->route()->uri == 'praca-w-cyklu';
         $user = Auth::user();
         $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
         $users = User::select('id','employeeNo', 'role')->get();
@@ -46,17 +51,27 @@ class ProductionCycleController extends Controller
             $parent_cycles = $this->filterParentCycles($request, $parent_cycles, $where_clause);
             $filt_items = array_merge($where_clause['where_in'], $where_clause['where_like']);
             $parent_cycles = $this->orderParentCycles($parent_cycles, $request->order);
-            $parent_cycles = $parent_cycles->paginate(10);
+            if($is_work_cycle) {
+                $filtered_cycles_work = $this->filterParentCyclesByWork($parent_cycles);
+                $parent_cycles = $filtered_cycles_work[0];
+                $work_array = $filtered_cycles_work[1];
+                $parent_cycles = $parent_cycles->paginate(2);
+            }
+            else {
+                $parent_cycles = $parent_cycles->paginate(10);
+            }
+
         } catch(Exception $e) {
             Log::channel('error')->error('Error filtering parent cycles grid: '.$e->getMessage(), [
                 'employeeNo' => $employee_no,
             ]);
             if(isset($parent_cycles) and $parent_cycles instanceof Builder) {
-                $parent_cycles = $parent_cycles->paginate(10);
+                $parent_cycles = $is_work_cycle? $parent_cycles->paginate(2) : $parent_cycles->paginate(10);
             } else {
-                $parent_cycles = ParentCycleView::paginate(10);
+                $parent_cycles = $is_work_cycle? ParentCycleView::paginate(2) : ParentCycleView::paginate(10);
             }
             $status_err = 'Nie udało się przefiltrować - błąd systemu.';
+            $filt_items = isset($filt_items)? $filt_items : null;
             $filt_start_time = isset($filt_start_time)? $filt_start_time : null;
             $filt_end_time = isset($filt_end_time)? $filt_end_time : null;
         }
@@ -78,7 +93,8 @@ class ProductionCycleController extends Controller
             'expected_amount_per_time_frame' => 'Oczekiwana ilość (szt)',
         );
 
-        return view('production.production', [
+        $view = $is_work_cycle? 'work.work-cycle' : 'production.production';
+        return view($view, [
             'parent_cycles' => $parent_cycles,
             'user' => $user,
             'users' => $users,
@@ -89,6 +105,7 @@ class ProductionCycleController extends Controller
             'filt_end_time' => $filt_end_time,
             'filt_items' => $filt_items,
             'order_items' => $order_items,
+            'work_array' => isset($work_array)? $work_array : null,
             'storage_path_products' => 'products',
             'storage_path_components' => 'components',
         ]);
@@ -655,8 +672,14 @@ class ProductionCycleController extends Controller
     }
     private function filterByExpectedEndTimeParentCycles(Request $request): array
     {
-        if(is_null($request->exp_end_start) or is_null($request->exp_end_end)) {
-            if(!(is_null($request->exp_end_start) and is_null($request->exp_end_end))) {
+        $exp_start = Carbon::parse($request->exp_start);
+        $exp_end = Carbon::parse($request->exp_end);
+
+        if(is_null($request->exp_start) or is_null($request->exp_end) or $exp_start->gt($exp_end)) {
+            if($exp_start->gt($exp_end)) {
+                $status_err = 'Nie przefiltrowano terminu. Data "Termin od" nie może być później od daty "Termin do".';
+            }
+            else if(!(is_null($request->exp_start) and is_null($request->exp_end))) {
                 $status_err = 'Nie przefiltrowano terminu. Aby filtrować po terminie podaj początek i koniec.';
             }
             $current_time = new DateTime();
@@ -669,10 +692,11 @@ class ProductionCycleController extends Controller
             $parent_cycles = ParentCycleView::whereBetween('expected_end_time', [$start_time." 00:00:00",$end_time." 23:59:59"]);
         }
         else {
-            $filt_start_time = $request->exp_end_start;
-            $filt_end_time = $request->exp_end_end;
-            $parent_cycles = ParentCycleView::whereBetween('expected_end_time', [$request->exp_end_start." 00:00:00",$request->exp_end_end." 23:59:59"]);
+            $filt_start_time = $request->exp_start;
+            $filt_end_time = $request->exp_end;
+            $parent_cycles = ParentCycleView::whereBetween('expected_end_time', [$request->exp_start." 00:00:00",$request->exp_end." 23:59:59"]);
         }
+
         return array(
             'filt_end_time' => $filt_end_time,
             'filt_start_time' => $filt_start_time,
@@ -702,6 +726,19 @@ class ProductionCycleController extends Controller
             }
         }
         return  $parent_cycles;
+    }
+
+    private function filterParentCyclesByWork(Builder $parent_cycles): array
+    {
+        $work_cycles_id = Work::select('production_cycle_id')->distinct()->get();
+        $work_cycles_id = collect($work_cycles_id)->map(function (Work $arr) { return $arr->production_cycle_id; })->toArray();
+        $parent_cycles = $parent_cycles->whereIn('cycle_id', $work_cycles_id);
+        $work_array = array();
+        foreach ($parent_cycles->get() as $p_cycle) {
+            $works = WorkView::where('cycle_id', $p_cycle->cycle_id)->orderBy('end_time', 'asc')->get();
+            $work_array[$p_cycle->cycle_id] = $works;
+        }
+        return array($parent_cycles,$work_array);
     }
     private function orderParentCycles(Builder $parent_cycles, $order_table): Builder
     {

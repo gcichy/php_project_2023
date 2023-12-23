@@ -134,9 +134,24 @@
                         </x-responsive-nav-link>
                     </li>
                     <li>
-                        <x-responsive-nav-link :href="route('work.index')" :active="request()->routeIs('work.index')">
-                            {{ __('Praca') }}
-                        </x-responsive-nav-link>
+                        @php
+                            $name = 'Praca';
+                            $dropdown_id = 'dropdown-work'
+                        @endphp
+                        <x-responsive-nav-button :name="$name" :dropdown_id="$dropdown_id">
+                            <ul id="{{$dropdown_id}}" class="hidden py-2 space-y-2">
+                                <li>
+                                    <x-responsive-nav-link :href="route('work.index')" :active="request()->routeIs('work.index')" class="w-[95%] ml-[5%]">
+                                        {{ __('Praca ogółem') }}
+                                    </x-responsive-nav-link>
+                                </li>
+                                <li>
+                                    <x-responsive-nav-link :href="route('work-cycle.index')" :active="request()->routeIs('work-cycle.index')" class="w-[95%] ml-[5%]">
+                                        {{ __('Praca w cyklu') }}
+                                    </x-responsive-nav-link>
+                                </li>
+                            </ul>
+                        </x-responsive-nav-button>
                     </li>
                     <li>
                         <x-responsive-nav-link :href="route('stastistics.index')" :active="request()->routeIs('stastistics.index')">
