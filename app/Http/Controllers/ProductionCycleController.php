@@ -46,7 +46,6 @@ class ProductionCycleController extends Controller
             $filt_start_time = $filt_by_exp_end_table['filt_start_time'];
             $filt_end_time = $filt_by_exp_end_table['filt_end_time'];
             $status_err = $filt_by_exp_end_table['status_err'];
-
             $where_clause = $this->createWhereClause($request);
             $parent_cycles = $this->filterParentCycles($request, $parent_cycles, $where_clause);
             $filt_items = array_merge($where_clause['where_in'], $where_clause['where_like']);
@@ -58,17 +57,16 @@ class ProductionCycleController extends Controller
                 $parent_cycles = $parent_cycles->paginate(2);
             }
             else {
-                $parent_cycles = $parent_cycles->paginate(10);
+                $parent_cycles = $parent_cycles->paginate(2);
             }
-
         } catch(Exception $e) {
             Log::channel('error')->error('Error filtering parent cycles grid: '.$e->getMessage(), [
                 'employeeNo' => $employee_no,
             ]);
             if(isset($parent_cycles) and $parent_cycles instanceof Builder) {
-                $parent_cycles = $is_work_cycle? $parent_cycles->paginate(2) : $parent_cycles->paginate(10);
+                $parent_cycles = $is_work_cycle? $parent_cycles->paginate(2) : $parent_cycles->paginate(2);
             } else {
-                $parent_cycles = $is_work_cycle? ParentCycleView::paginate(2) : ParentCycleView::paginate(10);
+                $parent_cycles = $is_work_cycle? ParentCycleView::paginate(2) : ParentCycleView::paginate(2);
             }
             $status_err = 'Nie udało się przefiltrować - błąd systemu.';
             $filt_items = isset($filt_items)? $filt_items : null;
@@ -93,6 +91,7 @@ class ProductionCycleController extends Controller
             'expected_amount_per_time_frame' => 'Oczekiwana ilość (szt)',
         );
 
+        $status = session('add_work')? 'Aby zaraportować pracę wybierz cykl produkcji (możesz też dodać nowy).' : null;
         $view = $is_work_cycle? 'work.work-cycle' : 'production.production';
         return view($view, [
             'parent_cycles' => $parent_cycles,
@@ -108,7 +107,7 @@ class ProductionCycleController extends Controller
             'work_array' => isset($work_array)? $work_array : null,
             'storage_path_products' => 'products',
             'storage_path_components' => 'components',
-        ]);
+        ])->with('status', $status);
     }
 
     public function cycleDetails(Request $request, $id): View|RedirectResponse
@@ -159,7 +158,7 @@ class ProductionCycleController extends Controller
             //get pack products with minutes per one pcs calculated
             $products = Product::select('product.id', 'product.name', 'product.image', 'product.material', DB::raw('truncate(60/(amount/duration_hours),2) as minutes_per_pcs'))
                 ->join('production_standard', 'product.id', '=','production_standard.product_id' )
-                ->orderBy('name')->paginate(2,['*'],'pak-prod');
+                ->orderBy('name')->paginate(1,['*'],'pak-prod');
             $category_name = 'Zadanie';
 
             $union = ProductionSchema::select('id','production_schema', 'description', DB::raw('null as minutes_per_pcs'))
@@ -174,7 +173,7 @@ class ProductionCycleController extends Controller
             if(is_string($request->filter_elem)) {
                 $elements = $elements->where('production_schema', 'like', '%' . $request->filter_elem . '%');
             }
-            $elements = $elements->paginate(10,['*'],'dodaj-cykl');
+            $elements = $elements->orderBy('id','asc')->paginate(2,['*'],'dodaj-cykl');
         } else {
             //get products with minutes per one pcs calculated
             $elements = Product::join('product_component', 'product.id', '=', 'product_component.product_id')
@@ -257,6 +256,7 @@ class ProductionCycleController extends Controller
 
     public function storeUpdatedCycle(Request $request, $id): RedirectResponse
     {
+
         $cycle_status = ProductionCycle::where(['id' => $id, 'start_time' => null])->first();
         if(!$cycle_status instanceof ProductionCycle) {
             return back()->with('status_err', 'Nie można edytować cyklu. Cykl rozpoczęty.')->withInput();
@@ -273,7 +273,7 @@ class ProductionCycleController extends Controller
         $user = Auth::user();
         $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
         try {
-            $employees_name = 'employees'.$id;
+            $employees_name = 'employees_2'.$id;
             $employees = $request->$employees_name;
             $employees = $this->validateEmployees($employees, $employee_no, true);
 
@@ -436,12 +436,12 @@ class ProductionCycleController extends Controller
      */
     private function insertProductionCycle($request, string $employee_no) : int
     {
-        $category = intval($request->category);
-        $id = intval($request->id);
-        $amount = intval($request->amount);
+        $category = intval($request->category_2);
+        $id = intval($request->id_2);
+        $amount = intval($request->amount_2);
         $parent_id = null;
         if(!in_array($category, [1,2,3])) {
-            Log::channel('error')->error('Error inserting cycle: incorrect $request->category value: '.$request->category, [
+            Log::channel('error')->error('Error inserting cycle: incorrect $request->category_2 value: '.$request->category_2, [
                 'employeeNo' => $employee_no,
             ]);
             throw new Exception('Nie udało się dodać cyklu. Błąd systemu przy ustalaniu kategorii.',1);
@@ -452,7 +452,7 @@ class ProductionCycleController extends Controller
                 throw new Exception('Nie można dodać nowego cyklu - istnieje rozpoczęty cykl dla tego produktu. Aby dodać nowy cykl zakończ poprzedni.',1);
             }
             if(!Product::find($id) instanceof Product) {
-                Log::channel('error')->error('Error inserting cycle: incorrect $request->id value: '.$request->id.'. Product with provided id not found.', [
+                Log::channel('error')->error('Error inserting cycle: incorrect $request->id_2 value: '.$request->id_2.'. Product with provided id not found.', [
                     'employeeNo' => $employee_no,
                 ]);
                 throw new Exception('Nie udało się dodać cyklu dla produktu. Błąd systemu.',1);
@@ -462,10 +462,10 @@ class ProductionCycleController extends Controller
                 'level' => 1,
                 'category' => 1,
                 'product_id' => $id,
-                'expected_start_time' => $request->exp_start.' 00:00:00',
-                'expected_end_time' => $request->exp_end.' 23:59:59',
+                'expected_start_time' => $request->exp_start_2.' 00:00:00',
+                'expected_end_time' => $request->exp_end_2.' 23:59:59',
                 'total_amount' => $amount,
-                'additional_comment' => $request->comment,
+                'additional_comment' => $request->comment_2,
                 'created_by' => $employee_no,
                 'updated_by' => $employee_no,
                 'created_at' => date('y-m-d h:i:s'),
@@ -480,8 +480,8 @@ class ProductionCycleController extends Controller
                         'category' => 2,
                         'component_id' => $comp->component_id,
                         'parent_id' => $parent_id,
-                        'expected_start_time' => $request->exp_start.' 00:00:00',
-                        'expected_end_time' => $request->exp_end.' 23:59:59',
+                        'expected_start_time' => $request->exp_start_2.' 00:00:00',
+                        'expected_end_time' => $request->exp_end_2.' 23:59:59',
                         'total_amount' => $amount * $comp->amount_per_product,
                         'created_by' => $employee_no,
                         'updated_by' => $employee_no,
@@ -498,8 +498,8 @@ class ProductionCycleController extends Controller
                         'production_schema_id' => $prod_schema->production_schema_id,
                         'parent_id' => $parent_id2,
                         'sequence_no' => $prod_schema->sequence_no,
-                        'expected_start_time' => $request->exp_start.' 00:00:00',
-                        'expected_end_time' => $request->exp_end.' 23:59:59',
+                        'expected_start_time' => $request->exp_start_2.' 00:00:00',
+                        'expected_end_time' => $request->exp_end_2.' 23:59:59',
                         'total_amount' => $amount * $comp->amount_per_product,
                         'created_by' => $employee_no,
                         'updated_by' => $employee_no,
@@ -514,7 +514,7 @@ class ProductionCycleController extends Controller
                 throw new Exception('Nie można dodać nowego cyklu - istnieje rozpoczęty cykl dla tego materiału. Aby dodać nowy cykl zakończ poprzedni.',1);
             }
             if(!Component::find($id) instanceof Component) {
-                Log::channel('error')->error('Error inserting cycle: incorrect $request->id value: '.$request->id.'. Component with provided id not found.', [
+                Log::channel('error')->error('Error inserting cycle: incorrect $request->id_2 value: '.$request->id_2.'. Component with provided id not found.', [
                     'employeeNo' => $employee_no,
                 ]);
                 throw new Exception('Nie udało się dodać cyklu dla materiału. Błąd systemu.',1);
@@ -523,10 +523,10 @@ class ProductionCycleController extends Controller
                 'level' => 1,
                 'category' => 2,
                 'component_id' => $id,
-                'expected_start_time' => $request->exp_start.' 00:00:00',
-                'expected_end_time' => $request->exp_end.' 23:59:59',
+                'expected_start_time' => $request->exp_start_2.' 00:00:00',
+                'expected_end_time' => $request->exp_end_2.' 23:59:59',
                 'total_amount' => $amount,
-                'additional_comment' => $request->comment,
+                'additional_comment' => $request->comment_2,
                 'created_by' => $employee_no,
                 'updated_by' => $employee_no,
                 'created_at' => date('y-m-d h:i:s'),
@@ -540,10 +540,10 @@ class ProductionCycleController extends Controller
                     'component_id' => $prod_schema->production_schema_id,
                     'parent_id' => $parent_id,
                     'sequence_no' => $prod_schema->sequence_no,
-                    'expected_start_time' => $request->exp_start.' 00:00:00',
-                    'expected_end_time' => $request->exp_end.' 23:59:59',
+                    'expected_start_time' => $request->exp_start_2.' 00:00:00',
+                    'expected_end_time' => $request->exp_end_2.' 23:59:59',
                     'total_amount' => $amount,
-                    'additional_comment' => $request->comment,
+                    'additional_comment' => $request->comment_2,
                     'created_by' => $employee_no,
                     'updated_by' => $employee_no,
                     'created_at' => date('y-m-d h:i:s'),
@@ -551,32 +551,32 @@ class ProductionCycleController extends Controller
             }
         }
         else if($category == 3) {
-            if(!is_null($request->pack_prod_id)) {
+            if(!is_null($request->pack_prod_id_2)) {
                 if(count(ProductionCycle::where(['production_schema_id' => $id, 'parent_id' => null, 'finished' => 0])->get()) > 0) {
                     throw new Exception('Nie można dodać nowego cyklu - istnieje rozpoczęty cykl dla tego zadania. Aby dodać nowy cykl zakończ poprzedni.',1);
                 }
             } else {
-                if(count(ProductionCycle::where(['production_schema_id' => $id, 'product_id' => $request->pack_prod_id, 'parent_id' => null, 'finished' => 0])->get()) > 0) {
+                if(count(ProductionCycle::where(['production_schema_id' => $id, 'product_id' => $request->pack_prod_id_2, 'parent_id' => null, 'finished' => 0])->get()) > 0) {
                     throw new Exception('Nie można dodać nowego cyklu - istnieje rozpoczęty cykl dla tego zadania. Aby dodać nowy cykl zakończ poprzedni.',1);
                 }
             }
 
             if(!ProductionSchema::find($id) instanceof ProductionSchema) {
-                Log::channel('error')->error('Error inserting cycle: incorrect $request->id value: '.$request->id.'. ProductionSchema with provided id not found.', [
+                Log::channel('error')->error('Error inserting cycle: incorrect $request->id_2 value: '.$request->id_2.'. ProductionSchema with provided id not found.', [
                     'employeeNo' => $employee_no,
                 ]);
                 throw new Exception('Nie udało się dodać cyklu dla zadania. Błąd systemu.',1);
             }
-            $pack_prod_id = Product::where('id', $request->pack_prod_id)->first() instanceof Product? $request->pack_prod_id : null;
+            $pack_prod_id = Product::where('id', $request->pack_prod_id_2)->first() instanceof Product? $request->pack_prod_id_2 : null;
             $parent_id = DB::table('production_cycle')->insertGetId([
                 'level' => 1,
                 'category' => 3,
                 'production_schema_id' => $id,
                 'product_id' => $pack_prod_id,
                 'total_amount' => $amount,
-                'expected_start_time' => $request->exp_start.' 00:00:00',
-                'expected_end_time' => $request->exp_end.' 23:59:59',
-                'additional_comment' => $request->comment,
+                'expected_start_time' => $request->exp_start_2.' 00:00:00',
+                'expected_end_time' => $request->exp_end_2.' 23:59:59',
+                'additional_comment' => $request->comment_2,
                 'created_by' => $employee_no,
                 'updated_by' => $employee_no,
                 'created_at' => date('y-m-d h:i:s'),
@@ -591,18 +591,18 @@ class ProductionCycleController extends Controller
      */
     private function updateProductionCycle($request, string $employee_no) : void
     {
-        $category = intval($request->category);
-        $id = intval($request->id);
-        $amount = intval($request->amount);
+        $category = intval($request->category_2);
+        $id = intval($request->id_2);
+        $amount = intval($request->amount_2);
 
         if(!in_array($category, [1,2,3])) {
-            Log::channel('error')->error('Error updating cycle: incorrect $request->category value: '.$request->category, [
+            Log::channel('error')->error('Error updating cycle: incorrect $request->category_2 value: '.$request->category_2, [
                 'employeeNo' => $employee_no,
             ]);
             throw new Exception('Nie udało się edytować cyklu. Błąd systemu przy ustalaniu kategorii.',1);
         }
         if (!ProductionCycle::find($id) instanceof ProductionCycle) {
-            Log::channel('error')->error('Error updating cycle: incorrect $request->id value: ' . $request->id . '. ProductionCycle with provided id not found.', [
+            Log::channel('error')->error('Error updating cycle: incorrect $request->id_2 value: ' . $request->id_2 . '. ProductionCycle with provided id not found.', [
                 'employeeNo' => $employee_no,
             ]);
             throw new Exception('Nie udało się edytować cyklu. Błąd systemu.', 1);
@@ -613,10 +613,10 @@ class ProductionCycleController extends Controller
             $amount_coef = ProductionCycle::where('id',$id)->select('total_amount')->first();
             $amount_coef = $amount_coef instanceof ProductionCycle? $amount / $amount_coef->total_amount : 1;
             DB::table('production_cycle')->where('id', $id)->update([
-                    'expected_start_time' => $request->exp_start.' 00:00:00',
-                    'expected_end_time' => $request->exp_end.' 23:59:59',
+                    'expected_start_time' => $request->exp_start_2.' 00:00:00',
+                    'expected_end_time' => $request->exp_end_2.' 23:59:59',
                     'total_amount' => $amount,
-                    'additional_comment' => $request->comment,
+                    'additional_comment' => $request->comment_2,
                     'updated_by' => $employee_no,
                     'updated_at' => date('y-m-d h:i:s'),]
 
@@ -625,16 +625,16 @@ class ProductionCycleController extends Controller
 
             foreach ($cycles_2 as $cycle) {
                 DB::table('production_cycle')->where('id', $cycle->id)->update([
-                        'expected_start_time' => $request->exp_start.' 00:00:00',
-                        'expected_end_time' => $request->exp_end.' 23:59:59',
+                        'expected_start_time' => $request->exp_start_2.' 00:00:00',
+                        'expected_end_time' => $request->exp_end_2.' 23:59:59',
                         'total_amount' => $amount_coef * $cycle->total_amount,
                         'updated_by' => $employee_no,
                         'updated_at' => date('y-m-d h:i:s'),]
 
                 );
                 DB::table('production_cycle')->where('parent_id', $cycle->id)->update([
-                    'expected_start_time' => $request->exp_start.' 00:00:00',
-                    'expected_end_time' => $request->exp_end.' 23:59:59',
+                    'expected_start_time' => $request->exp_start_2.' 00:00:00',
+                    'expected_end_time' => $request->exp_end_2.' 23:59:59',
                     'total_amount' => $amount_coef * $cycle->total_amount,
                     'updated_by' => $employee_no,
                     'updated_at' => date('y-m-d h:i:s'),]);
@@ -643,18 +643,18 @@ class ProductionCycleController extends Controller
         //component cycle update
         else if($category == 2) {
             DB::table('production_cycle')->where('id', $id)->update([
-                'expected_start_time' => $request->exp_start.' 00:00:00',
-                'expected_end_time' => $request->exp_end.' 23:59:59',
+                'expected_start_time' => $request->exp_start_2.' 00:00:00',
+                'expected_end_time' => $request->exp_end_2.' 23:59:59',
                 'total_amount' => $amount,
-                'additional_comment' => $request->comment,
+                'additional_comment' => $request->comment_2,
                 'updated_by' => $employee_no,
                 'updated_at' => date('y-m-d h:i:s'),]);
 
             DB::table('production_cycle')->where('parent_id', $id)->update([
-                    'expected_start_time' => $request->exp_start.' 00:00:00',
-                    'expected_end_time' => $request->exp_end.' 23:59:59',
+                    'expected_start_time' => $request->exp_start_2.' 00:00:00',
+                    'expected_end_time' => $request->exp_end_2.' 23:59:59',
                     'total_amount' => $amount,
-                    'additional_comment' => $request->comment,
+                    'additional_comment' => $request->comment_2,
                     'updated_by' => $employee_no,
                     'updated_at' => date('y-m-d h:i:s'),]);
         }
@@ -663,9 +663,9 @@ class ProductionCycleController extends Controller
 
             DB::table('production_cycle')->where('id', $id)->update([
                 'total_amount' => $amount,
-                'expected_start_time' => $request->exp_start . ' 00:00:00',
-                'expected_end_time' => $request->exp_end . ' 23:59:59',
-                'additional_comment' => $request->comment,
+                'expected_start_time' => $request->exp_start_2 . ' 00:00:00',
+                'expected_end_time' => $request->exp_end_2 . ' 23:59:59',
+                'additional_comment' => $request->comment_2,
                 'updated_by' => $employee_no,
                 'updated_at' => date('y-m-d h:i:s'),]);
         }
@@ -674,6 +674,7 @@ class ProductionCycleController extends Controller
     {
         $exp_start = Carbon::parse($request->exp_start);
         $exp_end = Carbon::parse($request->exp_end);
+
 
         if(is_null($request->exp_start) or is_null($request->exp_end) or $exp_start->gt($exp_end)) {
             if($exp_start->gt($exp_end)) {
@@ -694,9 +695,8 @@ class ProductionCycleController extends Controller
         else {
             $filt_start_time = $request->exp_start;
             $filt_end_time = $request->exp_end;
-            $parent_cycles = ParentCycleView::whereBetween('expected_end_time', [$request->exp_start." 00:00:00",$request->exp_end." 23:59:59"]);
+            $parent_cycles = ParentCycleView::whereBetween('expected_end_time', [$filt_start_time." 00:00:00",$filt_end_time." 23:59:59"]);
         }
-
         return array(
             'filt_end_time' => $filt_end_time,
             'filt_start_time' => $filt_start_time,
@@ -777,25 +777,25 @@ class ProductionCycleController extends Controller
     {
         $keyword = $edit? 'edytować' : 'dodać';
         $request->validate([
-            'id' => ['required'],
-            'exp_start' => ['date', 'required'],
-            'exp_end' => ['date','required','after:yesterday', 'after_or_equal:exp_start'],
-            'pack_prod_id' => ['nullable', 'integer'],
-            'comment' => ['max:255'],
-            'amount' => ['required','integer', 'gt:0']
+            'id_2' => ['required'],
+            'exp_start_2' => ['date', 'required'],
+            'exp_end_2' => ['date','required','after:yesterday', 'after_or_equal:exp_start'],
+            'pack_prod_id_2' => ['nullable', 'integer'],
+            'comment_2' => ['max:255'],
+            'amount_2' => ['required','integer', 'gt:0']
         ],
             [
-                'id.required' => 'Aby '.$keyword.' cykl wybierz produkt/materiał/zadanie.',
-                'amount.required' => 'Aby '.$keyword.' cykl należy podać ilość sztuk.',
-                'amount.integer' => 'Ilość sztuk musi być liczbą całkowitą.',
-                'amount.gt' => 'Ilość sztuk musi być liczbą większa od 0.',
-                'exp_start.required' => 'Aby '.$keyword.' cykl ustaw jego przewidywany start.',
-                'exp_start.date' => "Pole 'Start' powinno być datą w formacie 'yyyy-mm-dd'.",
-                'exp_end.after' => "'Termin' musi być ustawiony w przyszłości.",
-                'exp_end.after_or_equal' => "'Termin' musi być później niż 'Start'",
-                'exp_end.required' => 'Aby '.$keyword.' cykl ustaw termin wykonania.',
-                'exp_end.date' => "Pole 'Termin' powinno być datą w formacie 'yyyy-mm-dd'.",
-                'comment.max' => 'Pole uwagi zawiera zbyt dużo znaków.',
+                'id_2.required' => 'Aby '.$keyword.' cykl wybierz produkt/materiał/zadanie.',
+                'amount_2.required' => 'Aby '.$keyword.' cykl należy podać ilość sztuk.',
+                'amount_2.integer' => 'Ilość sztuk musi być liczbą całkowitą.',
+                'amount_2.gt' => 'Ilość sztuk musi być liczbą większa od 0.',
+                'exp_start_2.required' => 'Aby '.$keyword.' cykl ustaw jego przewidywany start.',
+                'exp_start_2.date' => "Pole 'Start' powinno być datą w formacie 'yyyy-mm-dd'.",
+                'exp_end_2.after' => "'Termin' musi być ustawiony w przyszłości.",
+                'exp_end_2.after_or_equal' => "'Termin' musi być później niż 'Start'",
+                'exp_end_2.required' => 'Aby '.$keyword.' cykl ustaw termin wykonania.',
+                'exp_end_2.date' => "Pole 'Termin' powinno być datą w formacie 'yyyy-mm-dd'.",
+                'comment_2.max' => 'Pole uwagi zawiera zbyt dużo znaków.',
             ]);
     }
 }

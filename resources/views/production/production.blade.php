@@ -143,10 +143,6 @@
             $name = "Produkcja";
         @endphp
         <x-information-panel :viewName="$name">
-            {{--    routing for details set in java script above   --}}
-            <x-nav-button  id="filter-btn" class="on-select details bg-yellow-300 hover:bg-yellow-600">
-                {{ __('Filtry') }}
-            </x-nav-button>
             @php
                 $name = 'Dodaj cykl produkcji';
                 $button_id = 'add-cycle';
@@ -173,11 +169,12 @@
                     </form>
                 </div>
             </x-modal>
+            <x-nav-button  id="filter-btn" class="on-select details bg-yellow-300 hover:bg-yellow-600 ml-2 xl:mr-4">
+                {{ __('Filtry') }}
+            </x-nav-button>
         </x-information-panel>
         @if(isset($parent_cycles) and isset($users) and isset($filt_items))
-            <form method="POST" action="{{ route('production.filter') }}" enctype="multipart/form-data">
-                @method('PATCH')
-                @csrf
+            <form method="GET" action="{{ route('production.index') }}" enctype="multipart/form-data">
                 <div class="w-full mt-4 flex justify-center">
                     <div id="filters" class="flex flex-row justify-start w-[90%] border-2 rounded-lg hidden">
                         <dl class="grid grid-cols-3 bg-white text-left rounded-l-lg w-4/5">
@@ -333,26 +330,26 @@
                                     </div>
                                 </div>
                             @endif
-{{--                            <div class="col-span-3 flex flex-col justify-start  border-r-2">--}}
-{{--                                <a class ='block px-2 text-xs md:text-sm font-medium bg-gray-800 text-center text-white'>--}}
-{{--                                    Sortuj według--}}
-{{--                                </a>--}}
-{{--                                <div class="p-1 flex justify-center items-center h-full">--}}
-{{--                                    @php $unique_id = 'order' @endphp--}}
-{{--                                    <x-select-multiple :uniqueId="$unique_id" :placeholder="__('Sortuj według')">--}}
-{{--                                        <x-slot name="options">--}}
-{{--                                            @foreach($order as $key => $val)--}}
-{{--                                                <option value="{{$key}};asc" {{(isset($order_items) and in_array($key.';asc', $order_items))? 'selected' : ''}}>--}}
-{{--                                                    {{$val}} (rosnąco)--}}
-{{--                                                </option>--}}
-{{--                                                <option value="{{$key}};desc" {{(isset($order_items) and in_array($key.';desc', $order_items))? 'selected' : ''}}>--}}
-{{--                                                    {{$val}} (malejąco)--}}
-{{--                                                </option>--}}
-{{--                                           @endforeach--}}
-{{--                                        </x-slot>--}}
-{{--                                    </x-select-multiple>--}}
-{{--                                </div>--}}
-{{--                            </div>--}}
+                            {{--                            <div class="col-span-3 flex flex-col justify-start  border-r-2">--}}
+                            {{--                                <a class ='block px-2 text-xs md:text-sm font-medium bg-gray-800 text-center text-white'>--}}
+                            {{--                                    Sortuj według--}}
+                            {{--                                </a>--}}
+                            {{--                                <div class="p-1 flex justify-center items-center h-full">--}}
+                            {{--                                    @php $unique_id = 'order' @endphp--}}
+                            {{--                                    <x-select-multiple :uniqueId="$unique_id" :placeholder="__('Sortuj według')">--}}
+                            {{--                                        <x-slot name="options">--}}
+                            {{--                                            @foreach($order as $key => $val)--}}
+                            {{--                                                <option value="{{$key}};asc" {{(isset($order_items) and in_array($key.';asc', $order_items))? 'selected' : ''}}>--}}
+                            {{--                                                    {{$val}} (rosnąco)--}}
+                            {{--                                                </option>--}}
+                            {{--                                                <option value="{{$key}};desc" {{(isset($order_items) and in_array($key.';desc', $order_items))? 'selected' : ''}}>--}}
+                            {{--                                                    {{$val}} (malejąco)--}}
+                            {{--                                                </option>--}}
+                            {{--                                           @endforeach--}}
+                            {{--                                        </x-slot>--}}
+                            {{--                                    </x-select-multiple>--}}
+                            {{--                                </div>--}}
+                            {{--                            </div>--}}
                         </dl>
                         <div class="flex flex-col justify-center items-center bg-white xl:border-r-2 rounded-r-lg w-1/5">
                             <button type="submit" class ='w-[60%] xl:w-[40%] text-sm md:text-lg bg-gray-800 hover:bg-gray-600 font-medium text-center text-white rounded-lg'>
@@ -440,8 +437,8 @@
                                                 <dl class="grid grid-cols-4 xl:grid-cols-8 overflow-visible text-left rounded-xl w-[90%] shadow-md">
                                                     <div class="col-span-4 flex flex-col bg-gray-200/50 xl:border-r-2 rounded-t-xl xl:rounded-tl-xl xl:rounded-tr-none">
                                                         <dt class="order-first text-sm lg:text-lg font-semibold bg-gray-800 text-white w-[70%] rounded-tl-xl pl-5 py-2 flex flex-row justify-between">
-                                                            <input id="edit-cycle-id-input-{{$p_cycle->cycle_id}}" name="id" type="number" class="hidden" value="{{$p_cycle->cycle_id}}">
-                                                            <input id="edit-cycle-cat-input-{{$p_cycle->cycle_id}}" name="category" type="number" class="hidden" value="{{$p_cycle->category}}">
+                                                            <input id="edit-cycle-id-input-{{$p_cycle->cycle_id}}" name="id_2" type="number" class="hidden" value="{{$p_cycle->cycle_id}}">
+                                                            <input id="edit-cycle-cat-input-{{$p_cycle->cycle_id}}" name="category_2" type="number" class="hidden" value="{{$p_cycle->category}}">
                                                             <div id="edit-cycle-cat-{{$p_cycle->cycle_id}}" class="p-1">
                                                                 {{($p_cycle->category == 1)? 'Produkt' : (($p_cycle->category == 2)? 'Materiał' : 'Zadanie')}}
                                                             </div>
@@ -462,7 +459,7 @@
                                                                  data-te-datepicker-init
                                                                  data-te-format="yyyy-mm-dd"
                                                                  data-te-input-wrapper-init>
-                                                                <input name="exp_start" value="{{explode(' ',$p_cycle->expected_start_time)[0]}}"
+                                                                <input name="exp_start_2" value="{{explode(' ',$p_cycle->expected_start_time)[0]}}"
                                                                        class="p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
                                                                        placeholder="Start"/>
                                                             </div>
@@ -475,7 +472,7 @@
                                                                  data-te-datepicker-init
                                                                  data-te-format="yyyy-mm-dd"
                                                                  data-te-input-wrapper-init>
-                                                                <input name="exp_end" value="{{explode(' ',$p_cycle->expected_end_time)[0]}}"
+                                                                <input name="exp_end_2" value="{{explode(' ',$p_cycle->expected_end_time)[0]}}"
                                                                        class="p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
                                                                        placeholder="Termin"/>
                                                             </div>
@@ -484,7 +481,7 @@
                                                     <div class="col-span-2 xl:col-span-4 flex flex-col bg-gray-200/50 border-r">
                                                         <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Pracownicy</dt>
                                                         <div class="p-1 pl-5 flex justify-center items-center h-full">
-                                                            @php $unique_id = 'employees'.$p_cycle->cycle_id @endphp
+                                                            @php $unique_id = 'employees_2'.$p_cycle->cycle_id @endphp
                                                             <x-select-multiple :uniqueId="$unique_id" :placeholder="__('Pracownicy')">
                                                                 <x-slot name="options">
                                                                     @if(isset($users))
@@ -507,7 +504,7 @@
                                                             <div class="w-full p-1 flex justify-center items-center h-full w-full">
                                                                 <input id="new-cycle-amount-input-{{$p_cycle->cycle_id}}" type="number" min="0" value="{{$p_cycle->total_amount}}"
                                                                        class="xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
-                                                                       name="amount" placeholder="Ilość (szt)">
+                                                                       name="amount_2" placeholder="Ilość (szt)">
                                                             </div>
                                                         </div>
                                                     </div>
@@ -529,7 +526,7 @@
                                                             <div class="p-1 flex justify-center items-center h-full w-full">
                                                                 <textarea id="new-cycle-comm-input-{{$p_cycle->cycle_id}}"
                                                                           class="xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
-                                                                          name="comment" placeholder="Dodtakowe uwagi">{{$p_cycle->additional_comment}}
+                                                                          name="comment_2" placeholder="Dodtakowe uwagi">{{$p_cycle->additional_comment}}
                                                             </textarea>
                                                             </div>
                                                         </div>
@@ -640,7 +637,7 @@
                                     Statystyki
                                 </button>
                             </div>
-{{--                            ROW 1--}}
+                            {{--                            ROW 1--}}
                             <div class="additional-info col-span-4 flex flex-col bg-gray-200/50 hidden">
                                 <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Uwagi</dt>
                                 <div class="w-full h-full flex justify-center items-center">
@@ -657,7 +654,7 @@
                                     </dd>
                                 </div>
                             </div>
-{{--                            ROW 2--}}
+                            {{--                            ROW 2--}}
                             <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
                                 <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Zakładany start</dt>
                                 <div class="w-full h-full flex justify-center items-center">
@@ -718,7 +715,7 @@
                                     </dd>
                                 </div>
                             </div>
-{{--                            ROW 3--}}
+                            {{--                            ROW 3--}}
                             <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2 hidden">
                                 <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Produktywność</dt>
                                 <div class="w-full h-full flex justify-center items-center">
@@ -823,13 +820,13 @@
                                     </dd>
                                 </div>
                             </div>
-{{--                            tu jeszcze jakiś ROW 5 z miarami itp--}}
+                            {{--                            tu jeszcze jakiś ROW 5 z miarami itp--}}
                             <div class="additional-info col-span-4 xl:col-span-8 w-full bg-gray-300 py-2 flex flex-row justify-start hidden">
                                 <p class="pl-5 text-gray-800 focus:outline-none font-medium rounded-sm text-xs lg:text-sm">
                                     Informacje dodatkowe
                                 </p>
                             </div>
-{{--                            ROW 6 - product photo--}}
+                            {{--                            ROW 6 - product photo--}}
                             @if(!is_null($p_cycle->image))
                                 @php $path = ''; @endphp
                                 @if($p_cycle->category == 1)
@@ -837,11 +834,11 @@
                                 @elseif($p_cycle->category == 2)
                                     @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
                                 @endif
-                                    <div class="additional-info col-span-4 xl:col-span-2 flex justify-center bg-gray-200/50 border-r-2 hidden p-2">
-                                        <div class="max-w-[150px]">
-                                            <img src="{{asset('storage/'.$path.$p_cycle->image)}}">
-                                        </div>
+                                <div class="additional-info col-span-4 xl:col-span-2 flex justify-center bg-gray-200/50 border-r-2 hidden p-2">
+                                    <div class="max-w-[150px]">
+                                        <img src="{{asset('storage/'.$path.$p_cycle->image)}}">
                                     </div>
+                                </div>
                             @endif
                             @if(!is_null($p_cycle->description))
                                 <div class="additional-info col-span-4 {{is_null($p_cycle->image)? 'xl:col-span-8' : 'xl:col-span-6'}} flex flex-col bg-gray-200/50 hidden">
@@ -853,7 +850,7 @@
                                     </div>
                                 </div>
                             @endif
-{{--                            ROW 7 - product information--}}
+                            {{--                            ROW 7 - product information--}}
                             @if(!is_null($p_cycle->height) or !is_null($p_cycle->length) or !is_null($p_cycle->width))
                                 <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
                                     @php
@@ -924,7 +921,7 @@
                     </div>
                 @endforeach
                 <div class="w-4/5">
-                        {{ $parent_cycles->links() }}
+                    {{ $parent_cycles->appends(request()->query())->links() }}
                 </div>
             </div>
         @endif

@@ -97,32 +97,16 @@ class WorkController extends Controller
         ]);
     }
 
-    public function cycleDetails(Request $request, $id): View|RedirectResponse
+    public function addWorkWrapper(): RedirectResponse
     {
-        $user = Auth::user();
-        $child_cycles = ChildCycleView::where('parent_id', $id)->paginate(10);
-        $parent_cycle = ParentCycleView::where('cycle_id', $id)->first();
-        if(count($child_cycles) == 0) {
-            return back();
-        }
-        return view('production.cycle-details', [
-            'p_cycle' => $parent_cycle,
-            'child_cycles' => $child_cycles,
-            'user' => $user,
-            'storage_path_products' => 'products',
-            'storage_path_components' => 'components',
-        ]);
+        return  redirect('/produkcja')->with('add_work', true);
     }
 
-    public function addCycleWrapper(Request $request): RedirectResponse
-    {
-        return redirect()->route('production.add-cycle',['category' => $request->category]);
-    }
-
-    public function addCycle(Request $request, $category): View
+    public function addWork(Request $request): View
     {
         $user = Auth::user();
         $users = User::all();
+        $category = 2;
         if($category == 2) {
             //get components with minutes per one pcs calculated
             $elements = Component::where('independent',1)

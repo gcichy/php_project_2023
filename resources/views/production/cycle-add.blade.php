@@ -2,10 +2,6 @@
     @if(isset($category) and isset($category_name) and isset($elements))
         <script type="module">
 
-            function checkActive() {
-
-            }
-
             function formatTimeSpent(timeSpent) {
                 if (timeSpent < 60) {
                     let duration = "0:"
@@ -55,6 +51,7 @@
                             }
                         }
                         else {
+                            $('#new-cycle-pack-prod-id-input').val(null);
                             removeActiveProdRows();
                             if(!packProdTable.hasClass('hidden')) {
                                 packProdTable.addClass('hidden');
@@ -71,6 +68,7 @@
                             $('#new-cycle-id-input').val(null);
                             $('#new-cycle-name-input').val(null).removeClass('bg-blue-150 ring-2 ring-blue-600');
                         } else {
+                            $('#new-cycle-pack-prod-id-input').val(null);
                             removeActiveProdRows();
                             if(!packProdTable.hasClass('hidden')) {
                                 packProdTable.addClass('hidden');
@@ -155,9 +153,9 @@
                         <dl class="grid grid-cols-4 xl:grid-cols-8 overflow-visible text-left rounded-t-xl">
                             <div class="col-span-4 flex flex-col bg-gray-200/50 xl:border-r-2 xl:rounded-tl-xl">
                                 <dt class="order-first text-sm lg:text-lg font-semibold bg-gray-800 text-white w-[70%] xl:rounded-tl-xl pl-5 py-2 flex flex-row justify-between">
-                                    <input id="new-cycle-cat-input" name="category" type="number" class="hidden" value="{{$category}}">
-                                    <input type="number" name="id" id="new-cycle-id-input" class="hidden">
-                                    <input type="number" name="pack_prod_id" id="new-cycle-pack-prod-id-input" class="hidden">
+                                    <input id="new-cycle-cat-input" name="category_2" type="number" class="hidden" value="{{$category}}">
+                                    <input type="number" name="id_2" id="new-cycle-id-input" class="hidden">
+                                    <input type="number" name="pack_prod_id_2" id="new-cycle-pack-prod-id-input" class="hidden">
                                     <div id="new-cycle-cat" class="p-1">
 {{$category_name}}
                                     </div>
@@ -171,18 +169,18 @@
                                     <div class="p-1 flex justify-center items-center h-full">
                                         <input type="text" id="new-cycle-name-input" disabled
                                                class="xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
-                                               name="name" placeholder="Nazwa" required>
+                                               name="name_2" placeholder="Nazwa" required>
                                     </div>
                                 </dd>
                             </div>
                             <div class="col-span-2 flex flex-col bg-gray-200/50 border-r">
                                 <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Planowany start</dt>
                                 <div class="p-1 flex justify-center items-center h-full">
-                                    <div id="exp-start-time" class="relative w-full xl:mt-4"
+                                    <div id="exp-start-time-cycle-add" class="relative w-full xl:mt-4"
                                          data-te-datepicker-init
                                          data-te-format="yyyy-mm-dd"
                                          data-te-input-wrapper-init>
-                                        <input name="exp_start" value="{{old('exp_start')}}"
+                                        <input name="exp_start_2" value="{{old('exp_start')}}"
                                                class="exp-start-time p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
                                                placeholder="Start"/>
                                     </div>
@@ -191,11 +189,11 @@
                             <div class="col-span-2 flex flex-col bg-gray-200/50 xl:rounded-tr-xl">
                                 <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2 xl:rounded-tr-xl">Zakładany termin</dt>
                                 <div class="p-1 flex justify-center items-center h-full">
-                                    <div id="exp-end-time2" class="exp-end-time relative w-full xl:mt-4"
+                                    <div id="exp-end-time-cycle-add" class="exp-end-time relative w-full xl:mt-4"
                                         data-te-datepicker-init
                                          data-te-format="yyyy-mm-dd"
                                         data-te-input-wrapper-init>
-                                        <input name="exp_end" value="{{old('exp_end')}}"
+                                        <input name="exp_end_2" value="{{old('exp_end')}}"
                                                class="p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
                                                placeholder="Termin"/>
                                     </div>
@@ -204,7 +202,7 @@
                             <div class="col-span-2 xl:col-span-4 flex flex-col bg-gray-200/50 border-r">
                                 <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Pracownicy</dt>
                                 <div class="p-1 pl-5 flex justify-center items-center h-full">
-                                    @php $unique_id = 'employees' @endphp
+                                    @php $unique_id = 'employees_2' @endphp
                                     <x-select-multiple :uniqueId="$unique_id" :placeholder="__('Pracownicy')">
                                         <x-slot name="options">
                                             @if(isset($users))
@@ -227,7 +225,7 @@
                                     <div class="w-full p-1 flex justify-center items-center h-full w-full">
                                         <input id="new-cycle-amount-input" type="number" min="0" value="{{old('amount')}}"
                                                   class="xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
-                                                  name="amount" placeholder="Ilość (szt)">
+                                                  name="amount_2" placeholder="Ilość (szt)">
                                     </div>
                                 </div>
                             </div>
@@ -247,7 +245,7 @@
                                 <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Dodatkowe Uwagi</dt>
                                 <div class="p-1 flex justify-center items-center h-full">
                                     <div class="p-1 flex justify-center items-center h-full w-full">
-                                        @php $unique_id = 'comment' @endphp
+                                        @php $unique_id = 'comment_2' @endphp
                                         <textarea id="new-cycle-comm-input"
                                                class="xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
                                                   name="{{$unique_id}}" placeholder="Dodtakowe uwagi">
@@ -280,7 +278,7 @@
                                 }
 
                                 $elem = "elem";
-                                $route = route('production.add-cycle-filter',['category' => $category]);
+                                $route = route('production.add-cycle',['category' => $category]);
                                 $input_value = isset($filter_elem)? $filter_elem : '';
                             @endphp
                             <x-filter-input class="mb-3" :placeholder="$input_placeholder" :value="$input_value" :element_id="$elem" :route="$route"></x-filter-input>
@@ -338,7 +336,7 @@
                                                 </tbody>
                                             </table>
                                             <div class="px-3 bg-white">
-                                                {{$products->appends(['dodaj-cykl' => $elements->currentPage()])->links()}}
+                                                {{$products->appends(request()->query())->appends(['dodaj-cykl' => $elements->currentPage()])->links()}}
                                             </div>
                                         </div>
                                     @endif
@@ -346,7 +344,7 @@
                             @endforeach
                         </div>
                         <div class="w-4/5">
-                            {{ $elements->links() }}
+                            {{ $elements->appends(request()->query())->links() }}
                         </div>
                     </div>
                 </div>

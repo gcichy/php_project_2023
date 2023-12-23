@@ -141,13 +141,18 @@
                         <x-responsive-nav-button :name="$name" :dropdown_id="$dropdown_id">
                             <ul id="{{$dropdown_id}}" class="hidden py-2 space-y-2">
                                 <li>
-                                    <x-responsive-nav-link :href="route('work.index')" :active="request()->routeIs('work.index')" class="w-[95%] ml-[5%]">
-                                        {{ __('Praca ogółem') }}
+                                    <x-responsive-nav-link :href="route('work-cycle.index')" :active="request()->routeIs('work-cycle.index')" class="w-[95%] ml-[5%]">
+                                        {{ __('Praca w cyklu') }}
                                     </x-responsive-nav-link>
                                 </li>
                                 <li>
-                                    <x-responsive-nav-link :href="route('work-cycle.index')" :active="request()->routeIs('work-cycle.index')" class="w-[95%] ml-[5%]">
-                                        {{ __('Praca w cyklu') }}
+                                    <x-responsive-nav-link :href="route('work.index')" :active="request()->routeIs('work.index')" class="w-[95%] ml-[5%]">
+                                        {{ __('Przeglądaj') }}
+                                    </x-responsive-nav-link>
+                                </li>
+                                <li>
+                                    <x-responsive-nav-link :href="route('work.add-wrapper')" :active="request()->routeIs('work.add')" class="w-[95%] ml-[5%]">
+                                        {{ __('Raportuj') }}
                                     </x-responsive-nav-link>
                                 </li>
                             </ul>

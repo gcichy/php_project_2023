@@ -5,8 +5,6 @@
             let modalDetailsTable = $('#modal-work-table');
             let productivityStyle = getProductivityStyle(id);
             let defectStyle = getDefectStyle(id);
-            console.log(productivityStyle);
-            console.log(defectStyle);
             row.each(function () {
                 // Get the class attribute of the current element
                 let classNames = $(this).attr('class').split(' ');
@@ -30,8 +28,6 @@
         function getProductivityStyle(id) {
             let productivity = $('#row-'+id).find('.col-value.productivity');
             let productivityStyle = '';
-            // console.log(productivity.length);
-            // console.log(productivity.text().trim());
             if(productivity.length === 1 && parseInt(productivity.text().trim()) > 100 ) {
                 productivityStyle = 'text-green-450';
             }
@@ -50,7 +46,6 @@
         function getDefectStyle(id) {
             let defectPercent = $('#row-'+id).find('.col-value.defect-percent');
             let defectStyle = '';
-            //console.log(parseInt(defectPercent.text().trim()));
             if(defectPercent.length === 1 && parseInt(defectPercent.text().trim()) > 10) {
                 defectStyle = 'text-red-500';
             }
@@ -149,15 +144,15 @@
             $name = "Praca";
         @endphp
         <x-information-panel :viewName="$name">
-            {{--    routing for details set in java script above   --}}
-            <x-nav-button  id="filter-btn" class="on-select details bg-yellow-300 hover:bg-yellow-600">
+            <x-nav-button  id="filter-btn" class="on-select details bg-green-450 hover:bg-green-700 xl:mr-4">
+                {{ __('Dodaj') }}
+            </x-nav-button>
+            <x-nav-button  id="filter-btn" class="on-select details bg-yellow-300 hover:bg-yellow-600 xl:mr-4">
                 {{ __('Filtry') }}
             </x-nav-button>
         </x-information-panel>
         @if(isset($works) and isset($users) and isset($filt_items))
-            <form method="POST" action="{{ route('work.filter') }}" enctype="multipart/form-data">
-                @method('PATCH')
-                @csrf
+            <form method="GET" action="{{ route('work.index') }}" enctype="multipart/form-data">
                 <div class="w-full mt-4 flex justify-center">
                     <div id="filters" class="flex flex-row justify-start w-[90%] border-2 rounded-lg hidden">
                         <dl class="grid grid-cols-3 bg-white text-left rounded-l-lg w-4/5">
@@ -187,7 +182,7 @@
                                     Start pracy od
                                 </a>
                                 <div class="p-1 flex justify-center items-center h-full">
-                                    <div id="exp-start-time" class="relative w-full"
+                                    <div id="start-time-work" class="relative w-full"
                                          data-te-datepicker-init
                                          data-te-format="yyyy-mm-dd"
                                          data-te-input-wrapper-init>
@@ -202,7 +197,7 @@
                                     Start pracy do
                                 </a>
                                 <div class="p-1 flex justify-center items-center h-full">
-                                    <div id="exp-end-time" class="exp-end-time relative w-full"
+                                    <div id="end-time-work" class="exp-end-time relative w-full"
                                          data-te-datepicker-init
                                          data-te-format="yyyy-mm-dd"
                                          data-te-input-wrapper-init>
@@ -365,7 +360,7 @@
                             </table>
                         </div>
                         <div class="w-full p-2 bg-gray-50 rounded-b-xl">
-                            {{ $works->links() }}
+                            {{ $works->appends(request()->query())->links() }}
                         </div>
                     </div>
                 </div>

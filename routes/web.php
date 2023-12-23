@@ -88,7 +88,6 @@ Route::middleware(['auth'])->group(function () {
 //production
 Route::middleware('auth')->group(function () {
     Route::get('/produkcja', [ProductionCycleController::class, 'index'])->name('production.index');
-    Route::patch('/produkcja', [ProductionCycleController::class, 'index'])->name('production.filter');
     Route::post('/produkcja', [ProductionCycleController::class, 'addCycleWrapper'])->name('production.add-cycle-wrapper');
     Route::get('/produkcja/{id}', [ProductionCycleController::class, 'cycleDetails'])->name('production.cycle-detail');
     Route::delete('/produkcja/{id}', [ProductionCycleController::class, 'destroyCycle'])
@@ -96,16 +95,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/produkcja/{id}', [ProductionCycleController::class, 'storeUpdatedCycle'])
         ->name('production.edit')->middleware('role');
     Route::get('/dodaj-cykl/{category}', [ProductionCycleController::class, 'addCycle'])->name('production.add-cycle');
-    Route::patch('/dodaj-cykl/{category}', [ProductionCycleController::class, 'addCycle'])->name('production.add-cycle-filter');
     Route::post('/dodaj-cykl', [ProductionCycleController::class, 'storeCycle'])->name('production.store-cycle');
 });
 
 //work
 Route::middleware('auth')->group(function () {
     Route::get('/praca', [WorkController::class, 'index'])->name('work.index');
-    Route::patch('/praca', [WorkController::class, 'index'])->name('work.filter');
     Route::get('/praca-w-cyklu', [ProductionCycleController::class, 'index'])->name('work-cycle.index');
-    Route::patch('/praca-w-cyklu', [ProductionCycleController::class, 'index'])->name('work-cycle.filter');
+    Route::get('/praca-raportuj', [WorkController::class, 'addWorkWrapper'])->name('work.add-wrapper');
+
+
 });
 
 

@@ -7,9 +7,7 @@
                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
             </svg>
         </div>
-        <form method="POST" action="{{ $route }}"  enctype="multipart/form-data">
-            @method('PATCH')
-            @csrf
+        <form method="GET" action="{{ $route }}"  enctype="multipart/form-data">
             <input type="search" id="search-input-{{$element_id}}" name="filter_elem" class="list-element-{{$element_id}} block w-full p-4 pl-10 text-sm xl:text-lg text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-450 focus:border-blue-450 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-450 dark:focus:border-blue-500"
                    placeholder="{{$placeholder}}" value="{{$value}}">
             <button type="submit" id="search-button-{{$element_id}}" class="text-white absolute right-2.5 bottom-2.5 bg-blue-450 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm xl:text-lg px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
