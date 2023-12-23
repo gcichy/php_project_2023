@@ -24,6 +24,7 @@ use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -91,7 +92,7 @@ class ProductionCycleController extends Controller
             'expected_amount_per_time_frame' => 'Oczekiwana ilość (szt)',
         );
 
-        $status = session('add_work')? 'Aby zaraportować pracę wybierz cykl produkcji (możesz też dodać nowy).' : null;
+        $status_add_work = $this->getWorkStatus($request);
         $view = $is_work_cycle? 'work.work-cycle' : 'production.production';
         return view($view, [
             'parent_cycles' => $parent_cycles,
@@ -99,6 +100,7 @@ class ProductionCycleController extends Controller
             'users' => $users,
             'order' => $order_table,
             'status' => isset($status)? $status : null,
+            'status_add_work' => $status_add_work,
             'status_err' => isset($status_err)? $status_err : null,
             'filt_start_time' => $filt_start_time,
             'filt_end_time' => $filt_end_time,
@@ -107,7 +109,12 @@ class ProductionCycleController extends Controller
             'work_array' => isset($work_array)? $work_array : null,
             'storage_path_products' => 'products',
             'storage_path_components' => 'components',
-        ])->with('status', $status);
+        ]);
+    }
+
+    public function indexWrapper(): RedirectResponse
+    {
+        return redirect()->route('production.index');
     }
 
     public function cycleDetails(Request $request, $id): View|RedirectResponse
@@ -586,6 +593,20 @@ class ProductionCycleController extends Controller
         return $parent_id;
     }
 
+
+    private function getWorkStatus(Request $request) : string|null
+    {
+        $previous = explode('/',$request->session()->previousUrl());
+        $previous = $previous[count($previous)-1];
+
+        if($previous == 'praca-raportuj' || str_contains($previous,'produkcja')) {
+            return (session('add_work'))? 'Aby zaraportować pracę wybierz cykl produkcji (możesz też dodać nowy).' : null;
+        }
+        else {
+            session()->forget('add_work');
+        }
+        return null;
+    }
     /**
      * @throws Exception
      */

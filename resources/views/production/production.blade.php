@@ -13,25 +13,30 @@
                     let status = parseInt(styles[0]);
                     if(status === 0) {
                         cycleClasses = 'ring-green-450 ring-4 ring-offset-4';
-                        cycleTagBg = 'bg-green-450';
+                        cycleTagBg = 'bg-green-450 hover:bg-green-700';
                         cycleTagText = 'Zakończony';
                     } else if(status === 3) {
                         cycleClasses = 'ring-red-500 ring-4 ring-offset-4';
-                        cycleTagBg = 'bg-red-500';
+                        cycleTagBg = 'bg-red-500 hover:bg-red-800';
                         cycleTagText = 'Po terminie';
                     } else if(status === 1) {
                         cycleClasses = 'ring-blue-450 ring-4 ring-offset-4';
-                        cycleTagBg = 'bg-blue-450';
+                        cycleTagBg = 'bg-blue-450 hover:bg-blue-800';
                         cycleTagText = 'Aktywny';
                     } else if(status === 2) {
                         cycleClasses = 'ring-yellow-300 ring-4 ring-offset-4';
-                        cycleTagBg = 'bg-yellow-300';
+                        cycleTagBg = 'bg-yellow-300 hover:bg-yellow-600';
+
                         cycleTagText = 'Nierozpoczęty';
                     }
                     $(this).addClass(cycleClasses);
                     let cycleTag = $(this).find('.cycle-tag');
                     if(cycleTag.length === 1) {
                         cycleTag.addClass(cycleTagBg).text(cycleTagText);
+                    }
+                    let addWorkButton =  $(this).find('.add-work-button');
+                    if(addWorkButton.length === 1) {
+                        addWorkButton.addClass(cycleTagBg)
                     }
                     let progress = $(this).find('.progress');
                     if(progress.length === 1) {
@@ -120,27 +125,34 @@
     @if(isset($user) and $user instanceof \App\Models\User)
         @if(session('status'))
             <div class="flex justify-center items-center">
-                <p class="w-full !text-md lg:text-xl font-medium text-center p-6 text-green-600 space-y-1">
+                <p class="w-full !text-md lg:text-xl font-medium text-center px-6 pt-6  text-green-600 space-y-1">
                     {{session('status')}}
                 </p>
             </div>
         @endif
         @if(isset($status_err))
             <div class="flex justify-center items-center">
-                <p class="w-full !text-md lg:text-xl font-medium text-center p-6 text-red-700 space-y-1">
+                <p class="w-full !text-md lg:text-xl font-medium text-center px-6 pt-6  text-red-700 space-y-1">
                     {{$status_err}}
                 </p>
             </div>
         @endif
         @if(session('status_err'))
             <div class="flex justify-center items-center">
-                <p class="w-full !text-md lg:text-xl font-medium text-center p-6 text-red-700 space-y-1">
+                <p class="w-full !text-md lg:text-xl font-medium text-center px-6 pt-6  text-red-700 space-y-1">
                     {{session('status_err')}}
                 </p>
             </div>
         @endif
+            @if(isset($status_add_work))
+                <div class="flex justify-center items-center">
+                    <p class="w-full !text-md lg:text-xl font-medium text-center px-6 pt-6 text-green-600">
+                        {{$status_add_work}}
+                    </p>
+                </div>
+            @endif
         @php
-            $name = "Produkcja";
+            $name = isset($status_add_work)? 'Wybierz cykl' : 'Produkcja';
         @endphp
         <x-information-panel :viewName="$name">
             @php
@@ -330,26 +342,6 @@
                                     </div>
                                 </div>
                             @endif
-                            {{--                            <div class="col-span-3 flex flex-col justify-start  border-r-2">--}}
-                            {{--                                <a class ='block px-2 text-xs md:text-sm font-medium bg-gray-800 text-center text-white'>--}}
-                            {{--                                    Sortuj według--}}
-                            {{--                                </a>--}}
-                            {{--                                <div class="p-1 flex justify-center items-center h-full">--}}
-                            {{--                                    @php $unique_id = 'order' @endphp--}}
-                            {{--                                    <x-select-multiple :uniqueId="$unique_id" :placeholder="__('Sortuj według')">--}}
-                            {{--                                        <x-slot name="options">--}}
-                            {{--                                            @foreach($order as $key => $val)--}}
-                            {{--                                                <option value="{{$key}};asc" {{(isset($order_items) and in_array($key.';asc', $order_items))? 'selected' : ''}}>--}}
-                            {{--                                                    {{$val}} (rosnąco)--}}
-                            {{--                                                </option>--}}
-                            {{--                                                <option value="{{$key}};desc" {{(isset($order_items) and in_array($key.';desc', $order_items))? 'selected' : ''}}>--}}
-                            {{--                                                    {{$val}} (malejąco)--}}
-                            {{--                                                </option>--}}
-                            {{--                                           @endforeach--}}
-                            {{--                                        </x-slot>--}}
-                            {{--                                    </x-select-multiple>--}}
-                            {{--                                </div>--}}
-                            {{--                            </div>--}}
                         </dl>
                         <div class="flex flex-col justify-center items-center bg-white xl:border-r-2 rounded-r-lg w-1/5">
                             <button type="submit" class ='w-[60%] xl:w-[40%] text-sm md:text-lg bg-gray-800 hover:bg-gray-600 font-medium text-center text-white rounded-lg'>
@@ -420,8 +412,19 @@
                                     </dd>
                                 </div>
                             </div>
+                            @if(isset($status_add_work))
+                                <div class="col-span-4 xl:col-span-8 w-full text-center">
+                                    <a
+                                        class="add-work-button inline-block px-6 py-2 md:py-4 text-xs font-medium uppercase w-full text-md md:text-lg xl:text-xl leading-normal text-white focus:outline-none shadow-[0_4px_9px_-4px_rgba(0,0,0,0.2)] transition duration-150 ease-in-out hover:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] focus:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] active:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)]"
+                                        data-te-ripple-init
+                                        data-te-ripple-color="light"
+                                        href="{{route('work.add')}}">
+                                        {{ __('Raportuj pracę') }}
+                                    </a>
+                                </div>
+                            @endif
                             <div class="col-span-4 xl:col-span-8 w-full bg-gray-300 py-2 flex flex-row justify-end">
-                                @if($p_cycle->status == 2 and in_array($user->role,array('admin','manager')))
+                                @if($p_cycle->status == 2 and in_array($user->role,array('admin','manager')) and !isset($status_add_work))
                                     @php
                                         $name = 'Edytuj cykl produkcji';
                                         $id = $p_cycle->cycle_id;
@@ -628,7 +631,7 @@
                                         </div>
                                     </x-remove-modal>
                                 @endif
-                                @if($p_cycle->category != 3)
+                                @if($p_cycle->category != 3 and !isset($status_add_work))
                                     <a href="produkcja/{{$p_cycle->cycle_id}}"  id="sub-cycle-details-{{$p_cycle->cycle_id}}" class="sub-cycle-details flex justify-center items-center mr-2 text-gray-800 bg-white hover:bg-gray-100 uppercase focus:outline-none font-medium rounded-md text-xs lg:text-sm px-2 py-1 shadow-md">
                                         Więcej
                                     </a>

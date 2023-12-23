@@ -99,7 +99,8 @@ class WorkController extends Controller
 
     public function addWorkWrapper(): RedirectResponse
     {
-        return  redirect('/produkcja')->with('add_work', true);
+        session(['add_work' => true]);
+        return  redirect()->route('production.index');
     }
 
     public function addWork(Request $request): View

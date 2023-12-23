@@ -144,7 +144,7 @@
             $name = "Praca";
         @endphp
         <x-information-panel :viewName="$name">
-            <x-nav-button  id="filter-btn" class="on-select details bg-green-450 hover:bg-green-700 xl:mr-4">
+            <x-nav-button  id="add-work-btn" class="on-select details bg-green-450 hover:bg-green-700 xl:mr-4">
                 {{ __('Dodaj') }}
             </x-nav-button>
             <x-nav-button  id="filter-btn" class="on-select details bg-yellow-300 hover:bg-yellow-600 xl:mr-4">

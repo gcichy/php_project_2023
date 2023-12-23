@@ -129,7 +129,7 @@
                         </x-responsive-nav-button>
                     </li>
                     <li>
-                        <x-responsive-nav-link :href="route('production.index')" :active="request()->routeIs('production.index')">
+                        <x-responsive-nav-link :href="route('production.index-wrapper')" :active="request()->routeIs('production.index')">
                             {{ __('Produkcja') }}
                         </x-responsive-nav-link>
                     </li>
