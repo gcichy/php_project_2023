@@ -281,9 +281,11 @@
                                 $route = route('production.add-cycle',['category' => $category]);
                                 $input_value = isset($filter_elem)? $filter_elem : '';
                             @endphp
-                            <x-filter-input class="mb-3" :placeholder="$input_placeholder" :value="$input_value" :element_id="$elem" :route="$route"></x-filter-input>
+                            <div class="mb-3 w-full">
+                                <x-filter-input :placeholder="$input_placeholder" :value="$input_value" :element_id="$elem" :route="$route"></x-filter-input>
+                            </div>
                             @foreach($elements as $el)
-                                <x-list-element id="elem-{{$el->id}}" class="list-element flex-col w-full p-3">
+                                <x-list-element id="elem-{{$el->id}}" class="my-3 list-element flex-col w-full p-3">
                                     <input type="number" class="list-element-id hidden" value="{{$el->id}}">
                                     <input type="number" class="list-element-minute-per-pcs hidden" value="{{$el->minutes_per_pcs}}">
                                     <div class="w-full flex justify-between items-center">

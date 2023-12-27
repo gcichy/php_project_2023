@@ -4,7 +4,7 @@
 
 @layer utilities {
     .active-list-elem {
-        border-color: theme('colors.blue.450');
+        --tw-ring-color: theme('colors.blue.450');
         background-color: theme('colors.blue.150');
     }
 }

@@ -68,7 +68,6 @@
                 let id = $(this).attr('id').split('-')[1];
                 var list_id = '.prodschema-list-' + id;
 
-                console.log(list_id);
                 if($(this).hasClass('rotate-180')) {
                     $(this).removeClass('rotate-180');
                     $(this).addClass('rotate-0');
@@ -162,7 +161,7 @@
                         @php $j = 0; @endphp
                         @foreach($schema_data as $prod_schema_tasks)
                             @if(count($prod_schema_tasks) > 0)
-                                <x-list-element class="list-element-{{$xListElem}} list-element w-full flex-col text-md lg:text-lg lg:py-4 my-3" id="prodschema-{{$prod_schema_tasks[0]->prod_schema_id}}">
+                                <x-list-element class="list-element-{{$xListElem}} list-element w-full flex-col text-md lg:text-lg lg:py-4" id="prodschema-{{$prod_schema_tasks[0]->prod_schema_id}}">
                                     <div class="w-[100%] flex justify-between items-center">
                                         <div class="w-full flex justify-between items-center">
                                             <div class="w-full flex justify-left items-center">
@@ -177,7 +176,7 @@
                                     </div>
                                     <ul class="prodschema-list-{{$prod_schema_tasks[0]->prod_schema_id}} mt-[3%] ml-[3%] relative m-0 w-full hidden list-none overflow-hidden p-0 transition-[height] duration-200 ease-in-out text-xs md:text-sm lg:text-md">
                                         @if(!empty($prod_schema_tasks[0]->prod_std_id))
-                                            <table class="w-full text-sm xl:text-lg xl:h-[90%] text-left text-gray-700 dark:text-gray-400 mt-3 mb-5">
+                                            <table class="w-full text-sm xl:text-lg xl:h-[90%] text-left text-gray-700 dark:text-gray-400 shadow-md mt-3 mb-5">
                                                 <thead class="text-gray-950 bg-gray-50 dark:bg-gray-700 dark:text-gray-400 font-medium">
                                                 <tr>
                                                     <td class="px-6">
@@ -199,13 +198,13 @@
                                                     <td class="px-6 py-2">
                                                         {{$prod_schema_tasks[0]->prod_std_name}}
                                                     </td>
-                                                    <td class="px-6">
+                                                    <td class="px-6 py-2">
                                                         {{$prod_schema_tasks[0]->prod_std_duration}}
                                                     </td>
-                                                    <td class="px-6">
+                                                    <td class="px-6 py-2">
                                                         {{$prod_schema_tasks[0]->prod_std_amount}}
                                                     </td>
-                                                    <td class="px-6">
+                                                    <td class="px-6 py-2">
                                                         {{$prod_schema_tasks[0]->prod_std_unit}}
                                                     </td>
                                                 </tr>

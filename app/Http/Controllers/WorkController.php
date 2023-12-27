@@ -103,81 +103,54 @@ class WorkController extends Controller
         return  redirect()->route('production.index');
     }
 
-    public function addWork(Request $request): View
+    public function addWork(Request $request, $id): View|RedirectResponse
     {
         $user = Auth::user();
-        $users = User::all();
-        $category = 2;
-        if($category == 2) {
-            //get components with minutes per one pcs calculated
-            $elements = Component::where('independent',1)
-                ->join('production_standard', 'component.id', '=', 'production_standard.component_id')
-                ->select('component.id', 'component.name', 'component.material', 'component.height', 'component.length',
-                    'component.width', 'component.description', 'component.image',
-                    DB::raw('truncate(60/(1/sum(duration_hours/amount)),2) as minutes_per_pcs'))
-                ->groupBy('component.id', 'component.name', 'component.material', 'component.height', 'component.length',
-                        'component.width','component.description', 'component.image');
+        $parent_cycle = ParentCycleView::where('cycle_id', $id)->first();
 
-            $category_name = 'Materiał';
-            if(is_string($request->filter_elem)) {
-                $elements = $elements->where('product.name', 'like', '%'.$request->filter_elem.'%')
-                                    ->orWhere('product.material', 'like', '%'.$request->filter_elem.'%');
+        $child_cycles = ChildCycleView::where('parent_id', $id)->paginate(10);
+
+        $child_components = null;
+        $child_prod_schemas = null;
+        if($parent_cycle->category == 1) {
+            $child_components = ChildCycleView::where(['child_cycle_view.parent_id' => $id,
+                'child_cycle_view.prod_schema_id' => null])->get();
+            $child_prod_schemas = array();
+            $child_schemas = ChildCycleView::where(['child_cycle_view.parent_id' => $id])
+                ->join('task','task.production_schema_id', '=', 'child_cycle_view.prod_schema_id')
+                ->select('child_cycle_view.*',DB::raw('task.name as task_name, task.sequence_no as task_sequence_no, task.amount_required as task_amount_required'))
+                ->orderBy('child_cycle_view.component_id', 'asc','child_cycle_view.prod_schema_sequence_no','asc','task.sequence_no','asc');
+
+            foreach ($child_components as $comp) {
+                $temp_schemas = clone $child_schemas;
+                $child_prod_schemas[$comp->component_id] = $temp_schemas->where('component_id', $comp->component_id)->get();
             }
-            $elements = $elements->paginate(10);
-        } else if($category == 3) {
-            $pack_product_id = StaticValue::where('type', 'pack_schema')->select('value')->first();
-            $pack_prod_show = (bool) $request->query('pak-prod');
-            //get pack products with minutes per one pcs calculated
-            $products = Product::select('product.id', 'product.name', 'product.image', 'product.material', DB::raw('truncate(60/(amount/duration_hours),2) as minutes_per_pcs'))
-                ->join('production_standard', 'product.id', '=','production_standard.product_id' )
-                ->orderBy('name')->paginate(2,['*'],'pak-prod');
-            $category_name = 'Zadanie';
 
-            $union = ProductionSchema::select('id','production_schema', 'description', DB::raw('null as minutes_per_pcs'))
-                ->where('id', $pack_product_id->value);
-            //get pack production_schemas with minutes per one pcs calculated, but with null for pack product production_schema in this column
-            $elements = ProductionSchema::join('production_standard', 'production_schema.id', '=','production_standard.production_schema_id')
-                ->where(['production_standard.component_id' => null,
-                         'production_standard.product_id' => null])
-                ->select('production_schema.id','production_schema.production_schema', 'production_schema.description', DB::raw('truncate(60/(amount/duration_hours),2) as minutes_per_pcs'))
-                ->union($union);
-
-            if(is_string($request->filter_elem)) {
-                $elements = $elements->where('production_schema', 'like', '%' . $request->filter_elem . '%');
-            }
-            $elements = $elements->paginate(10,['*'],'dodaj-cykl');
-        } else {
-            //get products with minutes per one pcs calculated
-            $elements = Product::join('product_component', 'product.id', '=', 'product_component.product_id')
-                ->join('production_standard', 'production_standard.component_id', '=', 'product_component.component_id')
-                ->select('product.id','product.name', 'product.gtin', 'product.description', 'product.material',
-                    'product.height', 'product.length', 'product.width', 'product.color', 'product.image',
-                    'product.barcode_image', 'product.price', 'product.piecework_fee',
-                    DB::raw('truncate(60/(1/sum(duration_hours/amount)),2) as minutes_per_pcs'))
-                ->groupBy('product.id','product.name', 'product.gtin', 'product.description', 'product.material',
-                    'product.height', 'product.length', 'product.width', 'product.color', 'product.image',
-                    'product.barcode_image', 'product.price', 'product.piecework_fee');
-
-            $category_name = 'Produkt';
-            if(is_string($request->filter_elem)) {
-                $elements = $elements->where('product.name', 'like', '%'.$request->filter_elem.'%')
-                                    ->orWhere('product.material', 'like', '%'.$request->filter_elem.'%')
-                                    ->paginate(10);
-                ;
-            } else {
-                $elements = $elements->paginate(10);
-            }
         }
-        return view('production.cycle-add', [
+        else if($parent_cycle->category == 2) {
+            $child_prod_schemas = ChildCycleView::where(['child_cycle_view.parent_id' => $id])
+                ->join('task','task.production_schema_id', '=', 'child_cycle_view.prod_schema_id')
+                ->select('child_cycle_view.*',DB::raw('task.name as task_name, task.sequence_no as task_sequence_no, task.amount_required as task_amount_required'))
+                ->orderBy('child_cycle_view.prod_schema_sequence_no','asc','task.sequence_no','asc')->get();
+        }
+        else if($parent_cycle->category == 3) {
+            $child_prod_schemas = ParentCycleView::where('cycle_id', $id)
+                ->join('production_cycle','production_cycle.id', '=', 'parent_cycle_view.cycle_id')
+                ->join('task','task.production_schema_id', '=', 'production_cycle.production_schema_id')
+                ->select('parent_cycle_view.*',DB::raw('task.name as task_name, task.sequence_no as task_sequence_no, task.amount_required as task_amount_required'))
+                ->orderBy('task.sequence_no','asc')->get();
+        }
+
+        if(count($child_prod_schemas) == 0) {
+            return back();
+        }
+
+        return view('work.work-add', [
+            'p_cycle' => $parent_cycle,
+            'child_cycles' => $child_cycles,
+            'child_components' => $child_components,
+            'child_prod_schemas' => $child_prod_schemas,
             'user' => $user,
-            'users' => $users,
-            'category' => $category,
-            'category_name' => $category_name,
-            'elements' => $elements,
-            'filter_elem' => $request->filter_elem,
-            'products' => isset($products)? $products : null,
-            'pack_product_id' => isset($pack_product_id )? $pack_product_id : null,
-            'pack_prod_show' => isset($pack_prod_show)? $pack_prod_show : false,
             'storage_path_products' => 'products',
             'storage_path_components' => 'components',
         ]);

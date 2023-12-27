@@ -1,8 +1,29 @@
 <x-app-layout>
     <script type="module">
+
+        function cloneSelectedElements(comp, componentId, prodSchema,  productionSchemaId) {
+            let clonedProdSchema = prodSchema.clone();
+            clonedProdSchema.attr('id', 'selected-'+prodSchema.attr('id'));
+            $('#selected-prod-schema-container').append(clonedProdSchema);
+            $('#selected-prod-schema-id').val(productionSchemaId);
+            if(comp.length > 0) {
+                let clonedComp = comp.clone();
+                clonedComp.attr('id', 'selected-'+comp.attr('id'));
+                $('#selected-comp-container').append(clonedComp);
+                $('#selected-comp-id').val(componentId);
+            }
+        }
+
+        function removeSelectedElements() {
+            $('#selected-comp-id').val(null);
+            $('#selected-prod-schema-id').val(null);
+            $('#selected-prod-schema-container :nth-child(2)').remove();
+            $('#selected-comp-container :nth-child(2)').remove();
+        }
+
         function getRowData(id) {
             let row = $('#row-'+id).find('.col-value');
-            let modalDetailsTable = $('#modal-detais-table');
+            let modalDetailsTable = $('#modal-details-table');
             let productivity = $('#row-'+id).find('.col-value.productivity');
             let productivityStyle = 'text-red-500';
             if(productivity.length === 1 && parseInt(productivity.text().trim()) > 100 ) {
@@ -55,25 +76,29 @@
 
                     if(status === 0) {
                         //cycleClasses = 'ring-green-450 ring-4 ring-offset-4';
-                        cycleTagBg = 'bg-green-450';
+                        cycleTagBg = 'bg-green-450 hover:bg-green-700';
                         cycleTagText = 'Zakończony';
                     } else if(status === 3) {
                         //cycleClasses = 'ring-red-500 ring-4 ring-offset-4';
-                        cycleTagBg = 'bg-red-500';
+                        cycleTagBg = 'bg-red-500 hover:bg-red-800';
                         cycleTagText = 'Po terminie';
                     } else if(status === 1) {
                         //cycleClasses = 'ring-blue-450 ring-4 ring-offset-4';
-                        cycleTagBg = 'bg-blue-450';
+                        cycleTagBg = 'bg-blue-450 hover:bg-blue-800';
                         cycleTagText = 'Aktywny';
                     } else if(status === 2) {
                         //cycleClasses = 'ring-yellow-300 ring-4 ring-offset-4';
-                        cycleTagBg = 'bg-yellow-300';
+                        cycleTagBg = 'bg-yellow-300 hover:bg-yellow-600';
                         cycleTagText = 'Nierozpoczęty';
                     }
                     //$(this).addClass(cycleClasses);
                     let cycleTag = $(this).find('.cycle-tag');
                     if(cycleTag.length === 1) {
                         cycleTag.addClass(cycleTagBg).text(cycleTagText);
+                    }
+                    let addWorkButton =  $(this).find('#add-work-button');
+                    if(addWorkButton.length === 1) {
+                        addWorkButton.addClass(cycleTagBg)
                     }
                     let progress = $(this).find('.progress');
                     if(progress.length === 1) {
@@ -105,8 +130,6 @@
                         $(progress).addClass(width);
                     }
                 }
-
-
             });
         }
 
@@ -127,7 +150,73 @@
                         additionalInfo.addClass('hidden');
                     }
                 }
+            });
 
+            $('.list-element').on('click', function () {
+                removeSelectedElements();
+                let isActive = ($(this).hasClass('active-list-elem') ? true : false);
+                $('.list-element').removeClass('active-list-elem');
+                $('.list-element-2').removeClass('active-list-elem');
+                $(this).addClass('active-list-elem');
+
+                let compId = $(this).attr('id');
+                let prodSchemas = $('.list-element-2.'+ compId);
+                $('.list-element-2').addClass('hidden');
+
+                //
+                // if($(list_id).hasClass('hidden')) {
+                if (isActive) {
+                    $('.list-element').removeClass('active-list-elem');
+                }
+                else {
+                    if(prodSchemas.hasClass('hidden')){
+                        prodSchemas.removeClass('hidden');
+                    }
+                }
+                // }
+                // checkActive();
+            });
+
+            $('.list-element-2').on('click', function () {
+                var isActive = ($(this).hasClass('active-list-elem') ? true : false);
+                removeSelectedElements();
+                $('.list-element-2').removeClass('active-list-elem');
+                $(this).addClass('active-list-elem');
+
+                // var id = $(this).attr('id').split('-')[1];
+                // var list_id = '.prodschema-list-' + id;
+                //
+                // if($(list_id).hasClass('hidden')) {
+                if (isActive) {
+//                    if(!$(list_id).hasClass('just-hidden')) {
+                    $('.list-element-2').removeClass('active-list-elem');
+                    // } else {
+                    //     $(list_id).removeClass('just-hidden');
+                    // }
+                }
+                else {
+                    let id = $(this).attr('id');
+                    var schemaId = null;
+                    if(id.includes('comp')) {
+                        let arrayId = id.split('-');
+                        let compId = arrayId[arrayId.length - 1];
+                        if(arrayId.length > 3) {
+                            schemaId = arrayId[arrayId.length - 3];
+                        }
+
+                        let comp = $('#comp-'+compId);
+                        cloneSelectedElements(comp, compId, $(this), schemaId);
+                    }
+                    else {
+                        let arrayId = id.split('-');
+                        if(arrayId.length > 1) {
+                            schemaId = arrayId[arrayId.length - 1];
+                        }
+                        cloneSelectedElements(null, null, $(this), schemaId);
+                    }
+                }
+                // }
+                // checkActive();
             });
 
             $("#close-modal-details-button").on('click', function () {
@@ -141,6 +230,26 @@
 
             });
 
+            $('.expand-btn').on('click', function () {
+                let id = $(this).attr('id').split('-');
+                id = id[id.length-1];
+                var listId = '.prodschema-list-' + id;
+
+                if($(this).hasClass('rotate-180')) {
+                    $(this).removeClass('rotate-180');
+                    $(this).addClass('rotate-0');
+                } else {
+                    $(this).removeClass('rotate-0');
+                    $(this).addClass('rotate-180');
+                }
+
+                if($(listId).hasClass('hidden')) {
+                    $(listId).removeClass('hidden');
+                } else {
+                    $(listId).addClass('hidden');
+                    $(listId).addClass('just-hidden');
+                }
+            });
         });
     </script>
     @if(isset($user) and $user instanceof \App\Models\User)
@@ -159,7 +268,7 @@
             </div>
         @endif
         @php
-            $name = "Szczegóły cyklu";
+            $name = "Raportuj pracę dla cyklu";
         @endphp
         <x-information-panel :viewName="$name">
         </x-information-panel>
@@ -207,15 +316,23 @@
                             </div>
                         </div>
                         {{--                            ROW 1--}}
-                        <div class="additional-info col-span-4 flex flex-col bg-gray-200/50 border-r-2">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Uwagi</dt>
-                            <div class="w-full h-full flex justify-center items-center">
-                                <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                    {{$p_cycle->additional_comment}}
-                                </dd>
+                        <div class="col-span-2 flex justify-start flex-col bg-gray-200/50 border-r-2">
+                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Zdjęcie</dt>
+                            <div class="flex justify-center items-center p-1">
+                                <div class="max-w-[150px]">
+                                    @if(!is_null($p_cycle->image))
+                                        @php $path = ''; @endphp
+                                        @if($p_cycle->category == 1)
+                                            @php $path = isset($storage_path_products) ? $storage_path_products.'/' : ''; @endphp
+                                        @elseif($p_cycle->category == 2)
+                                            @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
+                                        @endif
+                                        <img src="{{asset('storage/'.$path.$p_cycle->image)}}">
+                                    @endif
+                                </div>
                             </div>
                         </div>
-                        <div class="additional-info col-span-4 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2">
+                        <div class="col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2">
                             <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Przypisani pracownicy</dt>
                             <div class="w-full h-full flex justify-center items-center">
                                 <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
@@ -223,275 +340,127 @@
                                 </dd>
                             </div>
                         </div>
-                        <div class="col-span-4 xl:col-span-8 w-full bg-gray-300 py-2 flex flex-row justify-end">
-                            <button type="button" id="cycle-details-{{$p_cycle->cycle_id}}" class="cycle-details mr-4 text-gray-800 bg-white uppercase hover:bg-gray-100 focus:outline-none font-medium rounded-md text-xs lg:text-sm px-2 py-1 shadow-md">
-                                Statystyki
-                            </button>
-                        </div>
-{{--                            ROW 2--}}
-                        <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Zakładany start</dt>
+                        <div class="col-span-4 flex flex-col bg-gray-200/50 border-r-2">
+                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Uwagi</dt>
                             <div class="w-full h-full flex justify-center items-center">
                                 <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                    <svg fill="#000000" width="30px" height="20px" viewBox="0 0 1920 1920" xmlns="http://www.w3.org/2000/svg">
-                                        <g fill-rule="evenodd">
-                                            <path d="M1439.667 1226.667H1333V1440c0 14.187 5.653 27.733 15.573 37.76l123.414 123.306 75.413-75.413-107.733-107.733v-191.253Z"/>
-                                            <path d="M1386.333 1813.333C1180.467 1813.333 1013 1645.867 1013 1440c0-205.867 167.467-373.333 373.333-373.333 205.867 0 373.334 167.466 373.334 373.333 0 205.867-167.467 373.333-373.334 373.333m0-853.333c-264.64 0-480 215.36-480 480s215.36 480 480 480 480-215.36 480-480-215.36-480-480-480"/>
-                                            <path d="M1546.333 426.667H159.666v-160c0-29.44 24-53.334 53.334-53.334h160v53.334c0 29.44 23.894 53.333 53.333 53.333 29.44 0 53.333-23.893 53.333-53.333v-53.334h746.667v53.334c0 29.44 23.894 53.333 53.334 53.333 29.44 0 53.333-23.893 53.333-53.333v-53.334h160c29.333 0 53.333 23.894 53.333 53.334v160Zm-53.333-320h-160V53.333C1333 23.893 1309.107 0 1279.667 0c-29.44 0-53.334 23.893-53.334 53.333v53.334H479.666V53.333C479.666 23.893 455.773 0 426.333 0 396.894 0 373 23.893 373 53.333v53.334H213c-88.213 0-160 71.786-160 160v1546.666h746.666v-106.666h-640V533.333h1386.667v320H1653V266.667c0-88.214-71.787-160-160-160Z"/>
-                                        </g>
-                                    </svg>
-                                    {{$p_cycle->expected_start_time}}
+                                    {{$p_cycle->additional_comment}}
                                 </dd>
                             </div>
                         </div>
-                        <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2 hidden">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Zakładany termin</dt>
-                            <div class="w-full h-full flex justify-center items-center">
-                                <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                    <svg fill="#000000" width="30px" height="20px" viewBox="0 0 1920 1920" xmlns="http://www.w3.org/2000/svg">
-                                        <g fill-rule="evenodd">
-                                            <path d="M1439.667 1226.667H1333V1440c0 14.187 5.653 27.733 15.573 37.76l123.414 123.306 75.413-75.413-107.733-107.733v-191.253Z"/>
-                                            <path d="M1386.333 1813.333C1180.467 1813.333 1013 1645.867 1013 1440c0-205.867 167.467-373.333 373.333-373.333 205.867 0 373.334 167.466 373.334 373.333 0 205.867-167.467 373.333-373.334 373.333m0-853.333c-264.64 0-480 215.36-480 480s215.36 480 480 480 480-215.36 480-480-215.36-480-480-480"/>
-                                            <path d="M1546.333 426.667H159.666v-160c0-29.44 24-53.334 53.334-53.334h160v53.334c0 29.44 23.894 53.333 53.333 53.333 29.44 0 53.333-23.893 53.333-53.333v-53.334h746.667v53.334c0 29.44 23.894 53.333 53.334 53.333 29.44 0 53.333-23.893 53.333-53.333v-53.334h160c29.333 0 53.333 23.894 53.333 53.334v160Zm-53.333-320h-160V53.333C1333 23.893 1309.107 0 1279.667 0c-29.44 0-53.334 23.893-53.334 53.333v53.334H479.666V53.333C479.666 23.893 455.773 0 426.333 0 396.894 0 373 23.893 373 53.333v53.334H213c-88.213 0-160 71.786-160 160v1546.666h746.666v-106.666h-640V533.333h1386.667v320H1653V266.667c0-88.214-71.787-160-160-160Z"/>
-                                        </g>
-                                    </svg>
-                                    {{$p_cycle->expected_end_time}}
-                                </dd>
-                            </div>
+                        <div class="col-span-4 xl:col-span-8 w-full bg-gray-300 py-6 flex flex-row justify-end">
                         </div>
-                        <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Początek cyklu</dt>
-                            <div class="w-full h-full flex justify-center items-center">
-                                <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                    <svg fill="#000000" width="30px" height="20px" viewBox="0 0 1920 1920" xmlns="http://www.w3.org/2000/svg">
-                                        <g fill-rule="evenodd">
-                                            <path d="M1439.667 1226.667H1333V1440c0 14.187 5.653 27.733 15.573 37.76l123.414 123.306 75.413-75.413-107.733-107.733v-191.253Z"/>
-                                            <path d="M1386.333 1813.333C1180.467 1813.333 1013 1645.867 1013 1440c0-205.867 167.467-373.333 373.333-373.333 205.867 0 373.334 167.466 373.334 373.333 0 205.867-167.467 373.333-373.334 373.333m0-853.333c-264.64 0-480 215.36-480 480s215.36 480 480 480 480-215.36 480-480-215.36-480-480-480"/>
-                                            <path d="M1546.333 426.667H159.666v-160c0-29.44 24-53.334 53.334-53.334h160v53.334c0 29.44 23.894 53.333 53.333 53.333 29.44 0 53.333-23.893 53.333-53.333v-53.334h746.667v53.334c0 29.44 23.894 53.333 53.334 53.333 29.44 0 53.333-23.893 53.333-53.333v-53.334h160c29.333 0 53.333 23.894 53.333 53.334v160Zm-53.333-320h-160V53.333C1333 23.893 1309.107 0 1279.667 0c-29.44 0-53.334 23.893-53.334 53.333v53.334H479.666V53.333C479.666 23.893 455.773 0 426.333 0 396.894 0 373 23.893 373 53.333v53.334H213c-88.213 0-160 71.786-160 160v1546.666h746.666v-106.666h-640V533.333h1386.667v320H1653V266.667c0-88.214-71.787-160-160-160Z"/>
-                                        </g>
-                                    </svg>
-                                    {{$p_cycle->start_time}}
-                                </dd>
-                            </div>
-                        </div>
-                        <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 hidden">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Koniec cyklu</dt>
-                            <div class="w-full h-full flex justify-center items-center">
-                                <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                    <svg fill="#000000" width="30px" height="20px" viewBox="0 0 1920 1920" xmlns="http://www.w3.org/2000/svg">
-                                        <g fill-rule="evenodd">
-                                            <path d="M1439.667 1226.667H1333V1440c0 14.187 5.653 27.733 15.573 37.76l123.414 123.306 75.413-75.413-107.733-107.733v-191.253Z"/>
-                                            <path d="M1386.333 1813.333C1180.467 1813.333 1013 1645.867 1013 1440c0-205.867 167.467-373.333 373.333-373.333 205.867 0 373.334 167.466 373.334 373.333 0 205.867-167.467 373.333-373.334 373.333m0-853.333c-264.64 0-480 215.36-480 480s215.36 480 480 480 480-215.36 480-480-215.36-480-480-480"/>
-                                            <path d="M1546.333 426.667H159.666v-160c0-29.44 24-53.334 53.334-53.334h160v53.334c0 29.44 23.894 53.333 53.333 53.333 29.44 0 53.333-23.893 53.333-53.333v-53.334h746.667v53.334c0 29.44 23.894 53.333 53.334 53.333 29.44 0 53.333-23.893 53.333-53.333v-53.334h160c29.333 0 53.333 23.894 53.333 53.334v160Zm-53.333-320h-160V53.333C1333 23.893 1309.107 0 1279.667 0c-29.44 0-53.334 23.893-53.334 53.333v53.334H479.666V53.333C479.666 23.893 455.773 0 426.333 0 396.894 0 373 23.893 373 53.333v53.334H213c-88.213 0-160 71.786-160 160v1546.666h746.666v-106.666h-640V533.333h1386.667v320H1653V266.667c0-88.214-71.787-160-160-160Z"/>
-                                        </g>
-                                    </svg>
-                                    {{empty($p_cycle->end_time) ? 'cykl trwa' : $p_cycle->end_time}}
-                                </dd>
-                            </div>
-                        </div>
-{{--                            ROW 3--}}
-                        <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2 hidden">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Produktywność</dt>
-                            <div class="w-full h-full flex justify-center items-center">
-                                <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1  {{floatval($p_cycle->productivity) >= 100? 'text-green-450' : 'text-red-500'}}">
-                                    {{$p_cycle->productivity.'%'}}
-                                </dd>
-                            </div>
-                        </div>
-                        <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Postęp (%)</dt>
-                            <div class="w-full h-full flex justify-center items-center">
-                                <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1 {{floatval($p_cycle->time_passed) < floatval($p_cycle->progress)? 'text-green-450' : 'text-red-500'}}">
-                                    {{$p_cycle->progress.'%'}}
-                                </dd>
-                            </div>
-                        </div>
-                        <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2 hidden">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Czasu upłynęło (%)</dt>
-                            <div class="w-full h-full flex justify-center items-center">
-                                <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1  {{floatval($p_cycle->time_passed) < floatval($p_cycle->progress)? 'text-green-450' : 'text-red-500'}}">
-                                    {{($p_cycle->finished and floatval($p_cycle->time_passed) > 100)? '100%' : $p_cycle->time_passed.'%'}}
-                                </dd>
-                            </div>
-                        </div>
-                        <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Pozostało czasu (h)</dt>
-                            <div class="w-full h-full flex justify-center items-center">
-                                <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1 {{$p_cycle->status == 3 ? 'text-red-500' : ''}}">
-                                    {{$p_cycle->time_left}}
-                                </dd>
-                            </div>
-                        </div>
-                        <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Wyk. ilość (szt)</dt>
-                            <div class="w-full h-full flex justify-center items-center">
-                                <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1 {{floatval($p_cycle->productivity) >= 100? 'text-green-450' : 'text-red-500'}}">
-                                    {{$p_cycle->current_amount}}
-                                </dd>
-                            </div>
-                        </div>
-                        <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Cel (szt)</dt>
-                            <div class="w-full h-full flex justify-center items-center">
-                                <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                    {{$p_cycle->total_amount}}
-                                </dd>
-                            </div>
-                        </div>
-                        <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
-                            @php
-                                $expected_amount_time_frame = 'Ilość na jednostkę czasu(szt)';
-                                if($p_cycle->expected_amount_time_frame == 'day') {
-                                    $expected_amount_time_frame = 'Oczek. ilość/dzień(szt)';
-                                } else if($p_cycle->expected_amount_time_frame == 'hour') {
-                                    $expected_amount_time_frame = 'Oczek. ilość/godzina(szt)';
-                                }
-                            @endphp
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">{{$expected_amount_time_frame}}</dt>
-                            <div class="w-full h-full flex justify-center items-center">
-                                <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                    {{$p_cycle->expected_amount_per_time_frame}}
-                                </dd>
-                            </div>
-                        </div>
-                        <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2 hidden">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Defekty (szt)</dt>
-                            <div class="w-full h-full flex justify-center items-center">
-                                <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                    {{$p_cycle->defect_amount}}
-                                </dd>
-                            </div>
-                        </div>
-                        <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 xl:border-r-2 hidden">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Oczek. ilość/Czas pracy (szt)</dt>
-                            <div class="w-full h-full flex justify-center items-center">
-                                <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1 {{floatval($p_cycle->productivity) >= 100? 'text-green-450' : 'text-red-500'}}">
-                                    {{$p_cycle->expected_amount_per_spent_time}}
-                                </dd>
-                            </div>
-                        </div>
-                        <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Czas pracy (h)</dt>
-                            <div class="w-full h-full flex justify-center items-center">
-                                <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                    {{$p_cycle->time_spent_in_hours}}
-                                </dd>
-                            </div>
-                        </div>
-                        <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Oczek. czas wyk. (h)</dt>
-                            <div class="w-full h-full flex justify-center items-center">
-                                <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                    {{$p_cycle->expected_time_to_complete_in_hours}}
-                                </dd>
-                            </div>
-                        </div>
-                        <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Defekty (%)</dt>
-                            <div class="w-full h-full flex justify-center items-center">
-                                <dd class="w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                    {{$p_cycle->defect_percent}}
-                                </dd>
-                            </div>
-                        </div>
-                        <div class="additional-info col-span-4 xl:col-span-8 w-full bg-gray-300 py-2 flex flex-row justify-start hidden">
-                            <p class="pl-5 text-gray-800 focus:outline-none font-medium rounded-sm text-xs lg:text-sm">
-                                Informacje dodatkowe
-                            </p>
-                        </div>
-{{--                            ROW 6 - product photo--}}
-                        @if(!is_null($p_cycle->image))
-                            @php $path = ''; @endphp
-                            @if($p_cycle->category == 1)
-                                @php $path = isset($storage_path_products) ? $storage_path_products.'/' : ''; @endphp
-                            @elseif($p_cycle->category == 2)
-                                @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
-                            @endif
-                                <div class="additional-info col-span-4 xl:col-span-2 flex justify-center bg-gray-200/50 border-r-2 hidden p-2">
-                                    <div class="max-w-[150px]">
-                                        <img src="{{asset('storage/'.$path.$p_cycle->image)}}">
-                                    </div>
-                                </div>
-                        @endif
-                        @if(!is_null($p_cycle->description))
-                            <div class="additional-info col-span-4 {{is_null($p_cycle->image)? 'xl:col-span-8' : 'xl:col-span-6'}} flex flex-col bg-gray-200/50 border-r-2 hidden">
-                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Opis</dt>
-                                <div class="w-full h-full flex justify-center items-center">
-                                    <dd class="w-full text-xs font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                        {{$p_cycle->description}}
-                                    </dd>
+                        @if($p_cycle->category == 1)
+                            <div class="col-span-4 xl:col-span-8 flex justify-start items-center flex-col bg-gray-200/50">
+                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Wybrany materiał</dt>
+                                <div id="selected-comp-container" class="w-4/5 h-full min-h-[80px] flex justify-center items-center">
+                                    <input id="selected-comp-id" type="number" name="selected_component_id" class="hidden" value="">
                                 </div>
                             </div>
                         @endif
-{{--                            ROW 7 - product information--}}
-                        @if(!is_null($p_cycle->height) or !is_null($p_cycle->length) or !is_null($p_cycle->width))
-                            <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
-                                @php
-                                    $name = '';
-                                    $dim = '';
-                                    if(!is_null($p_cycle->height)) {
-                                        $name .= 'wys ';
-                                        $dim .= $p_cycle->height.' ';
-                                    }
-                                    if(!is_null($p_cycle->length)) {
-                                        if(!empty($name)) {
-                                            $name .= 'x  ';
-                                            $dim .= 'x  ';
-                                        }
-                                        $name .= 'dług ';
-                                        $dim .= $p_cycle->length.' ';
-                                    }
-                                    if(!is_null($p_cycle->width)) {
-                                        if(!empty($name)) {
-                                            $name .= 'x  ';
-                                            $dim .= 'x  ';
-                                        }
-                                        $name .= 'szer';
-                                        $dim .= $p_cycle->width.' ';
-                                    }
-                                    $name .= empty($name) ? 'Wymiary' : ' [cm]';
-                                @endphp
-                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">{{$name}}</dt>
-                                <div class="w-full h-full flex justify-center items-center">
-                                    <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                        {{$dim}}
-                                    </dd>
+                        @if($p_cycle->category != 3)
+                            <div class="col-span-4 xl:col-span-8 flex justify-start items-center flex-col bg-gray-200/50">
+                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Wybrane zadanie</dt>
+                                <div id="selected-prod-schema-container" class="w-4/5 h-full min-h-[80px] flex justify-center items-center">
+                                    <input id="selected-prod-schema-id" type="number" name="selected_prod_schema_id" class="hidden" value="">
                                 </div>
                             </div>
                         @endif
-                        @if(!is_null($p_cycle->material))
-                            <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 xl:border-r-2 hidden">
-                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Surowiec</dt>
-                                <div class="w-full h-full flex justify-center items-center">
-                                    <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                        {{$p_cycle->material}}
-                                    </dd>
-                                </div>
-                            </div>
-                        @endif
-                        @if(!is_null($p_cycle->price))
-                            <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 hidden">
-                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Cena (szt)</dt>
-                                <div class="w-full h-full flex justify-center items-center">
-                                    <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                        {{$p_cycle->price}}
-                                    </dd>
-                                </div>
-                            </div>
-                        @endif
-                        @if(!is_null($p_cycle->color))
-                            <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2 hidden">
-                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Kolor</dt>
-                                <div class="w-full h-full flex justify-center items-center">
-                                    <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                        {{$p_cycle->color}}
-                                    </dd>
-                                </div>
-                            </div>
-                        @endif
+                        <div class="col-span-4 xl:col-span-8 w-full text-center">
+                            <a  id="add-work-button"
+                                class="inline-block px-6 py-2 md:py-4 text-xs font-medium uppercase w-full text-md md:text-lg xl:text-xl leading-normal text-white focus:outline-none shadow-[0_4px_9px_-4px_rgba(0,0,0,0.2)] transition duration-150 ease-in-out hover:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] focus:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] active:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)]"
+                                data-te-ripple-init
+                                data-te-ripple-color="light"
+                                href="">
+                                {{ __('Raportuj pracę') }}
+                            </a>
+                        </div>
                     </dl>
                 </div>
             </div>
+            @if($p_cycle->category != 3 and isset($child_prod_schemas))
+                <div class="w-full flex justify-center items-center mb-4">
+                    <div class="w-[95%]">
+                        <div class="w-full text-lg lg:text-xl font-semibold bg-gray-800 text-white rounded-t-xl pl-5 py-2 flex flex-row justify-between">
+                            <div class="p-3">
+                                {{($p_cycle->category == 1)? 'Wybierz materiał i zadanie' : 'Wybierz zadanie'}}
+                            </div>
+                        </div>
+                        <div class="shadow-md rounded-b-xl mb-4 flex justify-center flex-col xl:flex-row">
+                            @if($p_cycle->category == 1 and isset($child_components))
+                                <div class="w-full xl:w-1/2 flex justify-start items-center flex-col">
+                                    <div class="w-full shadow-md bg-white text-lg text-gray-800 font-semibold pl-5 py-2">
+                                        <div class="p-2">
+                                            Materiały
+                                        </div>
+                                    </div>
+                                    <div class="w-[90%] p-2">
+                                        @foreach($child_components as $comp)
+                                            <x-list-element id="{{'comp-'.$comp->component_id}}" class="my-6 list-element flex-col w-full p-3">
+                                                <div class="w-full flex justify-between items-center">
+                                                    <div class="w-full flex justify-left items-center">
+                                                        <p class="inline-block list-element-name ml-[3%] py-3  xl:text-lg text-md">{{$comp->name}}</p>
+                                                    </div>
+                                                </div>
+                                            </x-list-element>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+                            <div class="w-full {{$p_cycle->category == 1? 'xl:w-1/2' : ''}}  flex justify-start items-center flex-col">
+                                @if($p_cycle->category == 1)
+                                    <div class="w-full shadow-md bg-white text-lg text-gray-800 font-semibold pl-5 py-2">
+                                        <div class="p-2">
+                                            Zadania
+                                        </div>
+                                    </div>
+                                @endif
+                                <div class="{{$p_cycle->category == 1? 'w-[90%]' : 'w-[70%]'}} p-2">
+                                    @if(is_array($child_prod_schemas))
+                                        @foreach($child_prod_schemas as $comp_id => $prod_schemas)
+                                            @php $current_id = 0; @endphp
+                                            @foreach($prod_schemas as $prod_schema)
+                                                @if($prod_schema->child_id != $current_id)
+                                                    <x-list-element id="schema-{{$prod_schema->child_id}}-comp-{{$comp_id}}" class="{{'comp-'.$comp_id}} my-6 list-element-2 flex-row w-full p-3 {{$p_cycle->category == 1? 'hidden' : ''}}">
+                                                        <input type="number" class="schema-list-element-id hidden" value="{{$prod_schema->child_id}}">
+                                                        <div class="w-full flex justify-between items-center">
+                                                            <div class="w-full flex justify-left items-center">
+                                                                <p class="inline-block list-element-name ml-[3%] py-3  xl:text-lg text-md">{{$prod_schema->name}}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div id="expbtn-schema-{{$prod_schema->child_id}}" class="expand-btn inline-block bg-gray-800 w-4 h-4 lg:w-6 lg:h-6 md:rounded-md rounded-sm rotate-0 transition-all mr-0">
+                                                            <img src="{{asset('storage/expand-down.png') }}">
+                                                        </div>
+                                                    </x-list-element>
+                                                @endif
+                                                @php $current_id = $prod_schema->child_id; @endphp
+                                            @endforeach
+                                        @endforeach
+                                    @else
+                                        @php $current_id = 0; @endphp
+                                        @foreach($child_prod_schemas  as $prod_schema)
+                                            @if($prod_schema->child_id != $current_id)
+                                                <x-list-element id="schema-{{$prod_schema->child_id}}" class="comp my-6 list-element-2 flex-row w-full p-3 {{$p_cycle->category == 1? 'hidden' : ''}}">
+                                                    <input type="number" class="schema-list-element-id hidden" value="{{$prod_schema->child_id}}">
+                                                    <div class="w-full flex justify-between items-center">
+                                                        <div class="w-full flex justify-left items-center">
+                                                            <p class="inline-block list-element-name ml-[3%] py-3  xl:text-lg text-md">{{$prod_schema->name}}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div id="expbtn-schema-{{$prod_schema->child_id}}" class="expand-btn inline-block bg-gray-800 w-4 h-4 lg:w-6 lg:h-6 md:rounded-md rounded-sm rotate-0 transition-all mr-0">
+                                                        <img src="{{asset('storage/expand-down.png') }}">
+                                                    </div>
+                                                </x-list-element>
+                                            @endif
+                                            @php $current_id = $prod_schema->child_id; @endphp
+                                        @endforeach
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
             <div class="w-full flex justify-center items-center mb-4">
                 <div class="w-[95%]">
                     <div class="w-full text-lg lg:text-xl font-semibold bg-gray-800 text-white rounded-t-xl pl-5 py-2 flex flex-row justify-between">
@@ -499,9 +468,9 @@
                             {{($p_cycle->category == 1)? 'Materiały i zadania' : 'Zadania'}}
                         </div>
                     </div>
-                    <div class="shadow-md sm:rounded-b-xl mb-4">
+                    <div class="shadow-md rounded-b-xl mb-4">
                         <div class="relative overflow-x-auto">
-                            <table class="w-full text-sm text-left rtl:text-right pb-2 text-gray-500 dark:text-gray-400 border-separate border-spacing-1 border-slate-300">
+                            <table class="w-full text-sm text-left rtl:text-right pb-2 bg-gray-100 text-gray-500 dark:text-gray-400 border-separate border-spacing-1 border-slate-300">
                                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 whitespace-nowrap">
                                 <tr>
                                     <th scope="col" class="px-6 py-3">
@@ -605,7 +574,7 @@
                                             @endphp
                                             <div class="w-full h-full flex justify-center">
                                                 <div class="{{$bg}} text-xs lg:text-sm text-white flex justify-center items-center font-semibold rounded-md mx-2">
-{{--                                                    id means row and column--}}
+                                                    {{--                                                    id means row and column--}}
                                                     <div class="col-value status cycle-tag p-2">
                                                         {{$status}}
                                                     </div>
@@ -624,9 +593,10 @@
                                         </td>
                                         <td class="p-1 rounded-md">
                                             @if(!is_null($c_cycle->image) and $c_cycle->category == 2)
+                                                @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
                                                 <div class="flex justify-center">
                                                     <div class="max-w-[100px]">
-                                                        <img src="{{asset('storage/components/'.$c_cycle->image)}}" alt="">
+                                                        <img src="{{asset('storage/'.$path.$c_cycle->image)}}" alt="">
                                                     </div>
                                                 </div>
                                             @endif
@@ -634,16 +604,16 @@
                                         <td class="col-value name px-6 py-4 whitespace-nowrap rounded-md">
                                             {{$c_cycle->name}}
                                         </td>
-                                        <td class="col-value productivity px-6 py-4 text-center {{floatval($p_cycle->productivity) >= 100? 'text-green-450' : 'text-red-500'}}">
+                                        <td class="col-value productivity px-6 py-4 text-center {{floatval($c_cycle->productivity) >= 100? 'text-green-450' : 'text-red-500'}}">
                                             {{$c_cycle->productivity.'%'}}
                                         </td>
                                         <td class="col-value time-spent-in-hours px-6 py-4 text-center">
                                             {{$c_cycle->time_spent_in_hours}}
                                         </td>
-                                        <td class="col-value current-amount px-6 py-4 text-center {{floatval($p_cycle->productivity) >= 100? 'text-green-450' : 'text-red-500'}}">
+                                        <td class="col-value current-amount px-6 py-4 text-center {{floatval($c_cycle->productivity) >= 100? 'text-green-450' : 'text-red-500'}}">
                                             {{$c_cycle->current_amount}}
                                         </td>
-                                        <td class="col-value expected-amount-per-spent-time px-6 py-4 text-center {{floatval($p_cycle->productivity) >= 100? 'text-green-450' : 'text-red-500'}}">
+                                        <td class="col-value expected-amount-per-spent-time px-6 py-4 text-center {{floatval($c_cycle->productivity) >= 100? 'text-green-450' : 'text-red-500'}}">
                                             {{$c_cycle->expected_amount_per_spent_time}}
                                         </td>
                                         <td class="col-value total-amount px-6 py-4 text-center">
@@ -681,11 +651,11 @@
                                 </tbody>
                             </table>
                         </div>
-                        <div class="w-full mx-2 p-2 bg-gray-50">
+                        <div class="w-full p-2 bg-gray-50 rounded-b-xl">
                             {{ $child_cycles->links() }}
                         </div>
                     </div>
-                    </div>
+                </div>
             </div>
 
             <div id="modal-details-background" class="z-[100] fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 hidden">
@@ -699,7 +669,7 @@
                         </x-nav-button>
                     </div>
                     <div class="flex justify-center items-start max-h-[500px] overflow-y-scroll mt-6">
-                        <div id="modal-detais-table" class="cycle w-[95%] rounded-xl bg-white my-5 shadow-md">
+                        <div id="modal-details-table" class="cycle w-[95%] rounded-xl bg-white my-5 shadow-md">
                             <dl class="grid grid-cols-4 xl:grid-cols-8 overflow-hidden text-left rounded-xl">
                                 <div class="col-span-4 flex flex-col bg-gray-200/50 xl:border-r-2">
                                     <dt class="order-first text-sm lg:text-lg font-semibold bg-gray-800 text-white w-[45%] xl:w-1/2 rounded-tl-xl pl-5 py-2 flex flex-row justify-between">

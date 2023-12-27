@@ -596,10 +596,8 @@ class ProductionCycleController extends Controller
 
     private function getWorkStatus(Request $request) : string|null
     {
-        $previous = explode('/',$request->session()->previousUrl());
-        $previous = $previous[count($previous)-1];
-
-        if($previous == 'praca-raportuj' || str_contains($previous,'produkcja')) {
+        $previous = $request->session()->previousUrl();
+        if($previous == str_contains($previous,'praca-raportuj') || str_contains($previous,'produkcja') || str_contains($previous,'dodaj-prace')) {
             return (session('add_work'))? 'Aby zaraportować pracę wybierz cykl produkcji (możesz też dodać nowy).' : null;
         }
         else {

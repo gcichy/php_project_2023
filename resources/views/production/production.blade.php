@@ -418,7 +418,7 @@
                                         class="add-work-button inline-block px-6 py-2 md:py-4 text-xs font-medium uppercase w-full text-md md:text-lg xl:text-xl leading-normal text-white focus:outline-none shadow-[0_4px_9px_-4px_rgba(0,0,0,0.2)] transition duration-150 ease-in-out hover:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] focus:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] active:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)]"
                                         data-te-ripple-init
                                         data-te-ripple-color="light"
-                                        href="{{route('work.add')}}">
+                                        href="{{"/dodaj-prace/$p_cycle->cycle_id"}}">
                                         {{ __('Raportuj pracę') }}
                                     </a>
                                 </div>

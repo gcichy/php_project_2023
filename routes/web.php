@@ -104,9 +104,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/praca', [WorkController::class, 'index'])->name('work.index');
     Route::get('/praca-w-cyklu', [ProductionCycleController::class, 'index'])->name('work-cycle.index');
     Route::get('/praca-raportuj', [WorkController::class, 'addWorkWrapper'])->name('work.add-wrapper');
-    Route::get('/dodaj-pracę', [WorkController::class, 'addWork'])->name('work.add');
-
-
+    Route::get('/dodaj-prace/{id}', [WorkController::class, 'addWork'])->name('work.add');
 });
 
 

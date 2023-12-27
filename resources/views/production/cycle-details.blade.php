@@ -55,19 +55,19 @@
 
                     if(status === 0) {
                         //cycleClasses = 'ring-green-450 ring-4 ring-offset-4';
-                        cycleTagBg = 'bg-green-450';
+                        cycleTagBg = 'bg-green-450 hover:bg-green-700';
                         cycleTagText = 'Zakończony';
                     } else if(status === 3) {
                         //cycleClasses = 'ring-red-500 ring-4 ring-offset-4';
-                        cycleTagBg = 'bg-red-500';
+                        cycleTagBg = 'bg-red-500 hover:bg-red-800';
                         cycleTagText = 'Po terminie';
                     } else if(status === 1) {
                         //cycleClasses = 'ring-blue-450 ring-4 ring-offset-4';
-                        cycleTagBg = 'bg-blue-450';
+                        cycleTagBg = 'bg-blue-450 hover:bg-blue-800';
                         cycleTagText = 'Aktywny';
                     } else if(status === 2) {
                         //cycleClasses = 'ring-yellow-300 ring-4 ring-offset-4';
-                        cycleTagBg = 'bg-yellow-300';
+                        cycleTagBg = 'bg-yellow-300 hover:bg-yellow-600';
                         cycleTagText = 'Nierozpoczęty';
                     }
                     //$(this).addClass(cycleClasses);
@@ -207,19 +207,35 @@
                             </div>
                         </div>
                         {{--                            ROW 1--}}
-                        <div class="additional-info col-span-4 flex flex-col bg-gray-200/50 border-r-2">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Uwagi</dt>
-                            <div class="w-full h-full flex justify-center items-center">
-                                <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                    {{$p_cycle->additional_comment}}
-                                </dd>
+                        @if(!is_null($p_cycle->image))
+                            @php $path = ''; @endphp
+                            @if($p_cycle->category == 1)
+                                @php $path = isset($storage_path_products) ? $storage_path_products.'/' : ''; @endphp
+                            @elseif($p_cycle->category == 2)
+                                @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
+                            @endif
+                            <div class="col-span-2 flex justify-center flex-col bg-gray-200/50 border-r-2">
+                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Zdjęcie</dt>
+                                <div class="flex justify-center items-center p-1">
+                                    <div class="max-w-[150px]">
+                                        <img src="{{asset('storage/'.$path.$p_cycle->image)}}">
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="additional-info col-span-4 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2">
+                        @endif
+                        <div class="col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2">
                             <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Przypisani pracownicy</dt>
                             <div class="w-full h-full flex justify-center items-center">
                                 <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
                                     {{$p_cycle->assigned_employee_no}}
+                                </dd>
+                            </div>
+                        </div>
+                        <div class="col-span-4 flex flex-col bg-gray-200/50 border-r-2">
+                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Uwagi</dt>
+                            <div class="w-full h-full flex justify-center items-center">
+                                <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
+                                    {{$p_cycle->additional_comment}}
                                 </dd>
                             </div>
                         </div>
@@ -399,25 +415,12 @@
                                 Informacje dodatkowe
                             </p>
                         </div>
-{{--                            ROW 6 - product photo--}}
-                        @if(!is_null($p_cycle->image))
-                            @php $path = ''; @endphp
-                            @if($p_cycle->category == 1)
-                                @php $path = isset($storage_path_products) ? $storage_path_products.'/' : ''; @endphp
-                            @elseif($p_cycle->category == 2)
-                                @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
-                            @endif
-                                <div class="additional-info col-span-4 xl:col-span-2 flex justify-center bg-gray-200/50 border-r-2 hidden p-2">
-                                    <div class="max-w-[150px]">
-                                        <img src="{{asset('storage/'.$path.$p_cycle->image)}}">
-                                    </div>
-                                </div>
-                        @endif
+{{--                            ROW 6 - product desc--}}
                         @if(!is_null($p_cycle->description))
-                            <div class="additional-info col-span-4 {{is_null($p_cycle->image)? 'xl:col-span-8' : 'xl:col-span-6'}} flex flex-col bg-gray-200/50 border-r-2 hidden">
+                            <div class="additional-info col-span-4 xl:col-span-8 flex flex-col bg-gray-200/50 border-r-2 hidden">
                                 <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Opis</dt>
                                 <div class="w-full h-full flex justify-center items-center">
-                                    <dd class="w-full text-xs font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
+                                    <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
                                         {{$p_cycle->description}}
                                     </dd>
                                 </div>
