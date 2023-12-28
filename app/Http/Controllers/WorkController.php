@@ -110,6 +110,7 @@ class WorkController extends Controller
 
         $child_cycles = ChildCycleView::where('parent_id', $id)->paginate(10);
 
+        $child_schemas_modal = null;
         $child_components = null;
         $child_prod_schemas = null;
         if($parent_cycle->category == 1) {
@@ -125,13 +126,14 @@ class WorkController extends Controller
                 $temp_schemas = clone $child_schemas;
                 $child_prod_schemas[$comp->component_id] = $temp_schemas->where('component_id', $comp->component_id)->get();
             }
-
+            $child_schemas_modal = $child_schemas->get();
         }
         else if($parent_cycle->category == 2) {
             $child_prod_schemas = ChildCycleView::where(['child_cycle_view.parent_id' => $id])
                 ->join('task','task.production_schema_id', '=', 'child_cycle_view.prod_schema_id')
                 ->select('child_cycle_view.*',DB::raw('task.name as task_name, task.sequence_no as task_sequence_no, task.amount_required as task_amount_required'))
                 ->orderBy('child_cycle_view.prod_schema_sequence_no','asc','task.sequence_no','asc')->get();
+            $child_schemas_modal = $child_prod_schemas;
         }
         else if($parent_cycle->category == 3) {
             $child_prod_schemas = ParentCycleView::where('cycle_id', $id)
@@ -139,17 +141,20 @@ class WorkController extends Controller
                 ->join('task','task.production_schema_id', '=', 'production_cycle.production_schema_id')
                 ->select('parent_cycle_view.*',DB::raw('task.name as task_name, task.sequence_no as task_sequence_no, task.amount_required as task_amount_required'))
                 ->orderBy('task.sequence_no','asc')->get();
+            $child_schemas_modal = $child_prod_schemas;
         }
 
         if(count($child_prod_schemas) == 0) {
             return back();
         }
 
+
         return view('work.work-add', [
             'p_cycle' => $parent_cycle,
             'child_cycles' => $child_cycles,
             'child_components' => $child_components,
             'child_prod_schemas' => $child_prod_schemas,
+            'child_schemas_modal' => $child_schemas_modal,
             'user' => $user,
             'storage_path_products' => 'products',
             'storage_path_components' => 'components',

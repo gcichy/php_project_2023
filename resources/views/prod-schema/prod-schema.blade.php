@@ -44,6 +44,7 @@
             checkActive();
 
             $('.list-element').on('click', function () {
+                console.log('lista');
                 var is_active = ($(this).hasClass('active-list-elem') ? true : false);
                 $('.list-element').removeClass('active-list-elem');
                 $(this).addClass('active-list-elem');
