@@ -689,7 +689,7 @@
                             {{ $child_cycles->links() }}
                         </div>
                     </div>
-                    </div>
+                </div>
             </div>
 
             <div id="modal-details-background" class="z-[100] fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 hidden">

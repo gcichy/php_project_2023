@@ -119,7 +119,7 @@ class WorkController extends Controller
             $child_prod_schemas = array();
             $child_schemas = ChildCycleView::where(['child_cycle_view.parent_id' => $id])
                 ->join('task','task.production_schema_id', '=', 'child_cycle_view.prod_schema_id')
-                ->select('child_cycle_view.*',DB::raw('task.name as task_name, task.sequence_no as task_sequence_no, task.amount_required as task_amount_required'))
+                ->select('child_cycle_view.*',DB::raw('task.id as task_id, task.name as task_name, task.sequence_no as task_sequence_no, task.amount_required as task_amount_required'))
                 ->orderBy('child_cycle_view.component_id', 'asc','child_cycle_view.prod_schema_sequence_no','asc','task.sequence_no','asc');
 
             foreach ($child_components as $comp) {
@@ -131,7 +131,7 @@ class WorkController extends Controller
         else if($parent_cycle->category == 2) {
             $child_prod_schemas = ChildCycleView::where(['child_cycle_view.parent_id' => $id])
                 ->join('task','task.production_schema_id', '=', 'child_cycle_view.prod_schema_id')
-                ->select('child_cycle_view.*',DB::raw('task.name as task_name, task.sequence_no as task_sequence_no, task.amount_required as task_amount_required'))
+                ->select('child_cycle_view.*',DB::raw('task.id as task_id, task.name as task_name, task.sequence_no as task_sequence_no, task.amount_required as task_amount_required'))
                 ->orderBy('child_cycle_view.prod_schema_sequence_no','asc','task.sequence_no','asc')->get();
             $child_schemas_modal = $child_prod_schemas;
         }
@@ -139,7 +139,7 @@ class WorkController extends Controller
             $child_prod_schemas = ParentCycleView::where('cycle_id', $id)
                 ->join('production_cycle','production_cycle.id', '=', 'parent_cycle_view.cycle_id')
                 ->join('task','task.production_schema_id', '=', 'production_cycle.production_schema_id')
-                ->select('parent_cycle_view.*',DB::raw('task.name as task_name, task.sequence_no as task_sequence_no, task.amount_required as task_amount_required'))
+                ->select('parent_cycle_view.*',DB::raw('task.id as task_id, task.name as task_name, task.sequence_no as task_sequence_no, task.amount_required as task_amount_required'))
                 ->orderBy('task.sequence_no','asc')->get();
             $child_schemas_modal = $child_prod_schemas;
         }
@@ -147,7 +147,6 @@ class WorkController extends Controller
         if(count($child_prod_schemas) == 0) {
             return back();
         }
-
 
         return view('work.work-add', [
             'p_cycle' => $parent_cycle,

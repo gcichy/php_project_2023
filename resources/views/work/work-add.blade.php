@@ -50,7 +50,16 @@
                     modalOnClick($(this));
                 });
             }
-
+            let prodSchemaListBtn = prodSchemaContainer.find('.expand-btn');
+            if(prodSchemaListBtn.length > 0) {
+                prodSchemaListBtn.addClass('hidden');
+            }
+            let prodSchemaList = adjustSelectedElement('dropdown',prodSchemaContainer);
+            prodSchemaList.removeClass('hidden');
+            let hiddenInputs = prodSchemaList.find('.hidden-input');
+            if(hiddenInputs.length > 0) {
+                hiddenInputs.removeClass('hidden');
+            }
             if(comp.length > 0) {
                 let clonedComp = comp.clone();
                 clonedComp.attr('id', 'selected-'+comp.attr('id'));
@@ -64,13 +73,13 @@
                         modalOnClick($(this));
                     });
                 }
-                let compList = adjustSelectedElement('expand-btn',compContainer);
-                if(compList.length > 0) {
-                    compList.on('click', function () {
+                let compListBtn = adjustSelectedElement('expand-btn',compContainer);
+                if(compListBtn.length > 0) {
+                    compListBtn.on('click', function () {
                         expandButtonOnClick($(this),'#selected-list-');
                     });
                 }
-                adjustSelectedElement('dropdown',compContainer)
+                adjustSelectedElement('dropdown',compContainer);
             }
         }
 
@@ -213,74 +222,65 @@
             });
 
             $('.list-element').on('click', function () {
-                removeSelectedElements();
-                let isActive = ($(this).hasClass('active-list-elem') ? true : false);
-                $('.list-element').removeClass('active-list-elem');
-                $('.list-element-2').removeClass('active-list-elem');
-                $(this).addClass('active-list-elem');
+                if(!($(event.target).is("a.open-modal") || $(event.target).closest("a.open-modal").length > 0
+                    || $(event.target).is("div.expand-btn") || $(event.target).closest("div.expand-btn").length > 0)) {
+                    removeSelectedElements();
+                    let isActive = ($(this).hasClass('active-list-elem') ? true : false);
+                    $('.list-element').removeClass('active-list-elem');
+                    $(this).addClass('active-list-elem');
 
-                let compId = $(this).attr('id');
-                let prodSchemas = $('.list-element-2.'+ compId);
-                $('.list-element-2').addClass('hidden');
+                    $('.list-element-2').removeClass('active-list-elem');
 
-                //
-                // if($(list_id).hasClass('hidden')) {
-                if (isActive) {
-                    if(!($(event.target).is("a.open-modal") || $(event.target).closest("a.open-modal").length > 0)) {
+
+                    let compId = $(this).attr('id');
+                    let prodSchemas = $('.list-element-2.'+ compId);
+                    $('.list-element-2').addClass('hidden');
+
+                    if (isActive) {
                         $('.list-element').removeClass('active-list-elem');
                     }
-                }
-                else {
-                    if(prodSchemas.hasClass('hidden')){
-                        prodSchemas.removeClass('hidden');
+                    else {
+                        if(prodSchemas.hasClass('hidden')){
+                            prodSchemas.removeClass('hidden');
+                        }
                     }
                 }
-                // }
-                // checkActive();
             });
 
             $('.list-element-2').on('click', function () {
-                var isActive = ($(this).hasClass('active-list-elem') ? true : false);
-                removeSelectedElements();
-                $('.list-element-2').removeClass('active-list-elem');
-                $(this).addClass('active-list-elem');
+                if(!($(event.target).is("a.open-modal") || $(event.target).closest("a.open-modal").length > 0
+                    || $(event.target).is("div.expand-btn") || $(event.target).closest("div.expand-btn").length > 0)) {
+                    var isActive = ($(this).hasClass('active-list-elem') ? true : false);
+                    removeSelectedElements();
+                    $('.list-element-2').removeClass('active-list-elem');
+                    $(this).addClass('active-list-elem');
 
-                // var id = $(this).attr('id').split('-')[1];
-                // var list_id = '.prodschema-list-' + id;
-                //
-                // if($(list_id).hasClass('hidden')) {
-                if (isActive) {
-//                    if(!$(list_id).hasClass('just-hidden')) {
-                    if(!($(event.target).is("a.open-modal") || $(event.target).closest("a.open-modal").length > 0)) {
+                    if (isActive) {
                         $('.list-element-2').removeClass('active-list-elem');
                     }
-                    // } else {
-                    //     $(list_id).removeClass('just-hidden');
-                    // }
-                }
-                else {
-                    let id = $(this).attr('id');
-                    var schemaId = null;
-                    if(id.includes('comp')) {
-                        let arrayId = id.split('-');
-                        let compId = arrayId[arrayId.length - 1];
-                        if(arrayId.length > 3) {
-                            schemaId = arrayId[arrayId.length - 3];
-                        }
-
-                        let comp = $('#comp-'+compId);
-                        cloneSelectedElements(comp, compId, $(this), schemaId);
-                    }
                     else {
-                        let arrayId = id.split('-');
-                        if(arrayId.length > 1) {
-                            schemaId = arrayId[arrayId.length - 1];
+                        let id = $(this).attr('id');
+                        var schemaId = null;
+                        if(id.includes('comp')) {
+                            let arrayId = id.split('-');
+                            let compId = arrayId[arrayId.length - 1];
+                            if(arrayId.length > 3) {
+                                schemaId = arrayId[arrayId.length - 3];
+                            }
+
+                            let comp = $('#comp-'+compId);
+                            cloneSelectedElements(comp, compId, $(this), schemaId);
                         }
-                        cloneSelectedElements(null, null, $(this), schemaId);
+                        else {
+                            let arrayId = id.split('-');
+                            if(arrayId.length > 1) {
+                                schemaId = arrayId[arrayId.length - 1];
+                            }
+                            cloneSelectedElements(null, null, $(this), schemaId);
+                        }
                     }
                 }
-                // }
-                // checkActive();
+
             });
 
             $("#close-modal-details-button").on('click', function () {
@@ -390,7 +390,7 @@
                                 </dd>
                             </div>
                         </div>
-                        <div class="col-span-4 flex flex-col bg-gray-200/50 border-r-2">
+                        <div class="col-span-4 flex flex-col bg-gray-200/50">
                             <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Uwagi</dt>
                             <div class="w-full h-full flex justify-center items-center">
                                 <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
@@ -399,6 +399,9 @@
                             </div>
                         </div>
                         <div class="col-span-4 xl:col-span-8 w-full bg-gray-300 py-6 flex flex-row justify-end">
+                            <button type="button" id="cycle-details-{{$p_cycle->cycle_id}}" class="cycle-details mr-4 text-gray-800 bg-white uppercase hover:bg-gray-100 focus:outline-none font-medium rounded-md text-xs lg:text-sm px-2 py-1 shadow-md">
+                                Statystyki
+                            </button>
                         </div>
                         @if($p_cycle->category == 1)
                             <div class="col-span-4 xl:col-span-8 flex justify-start items-center flex-col bg-gray-200/50">
@@ -411,7 +414,7 @@
                         @if($p_cycle->category != 3)
                             <div class="col-span-4 xl:col-span-8 flex justify-start items-center flex-col bg-gray-200/50">
                                 <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Wybrane zadanie</dt>
-                                <div id="selected-prod-schema-container" class="w-4/5 h-full min-h-[80px] flex justify-center items-center">
+                                <div id="selected-prod-schema-container" class="w-[95%] h-full min-h-[80px] flex justify-center items-center">
                                     <input id="selected-prod-schema-id" type="number" name="selected_prod_schema_id" class="hidden" value="">
                                 </div>
                             </div>
@@ -444,120 +447,122 @@
                                             Materiały
                                         </div>
                                     </div>
-                                    <div class="w-[90%] p-2">
-                                        @foreach($child_components as $comp)
-                                            <x-list-element id="{{'comp-'.$comp->component_id}}" class="my-6 list-element flex-col w-full lg:py-0 py-0">
-                                                <div class="w-full flex flex-row justify-center">
-                                                    <div class="w-[85%] flex flex-col justify-between items-center">
-                                                        <div class="w-full flex justify-left items-center">
-                                                            <p class="my-2 mr-2 rounded-lg inline-block text-white bg-blue-450 shadow-lg list-element-name py-2 px-3 xl:text-lg text-md whitespace-nowrap overflow-clip">
-                                                                {{$comp->name}}
-                                                            </p>
+                                    <div class="w-full h-full max-h-[400px] overflow-y-scroll flex justify-center items-start">
+                                        <div class="w-[90%] px-2 my-4">
+                                            @foreach($child_components as $comp)
+                                                <x-list-element id="{{'comp-'.$comp->component_id}}" class="my-6 list-element flex-col w-full lg:py-0 py-0">
+                                                    <div class="w-full flex flex-row justify-center">
+                                                        <div class="w-[85%] flex flex-col justify-between items-center">
+                                                            <div class="w-full flex justify-left items-center">
+                                                                <p class="my-2 mr-2 rounded-lg inline-block text-white bg-blue-450 shadow-lg list-element-name py-2 px-3 xl:text-lg text-md whitespace-nowrap overflow-clip">
+                                                                    {{$comp->name}}
+                                                                </p>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="w-[15%] flex justify-end items-center">
-                                                        <div id="expbtn-comp-{{$comp->child_id}}" class="expand-btn inline-block  p-0.5 bg-gray-800 rounded-md rotate-0 transition-all mr-1">
-                                                            <svg width="30px" height="30px" viewBox="0 0 1024 1024" class="w-5 h-5 lg:w-6 lg:h-6"  xmlns="http://www.w3.org/2000/svg">
-                                                                <title>szczegóły materiału</title>
-                                                                <path d="M903.232 256l56.768 50.432L512 768 64 306.432 120.768 256 512 659.072z" fill="#ffffff" />
-                                                            </svg>
-                                                        </div>
-                                                        <div class="flex justify-center ml-1">
-                                                            <a id="open-modal-{{$comp->child_id}}" type="button"
-                                                               class="open-modal font-medium text-blue-600 dark:text-blue-500 hover:underline p-0.5 bg-gray-800 rounded-md shadow-md">
-                                                                <svg fill="#ffffff" width="30px" height="30px" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 lg:w-6 lg:h-6">
-                                                                    <title>podgląd podcyklu</title>
-                                                                    <path d="M15.694 13.541l2.666 2.665 5.016-5.017 2.59 2.59 0.004-7.734-7.785-0.046 2.526 2.525-5.017 5.017zM25.926 16.945l-1.92-1.947 0.035 9.007-16.015 0.009 0.016-15.973 8.958-0.040-2-2h-7c-1.104 0-2 0.896-2 2v16c0 1.104 0.896 2 2 2h16c1.104 0 2-0.896 2-2l-0.074-7.056z"></path>
+                                                        <div class="w-[15%] flex justify-end items-center">
+                                                            <div id="expbtn-comp-{{$comp->child_id}}" class="expand-btn inline-block  p-0.5 bg-gray-800 rounded-md rotate-0 transition-all mr-1">
+                                                                <svg width="30px" height="30px" viewBox="0 0 1024 1024" class="w-5 h-5 lg:w-6 lg:h-6"  xmlns="http://www.w3.org/2000/svg">
+                                                                    <title>szczegóły materiału</title>
+                                                                    <path d="M903.232 256l56.768 50.432L512 768 64 306.432 120.768 256 512 659.072z" fill="#ffffff" />
                                                                 </svg>
-                                                            </a>
+                                                            </div>
+                                                            <div class="flex justify-center ml-1">
+                                                                <a id="open-modal-{{$comp->child_id}}" type="button"
+                                                                   class="open-modal font-medium text-blue-600 dark:text-blue-500 hover:underline p-0.5 bg-gray-800 rounded-md shadow-md">
+                                                                    <svg fill="#ffffff" width="30px" height="30px" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 lg:w-6 lg:h-6">
+                                                                        <title>podgląd podcyklu</title>
+                                                                        <path d="M15.694 13.541l2.666 2.665 5.016-5.017 2.59 2.59 0.004-7.734-7.785-0.046 2.526 2.525-5.017 5.017zM25.926 16.945l-1.92-1.947 0.035 9.007-16.015 0.009 0.016-15.973 8.958-0.040-2-2h-7c-1.104 0-2 0.896-2 2v16c0 1.104 0.896 2 2 2h16c1.104 0 2-0.896 2-2l-0.074-7.056z"></path>
+                                                                    </svg>
+                                                                </a>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                                <div id="list-{{$comp->child_id}}" class="dropdown hidden mt-6 mb-4 w-full w-[95%] mr-1">
-                                                    <div class="relative overflow-x-auto shadow-md">
-                                                        <table class="w-full text-sm md:text-lg text-left text-gray-500 dark:text-gray-400">
-                                                            <thead class="text-sm md:text-lg text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                                            <tr>
-                                                                <th scope="col" class="px-6 py-3">
-                                                                    Opis
-                                                                </th>
-                                                                <th scope="col" class="px-6 py-3"></th>
-                                                            </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                                                <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                                                    Zdjęcie
-                                                                </th>
-                                                                <td class="p-1">
-                                                                    @if(!is_null($comp->image))
-                                                                        @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
-                                                                        <div class="flex justify-center">
-                                                                            <div class="max-w-[150px]">
-                                                                                <img src="{{asset('storage/'.$path.$comp->image)}}" alt="">
-                                                                            </div>
-                                                                        </div>
-                                                                    @endif
-                                                                </td>
-                                                            </tr>
-                                                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                                                <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                                                    Surowiec
-                                                                </th>
-                                                                <td class="px-6 py-4">
-                                                                    {{is_null($comp->material) ? '' : $comp->material}}
-                                                                </td>
-                                                            </tr>
-                                                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                                                <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                                                    @php
-                                                                        $name = '';
-                                                                        $dim = '';
-                                                                        if(!is_null($comp->height)) {
-                                                                            $name .= 'wys ';
-                                                                            $dim .= $comp->height.' ';
-                                                                        }
-                                                                        if(!is_null($comp->length)) {
-                                                                            if(!empty($name)) {
-                                                                                $name .= 'x  ';
-                                                                                $dim .= 'x  ';
-                                                                            }
-                                                                            $name .= 'dług ';
-                                                                            $dim .= $comp->length.' ';
-                                                                        }
-                                                                        if(!is_null($comp->width)) {
-                                                                            if(!empty($name)) {
-                                                                                $name .= 'x  ';
-                                                                                $dim .= 'x  ';
-                                                                            }
-                                                                            $name .= 'szer';
-                                                                            $dim .= $comp->width.' ';
-                                                                        }
-                                                                        $name .= empty($name) ? 'Wymiary' : ' [cm]';
-
-                                                                    @endphp
-                                                                    {{$name}}
-                                                                </th>
-                                                                <td class="px-6 py-4">
-                                                                    {{$dim}}
-                                                                </td>
-                                                            </tr>
-                                                            @if(!empty($comp->description))
+                                                    <div id="list-{{$comp->child_id}}" class="dropdown hidden mt-6 mb-4 w-full w-[95%] mr-1">
+                                                        <div class="relative overflow-x-auto shadow-md">
+                                                            <table class="w-full text-sm md:text-lg text-left text-gray-500 dark:text-gray-400">
+                                                                <thead class="text-sm md:text-lg text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                                                <tr>
+                                                                    <th scope="col" class="px-6 py-3">
+                                                                        Opis
+                                                                    </th>
+                                                                    <th scope="col" class="px-6 py-3"></th>
+                                                                </tr>
+                                                                </thead>
+                                                                <tbody>
                                                                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                                                     <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                                                        Szczegóły
+                                                                        Zdjęcie
                                                                     </th>
-                                                                    <td class="px-6 py-4">
-                                                                        {{$comp->description}}
+                                                                    <td class="p-1">
+                                                                        @if(!is_null($comp->image))
+                                                                            @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
+                                                                            <div class="flex justify-center">
+                                                                                <div class="max-w-[150px]">
+                                                                                    <img src="{{asset('storage/'.$path.$comp->image)}}" alt="">
+                                                                                </div>
+                                                                            </div>
+                                                                        @endif
                                                                     </td>
                                                                 </tr>
-                                                            @endif
-                                                            </tbody>
-                                                        </table>
+                                                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                                                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                                        Surowiec
+                                                                    </th>
+                                                                    <td class="px-6 py-4">
+                                                                        {{is_null($comp->material) ? '' : $comp->material}}
+                                                                    </td>
+                                                                </tr>
+                                                                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                                                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                                        @php
+                                                                            $name = '';
+                                                                            $dim = '';
+                                                                            if(!is_null($comp->height)) {
+                                                                                $name .= 'wys ';
+                                                                                $dim .= $comp->height.' ';
+                                                                            }
+                                                                            if(!is_null($comp->length)) {
+                                                                                if(!empty($name)) {
+                                                                                    $name .= 'x  ';
+                                                                                    $dim .= 'x  ';
+                                                                                }
+                                                                                $name .= 'dług ';
+                                                                                $dim .= $comp->length.' ';
+                                                                            }
+                                                                            if(!is_null($comp->width)) {
+                                                                                if(!empty($name)) {
+                                                                                    $name .= 'x  ';
+                                                                                    $dim .= 'x  ';
+                                                                                }
+                                                                                $name .= 'szer';
+                                                                                $dim .= $comp->width.' ';
+                                                                            }
+                                                                            $name .= empty($name) ? 'Wymiary' : ' [cm]';
+
+                                                                        @endphp
+                                                                        {{$name}}
+                                                                    </th>
+                                                                    <td class="px-6 py-4">
+                                                                        {{$dim}}
+                                                                    </td>
+                                                                </tr>
+                                                                @if(!empty($comp->description))
+                                                                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                                                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                                            Szczegóły
+                                                                        </th>
+                                                                        <td class="px-6 py-4">
+                                                                            {{$comp->description}}
+                                                                        </td>
+                                                                    </tr>
+                                                                @endif
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </x-list-element>
-                                        @endforeach
+                                                </x-list-element>
+                                            @endforeach
+                                        </div>
                                     </div>
                                 </div>
                             @endif
@@ -569,76 +574,258 @@
                                         </div>
                                     </div>
                                 @endif
-                                <div class="{{$p_cycle->category == 1? 'w-[90%]' : 'w-[70%]'}} p-2">
-                                    @if(is_array($child_prod_schemas))
-                                        @foreach($child_prod_schemas as $comp_id => $prod_schemas)
+                                <div class="w-full h-full max-h-[400px] overflow-y-scroll flex justify-center items-start">
+                                    <div class="{{$p_cycle->category == 1? 'w-[90%]' : 'w-[70%]'}} p-2 ">
+                                        @if(is_array($child_prod_schemas))
+                                            @foreach($child_prod_schemas as $comp_id => $prod_schemas)
+                                                @php $current_id = 0; @endphp
+                                                @foreach($prod_schemas as $prod_schema)
+                                                    @if($prod_schema->child_id != $current_id)
+                                                        <x-list-element id="schema-{{$prod_schema->child_id}}-comp-{{$comp_id}}" class="{{'comp-'.$comp_id}} my-6 list-element-2 flex-col w-full lg:py-0 py-0 hidden">
+                                                            <div class="flex flex-row justify-between w-full">
+                                                                <input type="number" class="schema-list-element-id hidden" value="{{$prod_schema->child_id}}">
+                                                                <div class="w-[85%] flex flex-col justify-between items-center">
+                                                                    <div class="w-full flex justify-left items-center">
+                                                                        <p class="my-2 mr-2 rounded-lg inline-block text-white bg-blue-450 shadow-lg list-element-name py-2 px-3 xl:text-lg text-md whitespace-nowrap overflow-clip">
+                                                                            {{$prod_schema->name}}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="w-[15%] flex justify-end items-center">
+                                                                    <div id="expbtn-schema-{{$prod_schema->child_id}}" class="expand-btn inline-block  p-0.5 bg-gray-800 rounded-md rotate-0 transition-all mr-1">
+                                                                        <svg width="30px" height="30px" viewBox="0 0 1024 1024" class="w-5 h-5 lg:w-6 lg:h-6"  xmlns="http://www.w3.org/2000/svg">
+                                                                            <path d="M903.232 256l56.768 50.432L512 768 64 306.432 120.768 256 512 659.072z" fill="#ffffff" />
+                                                                        </svg>
+                                                                    </div>
+                                                                    <div class="flex justify-center ml-1">
+                                                                        <a id="open-modal-{{$prod_schema->child_id}}" type="button"
+                                                                           class="open-modal font-medium text-blue-600 dark:text-blue-500 hover:underline p-0.5 bg-gray-800 rounded-md shadow-md">
+                                                                            <svg fill="#ffffff" width="30px" height="30px" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 lg:w-6 lg:h-6">
+                                                                                <title>podgląd podcyklu</title>
+                                                                                <path d="M15.694 13.541l2.666 2.665 5.016-5.017 2.59 2.59 0.004-7.734-7.785-0.046 2.526 2.525-5.017 5.017zM25.926 16.945l-1.92-1.947 0.035 9.007-16.015 0.009 0.016-15.973 8.958-0.040-2-2h-7c-1.104 0-2 0.896-2 2v16c0 1.104 0.896 2 2 2h16c1.104 0 2-0.896 2-2l-0.074-7.056z"></path>
+                                                                            </svg>
+                                                                        </a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div id="list-{{$prod_schema->child_id}}" class="dropdown w-[95%] my-3 hidden">
+                                                                <div class="w-full text-sm lg:text-lg font-semibold bg-gray-800 text-white rounded-t-xl pl-5 py-2 flex flex-row justify-between">
+                                                                    <div class="p-1">
+                                                                        Raportuj
+                                                                    </div>
+                                                                </div>
+                                                                <div class="shadow-md rounded-b-xl mb-4">
+                                                                    <div class="relative overflow-x-auto">
+                                                                        <table class="w-full text-sm text-left rtl:text-right pb-2 bg-gray-100 text-gray-500 dark:text-gray-400 border-separate border-spacing-1 border-slate-300">
+                                                                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 whitespace-nowrap">
+                                                                            <tr>
+                                                                                <th scope="col" class="px-2 py-3">
+                                                                                    Kol.
+                                                                                </th>
+                                                                                <th scope="col" class="px-2 py-3">
+                                                                                    Podzadanie
+                                                                                </th>
+                                                                                <th scope="col" class="px-2 py-3 hidden-input hidden ">
+                                                                                    Ilość (szt)
+                                                                                </th>
+                                                                                <th scope="col" class="px-2 py-3 hidden-input hidden ">
+                                                                                    Start pracy
+                                                                                </th>
+                                                                                <th scope="col" class="px-2 py-3 hidden-input hidden ">
+                                                                                    Koniec pracy
+                                                                                </th>
+                                                                                <th scope="col" class="px-2 py-3 hidden-input hidden ">
+                                                                                    Czas pracy (h)
+                                                                                </th>
+                                                                                <th scope="col" class="px-2 py-3 hidden-input hidden ">
+                                                                                    Pracownik
+                                                                                </th>
+                                                                            </tr>
+                                                                            </thead>
+                                                                            <tbody>
+                                                                            @php $current_schema_id = $prod_schema->prod_schema_id; @endphp
+                                                                            @foreach($prod_schemas as $schema_task)
+                                                                                @if($current_schema_id == $schema_task->prod_schema_id)
+                                                                                    <tr id="row-{{$current_schema_id.'-'.$schema_task->task_id}}" class="font-medium text-gray-600 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border border-slate-300 ">
+                                                                                        <td class="col-value sequence-no px-2 py-3 whitespace-nowrap text-center rounded-md">
+                                                                                            {{$schema_task->task_sequence_no}}
+                                                                                        </td>
+                                                                                        <td class="col-value name px-2 py-3 whitespace-nowrap rounded-md">
+                                                                                            {{$schema_task->task_name}}
+                                                                                        </td>
+                                                                                        <td class="hidden-input amount px-2 text-center hidden max-w-[50px]">
+                                                                                            <div class="p-1 flex justify-center flex-row items-center h-full">
+                                                                                                <div class="w-full p-1 flex justify-center items-center h-full">
+                                                                                                    @if($schema_task->task_amount_required)
+                                                                                                        <input id="amount-{{$current_schema_id.'-'.$schema_task->task_id}}" type="number" min="0" value="{{old('amount')}}"
+                                                                                                               class="xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                                                                                               name="amount_{{$current_schema_id.'_'.$schema_task->task_id}}" placeholder="0">
+                                                                                                    @else
+                                                                                                        <div class="block w-full bg-white py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center">
+                                                                                                            -
+                                                                                                        </div>
+                                                                                                    @endif
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </td>
+                                                                                        <td class="hidden-input start-time px-2 py-3 text-center hidden">
+                                                                                            <input type="datetime-local" id="meetingDateTime" name="meetingDateTime"
+                                                                                                   min="2023-01-01T00:00" max="2023-12-31T23:59" step="60"
+                                                                                                   class="block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                        </td>
+                                                                                        <td class="hidden-input end-time px-2 py-3 text-center hidden">
+                                                                                            <input type="datetime-local" id="meetingDateTime" name="meetingDateTime"
+                                                                                                   min="2023-01-01T00:00" max="2023-12-31T23:59" step="60"
+                                                                                                   class="block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                        </td>
+                                                                                        <td class="hidden-input work-time-in-hours px-2 py-3 text-center hidden">
+                                                                                            <div class="block w-full bg-white py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                                0:00
+                                                                                            </div>
+                                                                                        </td>
+                                                                                        <td class="hidden-input work-time-in-hours px-2 py-3 text-center hidden">
+                                                                                            <div class="block w-full bg-white py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                                {{$user->employeeNo}}
+                                                                                            </div>
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                @endif
+                                                                            @endforeach
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </x-list-element>
+                                                    @endif
+                                                    @php $current_id = $prod_schema->child_id; @endphp
+                                                @endforeach
+                                            @endforeach
+                                        @else
                                             @php $current_id = 0; @endphp
-                                            @foreach($prod_schemas as $prod_schema)
+                                            @foreach($child_prod_schemas  as $prod_schema)
                                                 @if($prod_schema->child_id != $current_id)
-                                                    <x-list-element id="schema-{{$prod_schema->child_id}}-comp-{{$comp_id}}" class="{{'comp-'.$comp_id}} my-6 list-element-2 flex-row justify-between w-full lg:py-0 py-0 hidden">
-                                                        <input type="number" class="schema-list-element-id hidden" value="{{$prod_schema->child_id}}">
-                                                        <div class="w-[85%] flex flex-col justify-between items-center">
-                                                            <div class="w-full flex justify-left items-center">
-                                                                <p class="my-2 mr-2 rounded-lg inline-block text-white bg-blue-450 shadow-lg list-element-name py-2 px-3 xl:text-lg text-md whitespace-nowrap overflow-clip">
-                                                                    {{$prod_schema->name}}
-                                                                </p>
+                                                    <x-list-element id="schema-{{$prod_schema->child_id}}" class="comp my-6 list-element-2 flex-col w-full lg:py-0 py-0">
+                                                        <div class="flex flex-row justify-between w-full">
+                                                            <input type="number" class="schema-list-element-id hidden" value="{{$prod_schema->child_id}}">
+                                                            <div class="w-[85%] flex flex-col justify-between items-center">
+                                                                <div class="w-full flex justify-left items-center">
+                                                                    <p class="my-2 mr-2 rounded-lg inline-block text-white bg-blue-450 shadow-lg list-element-name py-2 px-3 xl:text-lg text-md whitespace-nowrap overflow-clip">
+                                                                        {{$prod_schema->name}}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            <div class="w-[15%] flex justify-end items-center">
+                                                                <div id="expbtn-schema-{{$prod_schema->child_id}}" class="expand-btn inline-block  p-0.5 bg-gray-800 rounded-md rotate-0 transition-all mr-1">
+                                                                    <svg width="30px" height="30px" viewBox="0 0 1024 1024" class="w-5 h-5 lg:w-6 lg:h-6"  xmlns="http://www.w3.org/2000/svg">
+                                                                        <path d="M903.232 256l56.768 50.432L512 768 64 306.432 120.768 256 512 659.072z" fill="#ffffff" />
+                                                                    </svg>
+                                                                </div>
+                                                                <div class="flex justify-center ml-1">
+                                                                    <a id="open-modal-{{$prod_schema->child_id}}" type="button"
+                                                                       class="open-modal font-medium text-blue-600 dark:text-blue-500 hover:underline p-0.5 bg-gray-800 rounded-md shadow-md">
+                                                                        <svg fill="#ffffff" width="30px" height="30px" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 lg:w-6 lg:h-6">
+                                                                            <title>podgląd podcyklu</title>
+                                                                            <path d="M15.694 13.541l2.666 2.665 5.016-5.017 2.59 2.59 0.004-7.734-7.785-0.046 2.526 2.525-5.017 5.017zM25.926 16.945l-1.92-1.947 0.035 9.007-16.015 0.009 0.016-15.973 8.958-0.040-2-2h-7c-1.104 0-2 0.896-2 2v16c0 1.104 0.896 2 2 2h16c1.104 0 2-0.896 2-2l-0.074-7.056z"></path>
+                                                                        </svg>
+                                                                    </a>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                        <div class="w-[15%] flex justify-end items-center">
-                                                            <div id="expbtn-schema-{{$prod_schema->child_id}}" class="expand-btn inline-block  p-0.5 bg-gray-800 rounded-md rotate-0 transition-all mr-1">
-                                                                <svg width="30px" height="30px" viewBox="0 0 1024 1024" class="w-5 h-5 lg:w-6 lg:h-6"  xmlns="http://www.w3.org/2000/svg">
-                                                                    <path d="M903.232 256l56.768 50.432L512 768 64 306.432 120.768 256 512 659.072z" fill="#ffffff" />
-                                                                </svg>
+                                                        <div id="list-{{$prod_schema->child_id}}" class="dropdown w-[95%] my-3 hidden">
+                                                            <div class="w-full text-sm lg:text-lg font-semibold bg-gray-800 text-white rounded-t-xl pl-5 py-2 flex flex-row justify-between">
+                                                                <div class="p-1">
+                                                                    Raportuj
+                                                                </div>
                                                             </div>
-                                                            <div class="flex justify-center ml-1">
-                                                                <a id="open-modal-{{$prod_schema->child_id}}" type="button"
-                                                                   class="open-modal font-medium text-blue-600 dark:text-blue-500 hover:underline p-0.5 bg-gray-800 rounded-md shadow-md">
-                                                                    <svg fill="#ffffff" width="30px" height="30px" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 lg:w-6 lg:h-6">
-                                                                        <title>podgląd podcyklu</title>
-                                                                        <path d="M15.694 13.541l2.666 2.665 5.016-5.017 2.59 2.59 0.004-7.734-7.785-0.046 2.526 2.525-5.017 5.017zM25.926 16.945l-1.92-1.947 0.035 9.007-16.015 0.009 0.016-15.973 8.958-0.040-2-2h-7c-1.104 0-2 0.896-2 2v16c0 1.104 0.896 2 2 2h16c1.104 0 2-0.896 2-2l-0.074-7.056z"></path>
-                                                                    </svg>
-                                                                </a>
+                                                            <div class="shadow-md rounded-b-xl mb-4">
+                                                                <div class="relative overflow-x-auto">
+                                                                    <table class="w-full text-sm text-left rtl:text-right pb-2 bg-gray-100 text-gray-500 dark:text-gray-400 border-separate border-spacing-1 border-slate-300">
+                                                                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 whitespace-nowrap">
+                                                                        <tr>
+                                                                            <th scope="col" class="px-2 py-3">
+                                                                                Kol.
+                                                                            </th>
+                                                                            <th scope="col" class="px-2 py-3">
+                                                                                Podzadanie
+                                                                            </th>
+                                                                            <th scope="col" class="px-2 py-3 hidden-input hidden ">
+                                                                                Ilość (szt)
+                                                                            </th>
+                                                                            <th scope="col" class="px-2 py-3 hidden-input hidden ">
+                                                                                Start pracy
+                                                                            </th>
+                                                                            <th scope="col" class="px-2 py-3 hidden-input hidden ">
+                                                                                Koniec pracy
+                                                                            </th>
+                                                                            <th scope="col" class="px-2 py-3 hidden-input hidden ">
+                                                                                Czas pracy (h)
+                                                                            </th>
+                                                                            <th scope="col" class="px-2 py-3 hidden-input hidden ">
+                                                                                Pracownik
+                                                                            </th>
+                                                                        </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                        @php $current_schema_id = $prod_schema->prod_schema_id; @endphp
+                                                                        @foreach($child_prod_schemas as $schema_task)
+                                                                            @if($current_schema_id == $schema_task->prod_schema_id)
+                                                                                <tr id="row-{{$current_schema_id.'-'.$schema_task->task_id}}" class="font-medium text-gray-600 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border border-slate-300 ">
+                                                                                    <td class="col-value sequence-no px-2 py-3 whitespace-nowrap text-center rounded-md">
+                                                                                        {{$schema_task->task_sequence_no}}
+                                                                                    </td>
+                                                                                    <td class="col-value name px-2 py-3 whitespace-nowrap rounded-md">
+                                                                                        {{$schema_task->task_name}}
+                                                                                    </td>
+                                                                                    <td class="hidden-input amount px-2 text-center hidden max-w-[50px]">
+                                                                                        <div class="p-1 flex justify-center flex-row items-center h-full">
+                                                                                            <div class="w-full p-1 flex justify-center items-center h-full">
+                                                                                                @if($schema_task->task_amount_required)
+                                                                                                    <input id="amount-{{$current_schema_id.'-'.$schema_task->task_id}}" type="number" min="0" value="{{old('amount')}}"
+                                                                                                           class="xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center"
+                                                                                                           name="amount_{{$current_schema_id.'_'.$schema_task->task_id}}" placeholder="0">
+                                                                                                @else
+                                                                                                    <div class="block w-full bg-white py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center">
+                                                                                                        -
+                                                                                                    </div>
+                                                                                                @endif
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </td>
+                                                                                    <td class="hidden-input start-time px-2 py-3 text-center hidden">
+                                                                                        <input type="datetime-local" id="meetingDateTime" name="meetingDateTime"
+                                                                                               min="2023-01-01T00:00" max="2023-12-31T23:59" step="60"
+                                                                                               class="block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                    </td>
+                                                                                    <td class="hidden-input end-time px-2 py-3 text-center hidden">
+                                                                                        <input type="datetime-local" id="meetingDateTime" name="meetingDateTime"
+                                                                                               min="2023-01-01T00:00" max="2023-12-31T23:59" step="60"
+                                                                                               class="block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                    </td>
+                                                                                    <td class="hidden-input work-time-in-hours px-2 py-3 text-center hidden">
+                                                                                        <div class="block w-full bg-white py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                            0:00
+                                                                                        </div>
+                                                                                    </td>
+                                                                                    <td class="hidden-input work-time-in-hours px-2 py-3 text-center hidden">
+                                                                                        <div class="block w-full bg-white py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                            {{$user->employeeNo}}
+                                                                                        </div>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            @endif
+                                                                        @endforeach
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </x-list-element>
                                                 @endif
                                                 @php $current_id = $prod_schema->child_id; @endphp
                                             @endforeach
-                                        @endforeach
-                                    @else
-                                        @php $current_id = 0; @endphp
-                                        @foreach($child_prod_schemas  as $prod_schema)
-                                            @if($prod_schema->child_id != $current_id)
-                                                <x-list-element id="schema-{{$prod_schema->child_id}}" class="comp my-6 list-element-2 flex-row w-full lg:py-0 py-0 hidden">
-                                                    <input type="number" class="schema-list-element-id hidden" value="{{$prod_schema->child_id}}">
-                                                    <div class="w-[85%] flex flex-col justify-between items-center">
-                                                        <div class="w-full flex justify-left items-center">
-                                                            <p class="my-2 mr-2 rounded-lg inline-block text-white bg-blue-450 shadow-lg list-element-name py-2 px-3 xl:text-lg text-md whitespace-nowrap overflow-clip">
-                                                                {{$prod_schema->name}}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    <div class="w-[15%] flex justify-end items-center">
-                                                        <div id="expbtn-schema-{{$prod_schema->child_id}}" class="expand-btn inline-block  p-0.5 bg-gray-800 rounded-md rotate-0 transition-all mr-1">
-                                                            <svg width="30px" height="30px" viewBox="0 0 1024 1024" class="w-5 h-5 lg:w-6 lg:h-6"  xmlns="http://www.w3.org/2000/svg">
-                                                                <path d="M903.232 256l56.768 50.432L512 768 64 306.432 120.768 256 512 659.072z" fill="#ffffff" />
-                                                            </svg>
-                                                        </div>
-                                                        <div class="flex justify-center ml-1">
-                                                            <a id="open-modal-{{$prod_schema->child_id}}" type="button"
-                                                               class="open-modal font-medium text-blue-600 dark:text-blue-500 hover:underline p-0.5 bg-gray-800 rounded-md shadow-md">
-                                                                <svg fill="#ffffff" width="30px" height="30px" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 lg:w-6 lg:h-6">
-                                                                    <title>podgląd podcyklu</title>
-                                                                    <path d="M15.694 13.541l2.666 2.665 5.016-5.017 2.59 2.59 0.004-7.734-7.785-0.046 2.526 2.525-5.017 5.017zM25.926 16.945l-1.92-1.947 0.035 9.007-16.015 0.009 0.016-15.973 8.958-0.040-2-2h-7c-1.104 0-2 0.896-2 2v16c0 1.104 0.896 2 2 2h16c1.104 0 2-0.896 2-2l-0.074-7.056z"></path>
-                                                                </svg>
-                                                            </a>
-                                                        </div>
-                                                    </div>
-                                                </x-list-element>
-                                            @endif
-                                            @php $current_id = $prod_schema->child_id; @endphp
-                                        @endforeach
-                                    @endif
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         </div>
