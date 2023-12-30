@@ -105,6 +105,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/praca-w-cyklu', [ProductionCycleController::class, 'index'])->name('work-cycle.index');
     Route::get('/praca-raportuj', [WorkController::class, 'addWorkWrapper'])->name('work.add-wrapper');
     Route::get('/dodaj-prace/{id}', [WorkController::class, 'addWork'])->name('work.add');
+    Route::post('/dodaj-prace/{id}', [WorkController::class, 'storeWork'])->name('work.store');
 });
 
 

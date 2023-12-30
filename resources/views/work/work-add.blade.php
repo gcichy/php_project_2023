@@ -1,6 +1,5 @@
 <x-app-layout>
     <script type="module">
-
         function adjustSelectedElement(elemClass, container) {
             let selectedElem = container.find('.'+elemClass);
             if(selectedElem.length === 1) {
@@ -38,14 +37,14 @@
             }
         }
 
-        function cloneSelectedElements(comp, componentId, prodSchema,  productionSchemaId) {
+        function cloneSelectedElements(comp, componentId, prodSchema,  prodSchemaCycleId) {
             let clonedProdSchema = prodSchema.clone();
             clonedProdSchema.attr('id', 'selected-'+prodSchema.attr('id'));
             let prodSchemaContainer = $('#selected-prod-schema-container');
             prodSchemaContainer.append(clonedProdSchema);
-            $('#selected-prod-schema-id').val(productionSchemaId);
+            $('#selected-prod-schema-cycle-id').val(prodSchemaCycleId);
             let schemaModalElem = adjustSelectedElement('open-modal',prodSchemaContainer);
-            if(schemaModalElem.length > 0) {
+            if(schemaModalElem != null && schemaModalElem.length > 0) {
                 schemaModalElem.on('click', function () {
                     modalOnClick($(this));
                 });
@@ -54,27 +53,24 @@
             if(prodSchemaListBtn.length > 0) {
                 prodSchemaListBtn.addClass('hidden');
             }
-            let prodSchemaList = adjustSelectedElement('dropdown',prodSchemaContainer);
-            prodSchemaList.removeClass('hidden');
-            let hiddenInputs = prodSchemaList.find('.hidden-input');
-            if(hiddenInputs.length > 0) {
-                hiddenInputs.removeClass('hidden');
-            }
-            if(comp.length > 0) {
+
+            handleInputTable(prodSchemaContainer);
+
+            if(comp != null && comp.length > 0) {
                 let clonedComp = comp.clone();
                 clonedComp.attr('id', 'selected-'+comp.attr('id'));
                 let compContainer = $('#selected-comp-container');
                 compContainer.append(clonedComp);
-                $('#selected-comp-id').val(componentId);
+                $('#selected-comp-cycle-id').val(componentId);
 
                 let compModalElem =adjustSelectedElement('open-modal',compContainer);
-                if(compModalElem.length > 0) {
+                if(compModalElem != null && compModalElem.length > 0) {
                     compModalElem.on('click', function () {
                         modalOnClick($(this));
                     });
                 }
                 let compListBtn = adjustSelectedElement('expand-btn',compContainer);
-                if(compListBtn.length > 0) {
+                if(compListBtn != null && compListBtn.length > 0) {
                     compListBtn.on('click', function () {
                         expandButtonOnClick($(this),'#selected-list-');
                     });
@@ -83,9 +79,113 @@
             }
         }
 
+        //function gets input table from cloned prod-schema, extracts table and clones it into input container
+        function handleInputTable(prodSchemaContainer) {
+            let prodSchemaList = adjustSelectedElement('dropdown',prodSchemaContainer);
+            if(prodSchemaList != null) {
+                let inputTable = prodSchemaList.find('.input-table');
+                if(inputTable.length > 0) {
+                    let inputTableCloned = inputTable.clone();
+                    prodSchemaList.remove();
+                    let hiddenInputs = inputTableCloned.find('.hidden-input');
+                    if(hiddenInputs.length > 0) {
+                        hiddenInputs.removeClass('hidden');
+                    }
+                    let timeInputs = inputTableCloned.find('.input-time');
+                    if(timeInputs.length > 0) {
+                        timeInputs.each(function () {
+                            $(this).attr('id','selected-'+$(this).attr('id'));
+                        })
+                        timeInputs.removeClass('input-time').addClass('selected-input-time');
+                    }
+                    let prodSchemaCheckboxes = inputTableCloned.find('.input-checkbox');
+                    if(prodSchemaCheckboxes.length > 0) {
+                        prodSchemaCheckboxes.each(function () {
+                            $(this).attr('id', 'selected-'+$(this).attr('id'));
+                        })
+                        prodSchemaCheckboxes.addClass('selected-input-checkbox').removeClass('input-checkbox');
+                        prodSchemaCheckboxes.change(function() {
+                            toggleInputsDisability($(this));
+                        });
+                    }
+
+                    $('#input-container').append(inputTableCloned);
+                    $('.selected-input-time').on('change', function () {
+                        calculateWorkDuration($(this));
+                    });
+                }
+
+                let inputTablePrompt = $('#input-table-prompt');
+                if(inputTablePrompt.length > 0) {
+                    inputTablePrompt.addClass('hidden');
+                }
+            }
+        }
+
+        function calculateWorkDuration(timeElement) {
+            let parent = timeElement.closest('.input-table-row');
+            let minutesDifference = 0;
+            if(timeElement.hasClass('input-start-time')) {
+                let endTime = parent.find('.input-end-time');
+                minutesDifference = calculateTimeDiff(timeElement.val(),endTime.val());
+            } else if(timeElement.hasClass('input-end-time')) {
+                let startTime = parent.find('.input-start-time');
+                minutesDifference = calculateTimeDiff(startTime.val(),timeElement.val());
+            }
+            let workDurationElem = parent.find('.work-duration');
+
+            if(workDurationElem.length > 0) {
+                workDurationElem.val(minutesDifference);
+            }
+            let workDuration = formatMinutesDuration(minutesDifference);
+            let workTimeElem = parent.find('.work-time-in-hours');
+            if(workTimeElem.length > 0) {
+                workTimeElem.text(workDuration);
+            }
+
+        }
+
+        function calculateTimeDiff(startDate,endDate) {
+            if(isValidDate(startDate) && isValidDate(endDate)) {
+                const date1 = new Date(startDate);
+                const date2 = new Date(endDate);
+
+                // Calculate the difference in milliseconds
+                const timeDifference = date2 - date1;
+                // Convert the difference to minutes
+                return Math.floor(timeDifference / (1000 * 60));;
+            }
+            return null;
+        }
+
+        function isValidDate(value) {
+            const dateObject = new Date(value);
+            return !isNaN(dateObject.getTime());
+        }
+
+        function formatMinutesDuration(minutes) {
+            let minus = minutes < 0;
+            minutes = Math.abs(minutes);
+            const hours = Math.floor(minutes / 60);
+            const remainingMinutes = minutes % 60;
+            const formattedMinutes = remainingMinutes < 10 ? `0${remainingMinutes}` : remainingMinutes;
+
+            return minus? `-${hours}:${formattedMinutes}` : `${hours}:${formattedMinutes}`;
+        }
+        function removeInputTable() {
+            let inputTable = $('#input-container').find('.input-table');
+            if(inputTable.length >0) {
+                inputTable.remove();
+            }
+            let inputTablePrompt = $('#input-table-prompt');
+            if(inputTablePrompt.length > 0) {
+                inputTablePrompt.removeClass('hidden');
+            }
+        }
+
         function removeSelectedElements() {
-            $('#selected-comp-id').val(null);
-            $('#selected-prod-schema-id').val(null);
+            $('#selected-comp-cycle-id').val(null);
+            $('#selected-prod-schema-cycle-id').val(null);
             $('#selected-prod-schema-container :nth-child(2)').remove();
             $('#selected-comp-container :nth-child(2)').remove();
         }
@@ -149,7 +249,7 @@
                         cycleTagText = 'Zakończony';
                     } else if(status === 3) {
                         //cycleClasses = 'ring-red-500 ring-4 ring-offset-4';
-                        cycleTagBg = 'bg-red-500 hover:bg-red-800';
+                        cycleTagBg = 'bg-red-600 hover:bg-red-800';
                         cycleTagText = 'Po terminie';
                     } else if(status === 1) {
                         //cycleClasses = 'ring-blue-450 ring-4 ring-offset-4';
@@ -202,8 +302,48 @@
             });
         }
 
+        function setMaxInputTime() {
+            let currentDate = new Date();
+            currentDate.setHours(currentDate.getHours() + 5);
+            let formattedDatetime = currentDate.toISOString().slice(0, 16);
+            $(".selected-input-time").attr("max", formattedDatetime);
+        }
+
+        function toggleInputsDisability(checkboxInput) {
+            let parent = checkboxInput.closest('.input-table-row');
+            if(parent.length > 0) {
+                let disabledInputs = parent.find('.disabled-input');
+                if(disabledInputs.length > 0) {
+                    if (checkboxInput.is(":checked")) {
+                        disabledInputs.prop("disabled", false).removeClass('bg-gray-200').addClass('bg-white');
+                    } else {
+                        disabledInputs.prop("disabled", true).removeClass('bg-white').addClass('bg-gray-200');
+                        let durationHours = parent.find('.work-time-in-hours');
+                        console.log(durationHours);
+                        if(durationHours.length > 0) {
+                            durationHours.text('0:00');
+                        }
+                        let inputTime = parent.find('.selected-input-time');
+                        if(inputTime.length > 0) {
+                            inputTime.val(null)
+                        }
+                        let amount = parent.find('.amount-input');
+                        if(amount.length > 0) {
+                            amount.val(null)
+                        }
+                        let durationMinute = parent.find('work-duration');
+                        if(durationMinute.length > 0) {
+                            durationMinute.val(null);
+                        }
+                    }
+                }
+            }
+
+        }
+
         $(document).ready(function() {
             addCycleStyles();
+            setMaxInputTime();
 
             $('.cycle-details').on('click',function (){
                 let id = $(this).attr('id');
@@ -225,6 +365,7 @@
                 if(!($(event.target).is("a.open-modal") || $(event.target).closest("a.open-modal").length > 0
                     || $(event.target).is("div.expand-btn") || $(event.target).closest("div.expand-btn").length > 0)) {
                     removeSelectedElements();
+                    removeInputTable();
                     let isActive = ($(this).hasClass('active-list-elem') ? true : false);
                     $('.list-element').removeClass('active-list-elem');
                     $(this).addClass('active-list-elem');
@@ -250,8 +391,9 @@
             $('.list-element-2').on('click', function () {
                 if(!($(event.target).is("a.open-modal") || $(event.target).closest("a.open-modal").length > 0
                     || $(event.target).is("div.expand-btn") || $(event.target).closest("div.expand-btn").length > 0)) {
-                    var isActive = ($(this).hasClass('active-list-elem') ? true : false);
                     removeSelectedElements();
+                    removeInputTable();
+                    var isActive = ($(this).hasClass('active-list-elem') ? true : false);
                     $('.list-element-2').removeClass('active-list-elem');
                     $(this).addClass('active-list-elem');
 
@@ -260,23 +402,22 @@
                     }
                     else {
                         let id = $(this).attr('id');
-                        var schemaId = null;
-                        if(id.includes('comp')) {
+                        var schemaCycleId = null;
+                        if(id.includes('compcycle')) {
                             let arrayId = id.split('-');
-                            let compId = arrayId[arrayId.length - 1];
+                            let compCycleId = arrayId[arrayId.length - 1];
                             if(arrayId.length > 3) {
-                                schemaId = arrayId[arrayId.length - 3];
+                                schemaCycleId = arrayId[arrayId.length - 3];
                             }
-
-                            let comp = $('#comp-'+compId);
-                            cloneSelectedElements(comp, compId, $(this), schemaId);
+                            let comp = $('#comp-'+compCycleId);
+                            cloneSelectedElements(comp, compCycleId, $(this), schemaCycleId);
                         }
                         else {
                             let arrayId = id.split('-');
                             if(arrayId.length > 1) {
-                                schemaId = arrayId[arrayId.length - 1];
+                                schemaCycleId = arrayId[arrayId.length - 1];
                             }
-                            cloneSelectedElements(null, null, $(this), schemaId);
+                            cloneSelectedElements(null, null, $(this), schemaCycleId);
                         }
                     }
                 }
@@ -300,6 +441,14 @@
             $('.expand-btn').on('click', function () {
                 expandButtonOnClick($(this),'#list-');
             });
+            $('.selected-input-time').on('change', function () {
+                calculateWorkDuration($(this));
+            });
+
+            $('.selected-input-checkbox ').change(function() {
+
+                toggleInputsDisability($(this));
+            });
         });
     </script>
     @if(isset($user) and $user instanceof \App\Models\User)
@@ -310,6 +459,13 @@
                 </p>
             </div>
         @endif
+            @if(session('status_err'))
+                <div class="flex justify-center items-center">
+                    <p class="w-full !text-md lg:text-xl font-medium text-center p-6 text-red-700 space-y-1">
+                        {{session('status_err')}}
+                    </p>
+                </div>
+            @endif
         @if(isset($status_err))
             <div class="flex justify-center items-center">
                 <p class="w-full !text-md lg:text-xl font-medium text-center p-6 text-red-700 space-y-1">
@@ -327,108 +483,244 @@
                 <div id="cycle-{{$p_cycle->cycle_id}}" class="cycle w-[95%] rounded-xl bg-white my-5 shadow-md">
                     <p class="cycle_status hidden">{{$p_cycle->status}}</p>
                     <p class="cycle_styles hidden">{{$p_cycle->status}};{{$p_cycle->style_progress}}</p>
-                    <dl class="grid grid-cols-4 xl:grid-cols-8 overflow-hidden text-left rounded-xl">
-                        <div class="col-span-4 flex flex-col bg-gray-200/50 xl:border-r-2">
-                            <dt class="order-first text-sm lg:text-lg font-semibold bg-gray-800 text-white w-[45%] xl:w-1/2 rounded-tl-xl pl-5 py-2 flex flex-row justify-between">
-                                <div class="p-1">
-                                    {{($p_cycle->category == 1)? 'Produkt' : (($p_cycle->category == 2)? 'Materiał' : 'Zadanie')}}
-                                </div>
-                                <div class="text-xs lg:text-sm flex justify-center items-center">
-                                    <div class="cycle-tag p-1 mx-2 rounded-md whitespace-nowrap"></div>
-                                </div>
-                            </dt>
-                            <dd class=" text-lg xl:text-xl font-semibold tracking-tight text-gray-900 pl-5 py-4">{{$p_cycle->name}}</dd>
-                        </div>
-                        <div class="col-span-2 flex flex-col bg-gray-200/50 border-r">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Postęp</dt>
-                            <div class="flex justify-center items-center w-full h-full p-2">
-                                <div class="rounded-lg w-1/2 border h-[32px]  relative bg-white">
-                                    <div class="absolute h-1/2 w-full top-[16%] lg:top-[8%] flex justify-center text-sm lg:text-lg font-semibold">
-                                        {{$p_cycle->current_amount}}/{{$p_cycle->total_amount}}
+                    <form method="POST" action="{{ route('work.store',['id' => $p_cycle->cycle_id]) }}" enctype="multipart/form-data" class="w-full">
+                        @csrf
+                        <dl class="grid grid-cols-4 xl:grid-cols-8 overflow-hidden text-left rounded-xl">
+                            <div class="col-span-4 flex flex-col bg-gray-200/50 xl:border-r-2">
+                                <dt class="order-first text-sm lg:text-lg font-semibold bg-gray-800 text-white w-[45%] xl:w-1/2 rounded-tl-xl pl-5 py-2 flex flex-row justify-between">
+                                    <div class="p-1">
+                                        {{($p_cycle->category == 1)? 'Produkt' : (($p_cycle->category == 2)? 'Materiał' : 'Zadanie')}}
                                     </div>
-                                    <div class="progress h-full  tracking-tight bg-green-450"></div>
+                                    <div class="text-xs lg:text-sm flex justify-center items-center">
+                                        <div class="cycle-tag p-1 mx-2 rounded-md whitespace-nowrap"></div>
+                                    </div>
+                                </dt>
+                                <dd class=" text-lg xl:text-xl font-semibold tracking-tight text-gray-900 pl-5 py-4">{{$p_cycle->name}}</dd>
+                            </div>
+                            <div class="col-span-2 flex flex-col bg-gray-200/50 border-r">
+                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Postęp</dt>
+                                <div class="flex justify-center items-center w-full h-full p-2">
+                                    <div class="rounded-lg w-1/2 border h-[32px]  relative bg-white">
+                                        <div class="absolute h-1/2 w-full top-[16%] lg:top-[8%] flex justify-center text-sm lg:text-lg font-semibold">
+                                            {{$p_cycle->current_amount}}/{{$p_cycle->total_amount}}
+                                        </div>
+                                        <div class="progress h-full  tracking-tight bg-green-450"></div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-span-2 flex flex-col bg-gray-200/50">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Zakładany termin</dt>
-                            <div class="w-full h-full flex justify-center items-center">
-                                <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                    <svg fill="#000000" width="30px" height="20px" viewBox="0 0 1920 1920" xmlns="http://www.w3.org/2000/svg">
-                                        <g fill-rule="evenodd">
-                                            <path d="M1439.667 1226.667H1333V1440c0 14.187 5.653 27.733 15.573 37.76l123.414 123.306 75.413-75.413-107.733-107.733v-191.253Z"/>
-                                            <path d="M1386.333 1813.333C1180.467 1813.333 1013 1645.867 1013 1440c0-205.867 167.467-373.333 373.333-373.333 205.867 0 373.334 167.466 373.334 373.333 0 205.867-167.467 373.333-373.334 373.333m0-853.333c-264.64 0-480 215.36-480 480s215.36 480 480 480 480-215.36 480-480-215.36-480-480-480"/>
-                                            <path d="M1546.333 426.667H159.666v-160c0-29.44 24-53.334 53.334-53.334h160v53.334c0 29.44 23.894 53.333 53.333 53.333 29.44 0 53.333-23.893 53.333-53.333v-53.334h746.667v53.334c0 29.44 23.894 53.333 53.334 53.333 29.44 0 53.333-23.893 53.333-53.333v-53.334h160c29.333 0 53.333 23.894 53.333 53.334v160Zm-53.333-320h-160V53.333C1333 23.893 1309.107 0 1279.667 0c-29.44 0-53.334 23.893-53.334 53.333v53.334H479.666V53.333C479.666 23.893 455.773 0 426.333 0 396.894 0 373 23.893 373 53.333v53.334H213c-88.213 0-160 71.786-160 160v1546.666h746.666v-106.666h-640V533.333h1386.667v320H1653V266.667c0-88.214-71.787-160-160-160Z"/>
-                                        </g>
-                                    </svg>
-                                    {{$p_cycle->expected_end_time}}
-                                </dd>
+                            <div class="col-span-2 flex flex-col bg-gray-200/50">
+                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Zakładany termin</dt>
+                                <div class="w-full h-full flex justify-center items-center">
+                                    <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
+                                        <svg fill="#000000" width="30px" height="20px" viewBox="0 0 1920 1920" xmlns="http://www.w3.org/2000/svg">
+                                            <g fill-rule="evenodd">
+                                                <path d="M1439.667 1226.667H1333V1440c0 14.187 5.653 27.733 15.573 37.76l123.414 123.306 75.413-75.413-107.733-107.733v-191.253Z"/>
+                                                <path d="M1386.333 1813.333C1180.467 1813.333 1013 1645.867 1013 1440c0-205.867 167.467-373.333 373.333-373.333 205.867 0 373.334 167.466 373.334 373.333 0 205.867-167.467 373.333-373.334 373.333m0-853.333c-264.64 0-480 215.36-480 480s215.36 480 480 480 480-215.36 480-480-215.36-480-480-480"/>
+                                                <path d="M1546.333 426.667H159.666v-160c0-29.44 24-53.334 53.334-53.334h160v53.334c0 29.44 23.894 53.333 53.333 53.333 29.44 0 53.333-23.893 53.333-53.333v-53.334h746.667v53.334c0 29.44 23.894 53.333 53.334 53.333 29.44 0 53.333-23.893 53.333-53.333v-53.334h160c29.333 0 53.333 23.894 53.333 53.334v160Zm-53.333-320h-160V53.333C1333 23.893 1309.107 0 1279.667 0c-29.44 0-53.334 23.893-53.334 53.333v53.334H479.666V53.333C479.666 23.893 455.773 0 426.333 0 396.894 0 373 23.893 373 53.333v53.334H213c-88.213 0-160 71.786-160 160v1546.666h746.666v-106.666h-640V533.333h1386.667v320H1653V266.667c0-88.214-71.787-160-160-160Z"/>
+                                            </g>
+                                        </svg>
+                                        {{$p_cycle->expected_end_time}}
+                                    </dd>
+                                </div>
                             </div>
-                        </div>
-                        {{--                            ROW 1--}}
-                        <div class="col-span-2 flex justify-start flex-col bg-gray-200/50 border-r-2">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Zdjęcie</dt>
-                            <div class="flex justify-center items-center p-1">
-                                <div class="max-w-[150px]">
-                                    @if(!is_null($p_cycle->image))
-                                        @php $path = ''; @endphp
-                                        @if($p_cycle->category == 1)
-                                            @php $path = isset($storage_path_products) ? $storage_path_products.'/' : ''; @endphp
-                                        @elseif($p_cycle->category == 2)
-                                            @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
+                            {{--                            ROW 1--}}
+                            <div class="col-span-2 flex justify-start flex-col bg-gray-200/50 border-r-2">
+                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Zdjęcie</dt>
+                                <div class="flex justify-center items-center p-1">
+                                    <div class="max-w-[150px]">
+                                        @if(!is_null($p_cycle->image))
+                                            @php $path = ''; @endphp
+                                            @if($p_cycle->category == 1)
+                                                @php $path = isset($storage_path_products) ? $storage_path_products.'/' : ''; @endphp
+                                            @elseif($p_cycle->category == 2)
+                                                @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
+                                            @endif
+                                            <img src="{{asset('storage/'.$path.$p_cycle->image)}}">
                                         @endif
-                                        <img src="{{asset('storage/'.$path.$p_cycle->image)}}">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2">
+                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Przypisani pracownicy</dt>
+                                <div class="w-full h-full flex justify-center items-center">
+                                    <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
+                                        {{$p_cycle->assigned_employee_no}}
+                                    </dd>
+                                </div>
+                            </div>
+                            <div class="col-span-4 flex flex-col bg-gray-200/50">
+                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Uwagi</dt>
+                                <div class="w-full h-full flex justify-center items-center">
+                                    <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
+                                        {{$p_cycle->additional_comment}}
+                                    </dd>
+                                </div>
+                            </div>
+                            <div class="col-span-4 xl:col-span-8 w-full bg-gray-300 py-2 flex flex-row justify-end">
+                                <button type="button" id="open-modal-{{$p_cycle->cycle_id}}" class="open-modal mr-4 text-gray-800 bg-white uppercase hover:bg-gray-100 focus:outline-none font-medium rounded-md text-xs lg:text-sm px-2 py-1 shadow-md">
+                                    Statystyki
+                                </button>
+                            </div>
+                            @if($p_cycle->category == 1)
+                                <div class="col-span-4 xl:col-span-8 flex justify-start items-center flex-col bg-gray-200/50">
+                                    <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Wybrany materiał</dt>
+                                    <div id="selected-comp-container" class="w-4/5 h-full min-h-[20px] flex justify-center items-center">
+                                        <input id="selected-comp-cycle-id" type="number" name="selected_component_cycle_id" class="hidden" value="">
+                                    </div>
+                                </div>
+                            @endif
+                            @if($p_cycle->category != 3)
+                                <div class="col-span-4 xl:col-span-8 flex justify-start items-center flex-col bg-gray-200/50">
+                                    <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Wybrane zadanie</dt>
+                                    <div id="selected-prod-schema-container" class="w-4/5 h-full min-h-[20px] flex justify-center items-center">
+                                        <input id="selected-prod-schema-cycle-id" type="number" name="selected_prod_schema_cycle_id" class="hidden" value="">
+                                    </div>
+                                </div>
+                            @endif
+                            <div class="col-span-4 xl:col-span-8 flex justify-start items-center flex-col bg-gray-200/50">
+                                <div class="w-full text-sm lg:text-lg font-semibold bg-gray-800 text-white pl-5 py-2 flex flex-row justify-between">
+                                    <div class="p-1">
+                                        Raportuj
+                                    </div>
+                                </div>
+                                @if(session('validation_err'))
+                                    <x-input-error :messages="session('validation_err')" class="mt-4 mb-2" />
+                                @endif
+                                @if($p_cycle->category != 3)
+                                    <div id="input-table-prompt" class="w-full flex justify-center items-center">
+                                        <p class="w-full !text-md lg:text-xl font-medium text-center p-6 text-green-600 space-y-1">
+                                            Aby zaraportować pracę wybierz {{$p_cycle->category == 1? 'materiał i zadanie' : 'zadanie'}}
+                                        </p>
+                                    </div>
+                                @endif
+                                <input id="selected-cycle-category" type="number" name="selected_cycle_category" class="hidden" value="{{$p_cycle->category}}">
+                                <div id="input-container" class="w-full">
+                                    @if($p_cycle->category == 3 and isset($child_prod_schemas) )
+                                        <div class="input-table shadow-md rounded-b-xl mb-4">
+                                            <div class="relative overflow-x-scroll">
+                                                <table class="w-full text-sm text-left rtl:text-right pb-2 bg-gray-100 text-gray-500 dark:text-gray-400 border-separate border-spacing-1 border-slate-300">
+                                                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 whitespace-nowrap">
+                                                    <tr>
+                                                        <th scope="col" class="px-2 py-3">
+                                                            Wybierz
+                                                        </th>
+                                                        <th scope="col" class="px-2 py-3">
+                                                            Kol.
+                                                        </th>
+                                                        <th scope="col" class="px-2 py-3">
+                                                            Podzadanie
+                                                        </th>
+                                                        <th scope="col" class="px-2 py-3">
+                                                            Ilość (szt)
+                                                        </th>
+                                                        <th scope="col" class="px-2 py-3">
+                                                            Start pracy
+                                                        </th>
+                                                        <th scope="col" class="px-2 py-3">
+                                                            Koniec pracy
+                                                        </th>
+                                                        <th scope="col" class="px-2 py-3">
+                                                            Czas pracy (h)
+                                                        </th>
+                                                        <th scope="col" class="px-2 py-3">
+                                                            Pracownik
+                                                        </th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    @foreach($child_prod_schemas as $schema_task)
+                                                        <tr id="row-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}" class="input-table-row font-medium text-gray-600 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border border-slate-300 ">
+                                                            <td class="">
+                                                                <div class="w-full h-full flex justify-center items-center">
+                                                                    <input type="checkbox" id="check-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                           name="check_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                           class="selected-input-checkbox rounded-sm"/>
+                                                                </div>
+                                                            </td>
+                                                            <td class="col-value sequence-no px-2 py-3 whitespace-nowrap text-center rounded-md">
+                                                                {{$schema_task->task_sequence_no}}
+                                                            </td>
+                                                            <td class="col-value name px-2 py-3 whitespace-nowrap rounded-md">
+                                                                {{$schema_task->task_name}}
+                                                            </td>
+                                                            <td class="amount px-2 max-w-[50px]">
+                                                                <div class="p-1 flex justify-center flex-row items-center h-full">
+                                                                    <div class="w-full p-1 flex justify-center items-center h-full">
+                                                                        @if($schema_task->task_amount_required)
+                                                                            <input id="amount-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}" type="number" min="0" value="{{old('amount')}}"
+                                                                                   class="disabled-input amount-input bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center"
+                                                                                   name="amount_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}" placeholder="0"
+                                                                                   disabled>
+                                                                        @else
+                                                                            <div class="block w-full bg-gray-200 py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center">
+                                                                                -
+                                                                            </div>
+                                                                        @endif
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td class="px-2 py-3 text-center">
+                                                                <input type="datetime-local" id="start-time-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}" name="start_time_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                       min="2023-01-01T00:00" max="2023-12-31T23:59" step="60"
+                                                                       class="disabled-input input-start-time selected-input-time bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                                                       disabled>
+                                                            </td>
+                                                            <td class="px-2 py-3 text-center">
+                                                                <input type="datetime-local" id="end-time-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}" name="end_time_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                       min="2023-01-01T00:00" max="2023-12-31T23:59" step="60"
+                                                                       class="disabled-input input-end-time selected-input-time bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                                                       disabled>
+                                                            </td>
+                                                            <td class="px-2 py-3 text-center">
+                                                                <div class="work-time-in-hours block w-full bg-white py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                    0:00
+                                                                </div>
+                                                                <input id="work-duration-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                       type="number" name="work_duration_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                       class="disabled-input work-duration hidden" disabled>
+                                                            </td>
+                                                            <td class="employee-no px-2 py-3 text-center">
+                                                                @if(isset($users) and in_array($user->role,['admin','manager']))
+                                                                    <div class="p-1 pl-5 flex justify-center items-center h-full">
+                                                                        <select id="{{'employees-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                name="{{'employee_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                                disabled class="disabled-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                            @foreach($users as $u)
+                                                                                <option value="{{$u->id}}" class="bg-white"
+                                                                                @if($user->id == $u->id)
+                                                                                    selected
+                                                                                @endif>
+                                                                                    {{$u->employeeNo}}
+                                                                                </option>
+                                                                            @endforeach
+                                                                        </select>
+                                                                    </div>
+                                                                @else
+                                                                    <div class="block w-full bg-white py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                        {{$user->employeeNo}}
+                                                                    </div>
+                                                                @endif
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
                                     @endif
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Przypisani pracownicy</dt>
-                            <div class="w-full h-full flex justify-center items-center">
-                                <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                    {{$p_cycle->assigned_employee_no}}
-                                </dd>
+                            <div class="col-span-4 xl:col-span-8 w-full text-center">
+                                <button  id="add-work-button"
+                                    class="inline-block px-6 py-2 md:py-4 text-xs font-medium uppercase w-full text-md md:text-lg xl:text-xl leading-normal text-white focus:outline-none shadow-[0_4px_9px_-4px_rgba(0,0,0,0.2)] transition duration-150 ease-in-out hover:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] focus:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] active:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)]"
+                                    data-te-ripple-init
+                                    data-te-ripple-color="light"
+                                    type="submit">
+                                    {{ __('Raportuj pracę') }}
+                                </button>
                             </div>
-                        </div>
-                        <div class="col-span-4 flex flex-col bg-gray-200/50">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Uwagi</dt>
-                            <div class="w-full h-full flex justify-center items-center">
-                                <dd class="w-full text-sm font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                    {{$p_cycle->additional_comment}}
-                                </dd>
-                            </div>
-                        </div>
-                        <div class="col-span-4 xl:col-span-8 w-full bg-gray-300 py-6 flex flex-row justify-end">
-                            <button type="button" id="cycle-details-{{$p_cycle->cycle_id}}" class="cycle-details mr-4 text-gray-800 bg-white uppercase hover:bg-gray-100 focus:outline-none font-medium rounded-md text-xs lg:text-sm px-2 py-1 shadow-md">
-                                Statystyki
-                            </button>
-                        </div>
-                        @if($p_cycle->category == 1)
-                            <div class="col-span-4 xl:col-span-8 flex justify-start items-center flex-col bg-gray-200/50">
-                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Wybrany materiał</dt>
-                                <div id="selected-comp-container" class="w-4/5 h-full min-h-[80px] flex justify-center items-center">
-                                    <input id="selected-comp-id" type="number" name="selected_component_id" class="hidden" value="">
-                                </div>
-                            </div>
-                        @endif
-                        @if($p_cycle->category != 3)
-                            <div class="col-span-4 xl:col-span-8 flex justify-start items-center flex-col bg-gray-200/50">
-                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Wybrane zadanie</dt>
-                                <div id="selected-prod-schema-container" class="w-[95%] h-full min-h-[80px] flex justify-center items-center">
-                                    <input id="selected-prod-schema-id" type="number" name="selected_prod_schema_id" class="hidden" value="">
-                                </div>
-                            </div>
-                        @endif
-                        <div class="col-span-4 xl:col-span-8 w-full text-center">
-                            <a  id="add-work-button"
-                                class="inline-block px-6 py-2 md:py-4 text-xs font-medium uppercase w-full text-md md:text-lg xl:text-xl leading-normal text-white focus:outline-none shadow-[0_4px_9px_-4px_rgba(0,0,0,0.2)] transition duration-150 ease-in-out hover:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] focus:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] active:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)]"
-                                data-te-ripple-init
-                                data-te-ripple-color="light"
-                                href="">
-                                {{ __('Raportuj pracę') }}
-                            </a>
-                        </div>
-                    </dl>
+                        </dl>
+                    </form>
                 </div>
             </div>
             @if($p_cycle->category != 3 and isset($child_prod_schemas))
@@ -450,7 +742,7 @@
                                     <div class="w-full h-full max-h-[400px] overflow-y-scroll flex justify-center items-start">
                                         <div class="w-[90%] px-2 my-4">
                                             @foreach($child_components as $comp)
-                                                <x-list-element id="{{'comp-'.$comp->component_id}}" class="my-6 list-element flex-col w-full lg:py-0 py-0">
+                                                <x-list-element id="{{'comp-'.$comp->child_id}}" class="my-6 list-element flex-col w-full lg:py-0 py-0">
                                                     <div class="w-full flex flex-row justify-center">
                                                         <div class="w-[85%] flex flex-col justify-between items-center">
                                                             <div class="w-full flex justify-left items-center">
@@ -577,11 +869,11 @@
                                 <div class="w-full h-full max-h-[400px] overflow-y-scroll flex justify-center items-start">
                                     <div class="{{$p_cycle->category == 1? 'w-[90%]' : 'w-[70%]'}} p-2 ">
                                         @if(is_array($child_prod_schemas))
-                                            @foreach($child_prod_schemas as $comp_id => $prod_schemas)
+                                            @foreach($child_prod_schemas as $comp_cycle_id => $prod_schemas)
                                                 @php $current_id = 0; @endphp
                                                 @foreach($prod_schemas as $prod_schema)
                                                     @if($prod_schema->child_id != $current_id)
-                                                        <x-list-element id="schema-{{$prod_schema->child_id}}-comp-{{$comp_id}}" class="{{'comp-'.$comp_id}} my-6 list-element-2 flex-col w-full lg:py-0 py-0 hidden">
+                                                        <x-list-element id="schemacycle-{{$prod_schema->child_id}}-compcycle-{{$comp_cycle_id}}" class="{{'comp-'.$comp_cycle_id}} my-6 list-element-2 flex-col w-full lg:py-0 py-0 hidden">
                                                             <div class="flex flex-row justify-between w-full">
                                                                 <input type="number" class="schema-list-element-id hidden" value="{{$prod_schema->child_id}}">
                                                                 <div class="w-[85%] flex flex-col justify-between items-center">
@@ -611,14 +903,17 @@
                                                             <div id="list-{{$prod_schema->child_id}}" class="dropdown w-[95%] my-3 hidden">
                                                                 <div class="w-full text-sm lg:text-lg font-semibold bg-gray-800 text-white rounded-t-xl pl-5 py-2 flex flex-row justify-between">
                                                                     <div class="p-1">
-                                                                        Raportuj
+                                                                        Podzadania
                                                                     </div>
                                                                 </div>
-                                                                <div class="shadow-md rounded-b-xl mb-4">
-                                                                    <div class="relative overflow-x-auto">
+                                                                <div class="input-table shadow-md rounded-b-xl mb-4">
+                                                                    <div class="relative overflow-x-scroll">
                                                                         <table class="w-full text-sm text-left rtl:text-right pb-2 bg-gray-100 text-gray-500 dark:text-gray-400 border-separate border-spacing-1 border-slate-300">
                                                                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 whitespace-nowrap">
                                                                             <tr>
+                                                                                <th scope="col" class="px-2 py-3 hidden-input hidden ">
+                                                                                    Wybierz
+                                                                                </th>
                                                                                 <th scope="col" class="px-2 py-3">
                                                                                     Kol.
                                                                                 </th>
@@ -646,47 +941,77 @@
                                                                             @php $current_schema_id = $prod_schema->prod_schema_id; @endphp
                                                                             @foreach($prod_schemas as $schema_task)
                                                                                 @if($current_schema_id == $schema_task->prod_schema_id)
-                                                                                    <tr id="row-{{$current_schema_id.'-'.$schema_task->task_id}}" class="font-medium text-gray-600 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border border-slate-300 ">
+                                                                                    <tr id="row-{{$current_schema_id.'-'.$schema_task->task_id}}" class="input-table-row font-medium text-gray-600 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border border-slate-300 ">
+                                                                                        <td class="hidden-input hidden">
+                                                                                            <div class="w-full h-full flex justify-center items-center">
+                                                                                                <input type="checkbox" id="check-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                                       name="check_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                                                        class="input-checkbox rounded-sm"/>
+                                                                                            </div>
+                                                                                        </td>
                                                                                         <td class="col-value sequence-no px-2 py-3 whitespace-nowrap text-center rounded-md">
                                                                                             {{$schema_task->task_sequence_no}}
                                                                                         </td>
                                                                                         <td class="col-value name px-2 py-3 whitespace-nowrap rounded-md">
                                                                                             {{$schema_task->task_name}}
                                                                                         </td>
-                                                                                        <td class="hidden-input amount px-2 text-center hidden max-w-[50px]">
+                                                                                        <td class="hidden-input hidden amount px-2 max-w-[50px]">
                                                                                             <div class="p-1 flex justify-center flex-row items-center h-full">
                                                                                                 <div class="w-full p-1 flex justify-center items-center h-full">
                                                                                                     @if($schema_task->task_amount_required)
                                                                                                         <input id="amount-{{$current_schema_id.'-'.$schema_task->task_id}}" type="number" min="0" value="{{old('amount')}}"
-                                                                                                               class="xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
-                                                                                                               name="amount_{{$current_schema_id.'_'.$schema_task->task_id}}" placeholder="0">
+                                                                                                               class="disabled-input amount-input bg-gray-200 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded  text-center"
+                                                                                                               name="amount_{{$current_schema_id.'_'.$schema_task->task_id}}" placeholder="0"
+                                                                                                               disabled>
                                                                                                     @else
-                                                                                                        <div class="block w-full bg-white py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center">
+                                                                                                        <div class="block w-full bg-gray-200 py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center">
                                                                                                             -
                                                                                                         </div>
                                                                                                     @endif
                                                                                                 </div>
                                                                                             </div>
                                                                                         </td>
-                                                                                        <td class="hidden-input start-time px-2 py-3 text-center hidden">
-                                                                                            <input type="datetime-local" id="meetingDateTime" name="meetingDateTime"
+                                                                                        <td class="hidden-input px-2 py-3 text-center hidden">
+                                                                                            <input type="datetime-local" id="start-time-{{$current_schema_id.'-'.$schema_task->task_id}}" name="start_time_{{$current_schema_id.'_'.$schema_task->task_id}}"
                                                                                                    min="2023-01-01T00:00" max="2023-12-31T23:59" step="60"
-                                                                                                   class="block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                                   class="disabled-input input-start-time input-time bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                                                                                   disabled>
                                                                                         </td>
-                                                                                        <td class="hidden-input end-time px-2 py-3 text-center hidden">
-                                                                                            <input type="datetime-local" id="meetingDateTime" name="meetingDateTime"
+                                                                                        <td class="hidden-input px-2 py-3 text-center hidden">
+                                                                                            <input type="datetime-local" id="end-time-{{$current_schema_id.'-'.$schema_task->task_id}}" name="end_time_{{$current_schema_id.'_'.$schema_task->task_id}}"
                                                                                                    min="2023-01-01T00:00" max="2023-12-31T23:59" step="60"
-                                                                                                   class="block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                                   class="disabled-input input-end-time input-time bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                                                                                   disabled>
                                                                                         </td>
-                                                                                        <td class="hidden-input work-time-in-hours px-2 py-3 text-center hidden">
-                                                                                            <div class="block w-full bg-white py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                        <td class="hidden-input px-2 py-3 text-center hidden">
+                                                                                            <div class="work-time-in-hours block w-full bg-white py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
                                                                                                 0:00
                                                                                             </div>
+                                                                                            <input id="work-duration-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                                   type="number"  name="work_duration_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                                                   class="disabled-input work-duration hidden" disabled>
                                                                                         </td>
-                                                                                        <td class="hidden-input work-time-in-hours px-2 py-3 text-center hidden">
-                                                                                            <div class="block w-full bg-white py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
-                                                                                                {{$user->employeeNo}}
-                                                                                            </div>
+                                                                                        <td class="hidden-input employee-no px-2 py-3 text-center hidden">
+                                                                                            @if(isset($users) and in_array($user->role,['admin','manager']))
+                                                                                                <div class="p-1 pl-5 flex justify-center items-center h-full">
+                                                                                                    <select id="{{'employees-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                                            name="{{'employee_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                                                            disabled class="disabled-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                                        @foreach($users as $u)
+                                                                                                            <option value="{{$u->id}}" class="bg-white"
+                                                                                                                    @if($user->id == $u->id)
+                                                                                                                        selected
+                                                                                                                @endif>
+                                                                                                                {{$u->employeeNo}}
+                                                                                                            </option>
+                                                                                                        @endforeach
+                                                                                                    </select>
+                                                                                                </div>
+                                                                                            @else
+                                                                                                <div class="block w-full bg-white py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                                    {{$user->employeeNo}}
+                                                                                                </div>
+                                                                                            @endif
                                                                                         </td>
                                                                                     </tr>
                                                                                 @endif
@@ -705,7 +1030,7 @@
                                             @php $current_id = 0; @endphp
                                             @foreach($child_prod_schemas  as $prod_schema)
                                                 @if($prod_schema->child_id != $current_id)
-                                                    <x-list-element id="schema-{{$prod_schema->child_id}}" class="comp my-6 list-element-2 flex-col w-full lg:py-0 py-0">
+                                                    <x-list-element id="schemacycle-{{$prod_schema->child_id}}" class="comp my-6 list-element-2 flex-col w-full lg:py-0 py-0">
                                                         <div class="flex flex-row justify-between w-full">
                                                             <input type="number" class="schema-list-element-id hidden" value="{{$prod_schema->child_id}}">
                                                             <div class="w-[85%] flex flex-col justify-between items-center">
@@ -735,14 +1060,17 @@
                                                         <div id="list-{{$prod_schema->child_id}}" class="dropdown w-[95%] my-3 hidden">
                                                             <div class="w-full text-sm lg:text-lg font-semibold bg-gray-800 text-white rounded-t-xl pl-5 py-2 flex flex-row justify-between">
                                                                 <div class="p-1">
-                                                                    Raportuj
+                                                                    Podzadania
                                                                 </div>
                                                             </div>
-                                                            <div class="shadow-md rounded-b-xl mb-4">
-                                                                <div class="relative overflow-x-auto">
+                                                            <div class="input-table shadow-md rounded-b-xl mb-4">
+                                                                <div class="relative overflow-x-scroll">
                                                                     <table class="w-full text-sm text-left rtl:text-right pb-2 bg-gray-100 text-gray-500 dark:text-gray-400 border-separate border-spacing-1 border-slate-300">
                                                                         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 whitespace-nowrap">
                                                                         <tr>
+                                                                            <th scope="col" class="px-2 py-3">
+                                                                                Wybierz
+                                                                            </th>
                                                                             <th scope="col" class="px-2 py-3">
                                                                                 Kol.
                                                                             </th>
@@ -770,47 +1098,77 @@
                                                                         @php $current_schema_id = $prod_schema->prod_schema_id; @endphp
                                                                         @foreach($child_prod_schemas as $schema_task)
                                                                             @if($current_schema_id == $schema_task->prod_schema_id)
-                                                                                <tr id="row-{{$current_schema_id.'-'.$schema_task->task_id}}" class="font-medium text-gray-600 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border border-slate-300 ">
+                                                                                <tr id="row-{{$current_schema_id.'-'.$schema_task->task_id}}" class="input-table-row font-medium text-gray-600 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border border-slate-300 ">
+                                                                                    <td class="hidden-input hidden">
+                                                                                        <div class="w-full h-full flex justify-center items-center">
+                                                                                            <input type="checkbox" id="check-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                                   name="check_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                                                   class="input-checkbox rounded-sm"/>
+                                                                                        </div>
+                                                                                    </td>
                                                                                     <td class="col-value sequence-no px-2 py-3 whitespace-nowrap text-center rounded-md">
                                                                                         {{$schema_task->task_sequence_no}}
                                                                                     </td>
                                                                                     <td class="col-value name px-2 py-3 whitespace-nowrap rounded-md">
                                                                                         {{$schema_task->task_name}}
                                                                                     </td>
-                                                                                    <td class="hidden-input amount px-2 text-center hidden max-w-[50px]">
+                                                                                    <td class="hidden-input amount px-2 hidden max-w-[50px]">
                                                                                         <div class="p-1 flex justify-center flex-row items-center h-full">
                                                                                             <div class="w-full p-1 flex justify-center items-center h-full">
                                                                                                 @if($schema_task->task_amount_required)
                                                                                                     <input id="amount-{{$current_schema_id.'-'.$schema_task->task_id}}" type="number" min="0" value="{{old('amount')}}"
-                                                                                                           class="xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center"
-                                                                                                           name="amount_{{$current_schema_id.'_'.$schema_task->task_id}}" placeholder="0">
+                                                                                                           class="disabled-input amount-input bg-gray-200 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center"
+                                                                                                           name="amount_{{$current_schema_id.'_'.$schema_task->task_id}}" placeholder="0"
+                                                                                                           disabled>
                                                                                                 @else
-                                                                                                    <div class="block w-full bg-white py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center">
+                                                                                                    <div class="block w-full bg-gray-200 py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center">
                                                                                                         -
                                                                                                     </div>
                                                                                                 @endif
                                                                                             </div>
                                                                                         </div>
                                                                                     </td>
-                                                                                    <td class="hidden-input start-time px-2 py-3 text-center hidden">
-                                                                                        <input type="datetime-local" id="meetingDateTime" name="meetingDateTime"
+                                                                                    <td class="hidden-input px-2 py-3 text-center hidden">
+                                                                                        <input type="datetime-local" id="start-time-{{$current_schema_id.'-'.$schema_task->task_id}}" name="start_time_{{$current_schema_id.'_'.$schema_task->task_id}}"
                                                                                                min="2023-01-01T00:00" max="2023-12-31T23:59" step="60"
-                                                                                               class="block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                               class="disabled-input input-start-time input-time bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                                                                               disabled>
                                                                                     </td>
-                                                                                    <td class="hidden-input end-time px-2 py-3 text-center hidden">
-                                                                                        <input type="datetime-local" id="meetingDateTime" name="meetingDateTime"
+                                                                                    <td class="hidden-input px-2 py-3 text-center hidden">
+                                                                                        <input type="datetime-local" id="end-time-{{$current_schema_id.'-'.$schema_task->task_id}}" name="end_time_{{$current_schema_id.'_'.$schema_task->task_id}}"
                                                                                                min="2023-01-01T00:00" max="2023-12-31T23:59" step="60"
-                                                                                               class="block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                               class="disabled-input input-end-time input-time bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                                                                               disabled>
                                                                                     </td>
-                                                                                    <td class="hidden-input work-time-in-hours px-2 py-3 text-center hidden">
-                                                                                        <div class="block w-full bg-white py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                    <td class="hidden-input px-2 py-3 text-center hidden">
+                                                                                        <div class="work-time-in-hours block w-full bg-white py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
                                                                                             0:00
                                                                                         </div>
+                                                                                        <input id="work-duration-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                               type="number"  name="work_duration_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                                               class="disabled-input work-duration hidden" disabled>
                                                                                     </td>
-                                                                                    <td class="hidden-input work-time-in-hours px-2 py-3 text-center hidden">
-                                                                                        <div class="block w-full bg-white py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
-                                                                                            {{$user->employeeNo}}
-                                                                                        </div>
+                                                                                    <td class="hidden-input employee-no px-2 py-3 text-center hidden">
+                                                                                        @if(isset($users) and in_array($user->role,['admin','manager']))
+                                                                                            <div class="p-1 pl-5 flex justify-center items-center h-full">
+                                                                                                <select id="{{'employees-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                                        name="{{'employee_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                                                        disabled class="disabled-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                                    @foreach($users as $u)
+                                                                                                        <option value="{{$u->id}}" class="bg-white"
+                                                                                                                @if($user->id == $u->id)
+                                                                                                                    selected
+                                                                                                            @endif>
+                                                                                                            {{$u->employeeNo}}
+                                                                                                        </option>
+                                                                                                    @endforeach
+                                                                                                </select>
+                                                                                            </div>
+                                                                                        @else
+                                                                                            <div class="block w-full bg-white py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                                {{$user->employeeNo}}
+                                                                                            </div>
+                                                                                        @endif
                                                                                     </td>
                                                                                 </tr>
                                                                             @endif
@@ -832,211 +1190,199 @@
                     </div>
                 </div>
             @endif
-{{--            <div class="w-full flex justify-center items-center mb-4">--}}
-{{--                <div class="w-[95%]">--}}
-{{--                    <div class="w-full text-lg lg:text-xl font-semibold bg-gray-800 text-white rounded-t-xl pl-5 py-2 flex flex-row justify-between">--}}
-{{--                        <div class="p-3">--}}
-{{--                            {{($p_cycle->category == 1)? 'Materiały i zadania' : 'Zadania'}}--}}
-{{--                        </div>--}}
-{{--                    </div>--}}
-{{--                    <div class="shadow-md rounded-b-xl mb-4">--}}
-{{--                        <div class="relative overflow-x-auto">--}}
-                            <table class="hidden">
-                                <tbody>
-                                @if(isset($child_components))
-                                    @foreach($child_components as $c_cycle)
-                                        <tr id="row-{{$c_cycle->child_id}}" class="">
-                                            <td class="">
-                                                @php
-                                                    switch ($c_cycle->status) {
-                                                        case 0:
-                                                            $status = 'Zakończony';
-                                                            $bg = 'bg-green-450';
-                                                            break;
-                                                        case 1:
-                                                            $status = 'Aktywny';
-                                                            $bg = 'bg-blue-450';
-                                                            break;
-                                                        case 2:
-                                                            $status = 'Nierozpoczęty';
-                                                            $bg = 'bg-yellow-300';
-                                                            break;
-                                                        case 3:
-                                                            $status = 'Po terminie';
-                                                            $bg = 'bg-red-500';
-                                                            break;
-                                                    }
-                                                @endphp
-                                                <div class="">
-                                                    <div class="">
-                                                        <div class="col-value status">
-                                                            {{$status}}
-                                                        </div>
-                                                    </div>
-                                                </div>
 
-                                            </td>
-                                            <td class="col-value category">
-                                                {{$c_cycle->category == 2? 'Materiał' : 'Zadanie'}}
-                                            </td>
-                                            <td class="">
-                                                @if(!is_null($c_cycle->image) and $c_cycle->category == 2)
-                                                    @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
-                                                    <div class="flex justify-center">
-                                                        <div class="max-w-[100px]">
-                                                            <img src="{{asset('storage/'.$path.$c_cycle->image)}}" alt="">
-                                                        </div>
-                                                    </div>
-                                                @endif
-                                            </td>
-                                            <td class="col-value name">
-                                                {{$c_cycle->name}}
-                                            </td>
-                                            <td class="col-value productivity">
-                                                {{$c_cycle->productivity.'%'}}
-                                            </td>
-                                            <td class="col-value time-spent-in-hours">
-                                                {{$c_cycle->time_spent_in_hours}}
-                                            </td>
-                                            <td class="col-value current-amount">
-                                                {{$c_cycle->current_amount}}
-                                            </td>
-                                            <td class="col-value expected-amount-per-spent-time">
-                                                {{$c_cycle->expected_amount_per_spent_time}}
-                                            </td>
-                                            <td class="col-value total-amount">
-                                                {{$c_cycle->total_amount}}
-                                            </td>
-                                            <td class="col-value progress">
-                                                {{$c_cycle->progress}}
-                                            </td>
-                                            <td class="col-value start-time">
-                                                {{$c_cycle->start_time}}
-                                            </td>
-                                            <td class="col-value end-time">
-                                                {{empty($c_cycle->end_time) ? 'cykl trwa' : $c_cycle->end_time}}
-                                            </td>
-                                            <td class="col-value expected-amount-per-time-frame">
-                                                {{$c_cycle->expected_amount_per_time_frame}}
-                                            </td>
-                                            <td class="col-value expected-time-to-complete-in-hours">
-                                                {{$c_cycle->expected_time_to_complete_in_hours}}
-                                            </td>
-                                            <td class="col-value defect-amount">
-                                                {{$c_cycle->defect_amount}}
-                                            </td>
-                                            <td class="col-value defect-percent">
-                                                {{$c_cycle->defect_percent}}
-                                            </td>
-                                            <td class="col-value waste-amount">
-                                                {{is_null($c_cycle->waste_amount) ? '-' : $c_cycle->waste_amount}}
-                                            </td>
-                                            <td class="col-value waste-unit">
-                                                {{is_null($c_cycle->waste_unit) ? '-' : $c_cycle->waste_unit}}
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                @endif
-                                @if(isset($child_schemas_modal))
-                                    @php $current_id = 0; @endphp
-                                    @foreach($child_schemas_modal as $c_cycle)
-                                        @if($c_cycle->child_id != $current_id)
-                                            <tr id="row-{{$c_cycle->child_id}}" class="">
-                                                <td class="">
-                                                    @php
-                                                        switch ($c_cycle->status) {
-                                                            case 0:
-                                                                $status = 'Zakończony';
-                                                                $bg = 'bg-green-450';
-                                                                break;
-                                                            case 1:
-                                                                $status = 'Aktywny';
-                                                                $bg = 'bg-blue-450';
-                                                                break;
-                                                            case 2:
-                                                                $status = 'Nierozpoczęty';
-                                                                $bg = 'bg-yellow-300';
-                                                                break;
-                                                            case 3:
-                                                                $status = 'Po terminie';
-                                                                $bg = 'bg-red-500';
-                                                                break;
-                                                        }
-                                                    @endphp
-                                                    <div class="">
-                                                        <div class="">
-                                                            <div class="col-value status">
-                                                                {{$status}}
-                                                            </div>
-                                                        </div>
-                                                    </div>
+<table class="hidden">
+    <tbody>
+    @if(isset($child_components))
+        @foreach($child_components as $c_cycle)
+            <tr id="row-{{$c_cycle->child_id}}" class="">
+                <td class="">
+                    @php
+                        switch ($c_cycle->status) {
+                            case 0:
+                                $status = 'Zakończony';
+                                $bg = 'bg-green-450';
+                                break;
+                            case 1:
+                                $status = 'Aktywny';
+                                $bg = 'bg-blue-450';
+                                break;
+                            case 2:
+                                $status = 'Nierozpoczęty';
+                                $bg = 'bg-yellow-300';
+                                break;
+                            case 3:
+                                $status = 'Po terminie';
+                                $bg = 'bg-red-500';
+                                break;
+                        }
+                    @endphp
+                    <div class="">
+                        <div class="">
+                            <div class="col-value status">
+                                {{$status}}
+                            </div>
+                        </div>
+                    </div>
 
-                                                </td>
-                                                <td class="col-value category">
-                                                    {{$c_cycle->category == 2? 'Materiał' : 'Zadanie'}}
-                                                </td>
-                                                <td class="">
-                                                    @if(!is_null($c_cycle->image) and $c_cycle->category == 2)
-                                                        @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
-                                                        <div class="flex justify-center">
-                                                            <div class="max-w-[100px]">
-                                                                <img src="{{asset('storage/'.$path.$c_cycle->image)}}" alt="">
-                                                            </div>
-                                                        </div>
-                                                    @endif
-                                                </td>
-                                                <td class="col-value name">
-                                                    {{$c_cycle->name}}
-                                                </td>
-                                                <td class="col-value productivity">
-                                                    {{$c_cycle->productivity.'%'}}
-                                                </td>
-                                                <td class="col-value time-spent-in-hours">
-                                                    {{$c_cycle->time_spent_in_hours}}
-                                                </td>
-                                                <td class="col-value current-amount">
-                                                    {{$c_cycle->current_amount}}
-                                                </td>
-                                                <td class="col-value expected-amount-per-spent-time">
-                                                    {{$c_cycle->expected_amount_per_spent_time}}
-                                                </td>
-                                                <td class="col-value total-amount">
-                                                    {{$c_cycle->total_amount}}
-                                                </td>
-                                                <td class="col-value progress">
-                                                    {{$c_cycle->progress}}
-                                                </td>
-                                                <td class="col-value start-time">
-                                                    {{$c_cycle->start_time}}
-                                                </td>
-                                                <td class="col-value end-time">
-                                                    {{empty($c_cycle->end_time) ? 'cykl trwa' : $c_cycle->end_time}}
-                                                </td>
-                                                <td class="col-value expected-amount-per-time-frame">
-                                                    {{$c_cycle->expected_amount_per_time_frame}}
-                                                </td>
-                                                <td class="col-value expected-time-to-complete-in-hours">
-                                                    {{$c_cycle->expected_time_to_complete_in_hours}}
-                                                </td>
-                                                <td class="col-value defect-amount">
-                                                    {{$c_cycle->defect_amount}}
-                                                </td>
-                                                <td class="col-value defect-percent">
-                                                    {{$c_cycle->defect_percent}}
-                                                </td>
-                                                <td class="col-value waste-amount">
-                                                    {{is_null($c_cycle->waste_amount) ? '-' : $c_cycle->waste_amount}}
-                                                </td>
-                                                <td class="col-value waste-unit">
-                                                    {{is_null($c_cycle->waste_unit) ? '-' : $c_cycle->waste_unit}}
-                                                </td>
-                                            </tr>
-                                        @endif
-                                        @php $current_id = $c_cycle->child_id; @endphp
-                                    @endforeach
-                                @endif
-                                </tbody>
-                            </table>
+                </td>
+                <td class="col-value category">
+                    {{$c_cycle->category == 2? 'Materiał' : 'Zadanie'}}
+                </td>
+                <td class="">
+                    @if(!is_null($c_cycle->image) and $c_cycle->category == 2)
+                        @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
+                        <div class="flex justify-center">
+                            <div class="max-w-[100px]">
+                                <img src="{{asset('storage/'.$path.$c_cycle->image)}}" alt="">
+                            </div>
+                        </div>
+                    @endif
+                </td>
+                <td class="col-value name">
+                    {{$c_cycle->name}}
+                </td>
+                <td class="col-value productivity">
+                    {{$c_cycle->productivity.'%'}}
+                </td>
+                <td class="col-value time-spent-in-hours">
+                    {{$c_cycle->time_spent_in_hours}}
+                </td>
+                <td class="col-value current-amount">
+                    {{$c_cycle->current_amount}}
+                </td>
+                <td class="col-value expected-amount-per-spent-time">
+                    {{$c_cycle->expected_amount_per_spent_time}}
+                </td>
+                <td class="col-value total-amount">
+                    {{$c_cycle->total_amount}}
+                </td>
+                <td class="col-value progress">
+                    {{$c_cycle->progress}}
+                </td>
+                <td class="col-value start-time">
+                    {{$c_cycle->start_time}}
+                </td>
+                <td class="col-value end-time">
+                    {{empty($c_cycle->end_time) ? 'cykl trwa' : $c_cycle->end_time}}
+                </td>
+                <td class="col-value expected-amount-per-time-frame">
+                    {{$c_cycle->expected_amount_per_time_frame}}
+                </td>
+                <td class="col-value expected-time-to-complete-in-hours">
+                    {{$c_cycle->expected_time_to_complete_in_hours}}
+                </td>
+                <td class="col-value defect-amount">
+                    {{$c_cycle->defect_amount}}
+                </td>
+                <td class="col-value defect-percent">
+                    {{$c_cycle->defect_percent}}
+                </td>
+                <td class="col-value waste-amount">
+                    {{is_null($c_cycle->waste_amount) ? '-' : $c_cycle->waste_amount}}
+                </td>
+                <td class="col-value waste-unit">
+                    {{is_null($c_cycle->waste_unit) ? '-' : $c_cycle->waste_unit}}
+                </td>
+            </tr>
+        @endforeach
+    @endif
+    @if(isset($modal_data))
+        @foreach($modal_data as $c_cycle)
+            <tr id="row-{{$c_cycle->child_id}}" class="">
+                <td class="">
+                    @php
+                        switch ($c_cycle->status) {
+                            case 0:
+                                $status = 'Zakończony';
+                                $bg = 'bg-green-450';
+                                break;
+                            case 1:
+                                $status = 'Aktywny';
+                                $bg = 'bg-blue-450';
+                                break;
+                            case 2:
+                                $status = 'Nierozpoczęty';
+                                $bg = 'bg-yellow-300';
+                                break;
+                            case 3:
+                                $status = 'Po terminie';
+                                $bg = 'bg-red-500';
+                                break;
+                        }
+                    @endphp
+                    <div class="">
+                        <div class="">
+                            <div class="col-value status">
+                                {{$status}}
+                            </div>
+                        </div>
+                    </div>
+
+                </td>
+                <td class="col-value category">
+                    {{$c_cycle->category == 1? 'Produkt' : ($c_cycle->category == 2? 'Materiał' : 'Zadanie')}}
+                </td>
+                <td class="">
+                    @if(!is_null($c_cycle->image) and $c_cycle->category == 2)
+                        @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
+                        <div class="flex justify-center">
+                            <div class="max-w-[100px]">
+                                <img src="{{asset('storage/'.$path.$c_cycle->image)}}" alt="">
+                            </div>
+                        </div>
+                    @endif
+                </td>
+                <td class="col-value name">
+                    {{$c_cycle->name}}
+                </td>
+                <td class="col-value productivity">
+                    {{$c_cycle->productivity.'%'}}
+                </td>
+                <td class="col-value time-spent-in-hours">
+                    {{$c_cycle->time_spent_in_hours}}
+                </td>
+                <td class="col-value current-amount">
+                    {{$c_cycle->current_amount}}
+                </td>
+                <td class="col-value expected-amount-per-spent-time">
+                    {{$c_cycle->expected_amount_per_spent_time}}
+                </td>
+                <td class="col-value total-amount">
+                    {{$c_cycle->total_amount}}
+                </td>
+                <td class="col-value progress">
+                    {{$c_cycle->progress}}
+                </td>
+                <td class="col-value start-time">
+                    {{$c_cycle->start_time}}
+                </td>
+                <td class="col-value end-time">
+                    {{empty($c_cycle->end_time) ? 'cykl trwa' : $c_cycle->end_time}}
+                </td>
+                <td class="col-value expected-amount-per-time-frame">
+                    {{$c_cycle->expected_amount_per_time_frame}}
+                </td>
+                <td class="col-value expected-time-to-complete-in-hours">
+                    {{$c_cycle->expected_time_to_complete_in_hours}}
+                </td>
+                <td class="col-value defect-amount">
+                    {{$c_cycle->defect_amount}}
+                </td>
+                <td class="col-value defect-percent">
+                    {{$c_cycle->defect_percent}}
+                </td>
+                <td class="col-value waste-amount">
+                    {{is_null($c_cycle->waste_amount) ? '-' : $c_cycle->waste_amount}}
+                </td>
+                <td class="col-value waste-unit">
+                    {{is_null($c_cycle->waste_unit) ? '-' : $c_cycle->waste_unit}}
+                </td>
+            </tr>
+        @endforeach
+    @endif
+    </tbody>
+</table>
 {{--                        </div>--}}
 {{--                        <div class="w-full p-2 bg-gray-50 rounded-b-xl">--}}
 {{--                            {{ $child_cycles->links() }}--}}

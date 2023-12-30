@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class WorkController extends Controller
@@ -107,10 +108,10 @@ class WorkController extends Controller
     {
         $user = Auth::user();
         $parent_cycle = ParentCycleView::where('cycle_id', $id)->first();
-
+        $users = User::select('id','employeeNo', 'role')->get();
         $child_cycles = ChildCycleView::where('parent_id', $id)->paginate(10);
 
-        $child_schemas_modal = null;
+        $modal_data = null;
         $child_components = null;
         $child_prod_schemas = null;
         if($parent_cycle->category == 1) {
@@ -120,28 +121,55 @@ class WorkController extends Controller
             $child_schemas = ChildCycleView::where(['child_cycle_view.parent_id' => $id])
                 ->join('task','task.production_schema_id', '=', 'child_cycle_view.prod_schema_id')
                 ->select('child_cycle_view.*',DB::raw('task.id as task_id, task.name as task_name, task.sequence_no as task_sequence_no, task.amount_required as task_amount_required'))
-                ->orderBy('child_cycle_view.component_id', 'asc','child_cycle_view.prod_schema_sequence_no','asc','task.sequence_no','asc');
+                ->orderBy('child_cycle_view.component_id', 'asc')
+                ->orderBy('child_cycle_view.prod_schema_sequence_no','asc')
+                ->orderBy('task_sequence_no','asc');
 
             foreach ($child_components as $comp) {
                 $temp_schemas = clone $child_schemas;
-                $child_prod_schemas[$comp->component_id] = $temp_schemas->where('component_id', $comp->component_id)->get();
+                $child_prod_schemas[$comp->child_id] = $temp_schemas->where('component_id', $comp->component_id)->get();
             }
-            $child_schemas_modal = $child_schemas->get();
+            $modal_data = ChildCycleView::where(['child_cycle_view.parent_id' => $id])
+                ->select('child_id','status','category','image','name','productivity','time_spent_in_hours',
+                        'current_amount','expected_amount_per_spent_time','total_amount','progress','start_time',
+                        'end_time','expected_amount_per_time_frame','expected_time_to_complete_in_hours',
+                        'defect_amount','defect_percent','waste_amount','waste_unit')
+                ->orderBy('child_cycle_view.component_id', 'asc')
+                ->orderBy('child_cycle_view.prod_schema_sequence_no','asc');
         }
         else if($parent_cycle->category == 2) {
             $child_prod_schemas = ChildCycleView::where(['child_cycle_view.parent_id' => $id])
                 ->join('task','task.production_schema_id', '=', 'child_cycle_view.prod_schema_id')
                 ->select('child_cycle_view.*',DB::raw('task.id as task_id, task.name as task_name, task.sequence_no as task_sequence_no, task.amount_required as task_amount_required'))
-                ->orderBy('child_cycle_view.prod_schema_sequence_no','asc','task.sequence_no','asc')->get();
-            $child_schemas_modal = $child_prod_schemas;
+                ->orderBy('child_cycle_view.prod_schema_sequence_no','asc')
+                ->orderBy('task.sequence_no','asc')->get();
+
+            $modal_data = ChildCycleView::where(['child_cycle_view.parent_id' => $id])
+                ->select('child_id','status','category','image','name','productivity','time_spent_in_hours',
+                    'current_amount','expected_amount_per_spent_time','total_amount','progress','start_time',
+                    'end_time','expected_amount_per_time_frame','expected_time_to_complete_in_hours',
+                    'defect_amount','defect_percent','waste_amount','waste_unit')
+                ->orderBy('child_cycle_view.prod_schema_sequence_no','asc');
         }
         else if($parent_cycle->category == 3) {
             $child_prod_schemas = ParentCycleView::where('cycle_id', $id)
                 ->join('production_cycle','production_cycle.id', '=', 'parent_cycle_view.cycle_id')
                 ->join('task','task.production_schema_id', '=', 'production_cycle.production_schema_id')
-                ->select('parent_cycle_view.*',DB::raw('task.id as task_id, task.name as task_name, task.sequence_no as task_sequence_no, task.amount_required as task_amount_required'))
+                ->select('parent_cycle_view.*',DB::raw('task.production_schema_id as prod_schema_id, task.id as task_id, task.name as task_name, task.sequence_no as task_sequence_no, task.amount_required as task_amount_required'))
                 ->orderBy('task.sequence_no','asc')->get();
-            $child_schemas_modal = $child_prod_schemas;
+        }
+
+        $parent_modal = ParentCycleView::where('cycle_id', $id)
+            ->select(DB::raw('cycle_id as child_id'),'status','category','image','name','productivity','time_spent_in_hours',
+                'current_amount','expected_amount_per_spent_time','total_amount','progress','start_time',
+                'end_time','expected_amount_per_time_frame','expected_time_to_complete_in_hours',
+                'defect_amount','defect_percent',DB::raw('null as waste_amount,null as waste_unit'));
+
+        if(isset($modal_data)) {
+            $modal_data = $modal_data->union($parent_modal)->get();
+
+        } else {
+            $modal_data = $parent_modal->get();
         }
 
         if(count($child_prod_schemas) == 0) {
@@ -153,137 +181,128 @@ class WorkController extends Controller
             'child_cycles' => $child_cycles,
             'child_components' => $child_components,
             'child_prod_schemas' => $child_prod_schemas,
-            'child_schemas_modal' => $child_schemas_modal,
+            'modal_data' => $modal_data,
             'user' => $user,
+            'users' => $users,
             'storage_path_products' => 'products',
             'storage_path_components' => 'components',
         ]);
     }
 
-    public function storeCycle(Request $request): RedirectResponse
+    public function storeWork(Request $request, int $id): RedirectResponse
     {
         $user = Auth::user();
         $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
-
-        $this->validateStoreCycle($request);
-        try{
-            DB::beginTransaction();
-            $employees = $this->validateEmployees($request->employees, $employee_no);
-
-            $cycle_id = $this->insertProductionCycle($request, $employee_no);
-
-            $this->insertProductionCycleUsers($employees, $cycle_id, $employee_no);
-
-
-
-//            $cycle = ProductionCycle::where('id', $cycle_id)->first();
-//            $user_list = ProductionCycleUser::where('production_cycle_id', $cycle_id)
-//                ->join('users', 'users.id', '=', 'production_cycle_user.user_id')
-//                ->select('users.firstName', 'users.lastName', 'users.employeeNo','users.email');
-//
-//            foreach ($user_list as $user) {
-//                Mail::to($user->email)->send(new CycleCreated($cycle, $user));
-//            }
-
-            DB::commit();
-
-
+        try {
+            $this->validateWork($request, $employee_no);
         }
-        catch(Exception $e) {
-            DB::rollBack();
-            if($e->getCode() == '1') {
+        catch (Exception $e) {
+            if($e instanceof ValidationException) {
+                return back()->with('validation_err', $e->validator->getMessageBag()->all())->withInput();
+            }
+            else if ($e->getCode() == 2) {
+                return back()->with('validation_err', [$e->getMessage()])->withInput();
+            }
+            else if($e->getCode() == 1) {
                 return back()->with('status_err', $e->getMessage())->withInput();
             }
-            Log::channel('error')->error('Error inserting cycle: '.$e->getMessage(), [
-                'employeeNo' => $employee_no,
-            ]);
-            return back()->with('status_err', 'Nie udało się dodać cyklu. Błąd systemu.')->withInput();
-        }
-
-        return redirect()->route('production.index')->with('status', 'Dodano cykl produkcji.');
-    }
-
-    public function storeUpdatedCycle(Request $request, $id): RedirectResponse
-    {
-        $cycle_status = ProductionCycle::where(['id' => $id, 'start_time' => null])->first();
-        if(!$cycle_status instanceof ProductionCycle) {
-            return back()->with('status_err', 'Nie można edytować cyklu. Cykl rozpoczęty.')->withInput();
-        }
-        try {
-            $this->validateStoreCycle($request, true);
-        } catch(Exception $e) {
-            $messages = isset($e->validator)? $e->validator->messages()->all() : null;
-            return back()->with(['status_err' => 'Nie udało się edytować cyklu: podano błędne wartości. Spróbuj ponownie.',
-                                 'edit_err' => $messages])
-                         ->withInput();
-        }
-
-        $user = Auth::user();
-        $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
-        try {
-            $employees_name = 'employees'.$id;
-            $employees = $request->$employees_name;
-            $employees = $this->validateEmployees($employees, $employee_no, true);
-
-            DB::beginTransaction();
-            $this->updateProductionCycle($request, $employee_no);
-            $this->updateProductionCycleUsers($employees, $id, $employee_no);
-
-            DB::commit();
-        } catch(Exception $e) {
-            DB::rollBack();
-            if($e->getCode() == '1') {
-                return back()->with('status_err', $e->getMessage())->withInput();
-            }
-            Log::channel('error')->error('Error updating cycle: '.$e->getMessage(), [
-                'employeeNo' => $employee_no,
-            ]);
-            return back()->with('status_err', 'Nie udało się edytować cyklu. Błąd systemu.')->withInput();
-        }
-        return redirect()->route('production.index')->with('status', 'Edytowano cykl produkcji.');
-    }
-
-    public function destroyCycle(Request $request, $id): RedirectResponse
-    {
-        $p_cycle = ProductionCycle::find($id);
-        if(!$p_cycle instanceof ProductionCycle) {
-            return back()->with('status_err', 'Nie można usunąć cyklu. Nie odnaleziono cyklu w systemie.');
-        }
-        $cycle_status = ProductionCycle::where(['id' => $id, 'start_time' => null])->first();
-        if(!$cycle_status instanceof ProductionCycle) {
-            return back()->with('status_err', 'Nie można usunąć cyklu. Cykl rozpoczęty.');
-        }
-
-        try {
-            $request->validate([
-                'confirmation' => ['regex:(usuń|usun)'],
-            ],
-                [
-                    'confirmation.regex' => 'Nie można usunąć produktu: niepoprawna wartość. Wpisz "usuń".',
+            else {
+                Log::channel('error')->error("Error inserting work: ".$e->getMessage(), [
+                    'employeeNo' => $employee_no,
                 ]);
+                return back()->with('status_err', 'Nie udało się dodać pracy. Wystąpił nieoczekiwany błąd systemu.')->withInput();
+            }
         }
-        catch (Exception $e) {
-            return redirect()->back()->with('status_err', $e->getMessage());
-        }
+        dd($request);
 
-        $user = Auth::user();
-        $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
-        try {
-            DB::beginTransaction();
-            ProductionCycleUser::where('production_cycle_id', $id)->delete();
-            $this->deleteProductionCycle($p_cycle->category, $id);
-            DB::commit();
-        }
-        catch (Exception $e) {
-            DB::rollBack();
-            Log::channel('error')->error('Error deleting cycle: '.$e->getMessage(), [
+        return back();
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function validateWork(Request $request,string $employee_no): void
+    {
+        if(is_null($request->selected_cycle_category) or !in_array($request->selected_cycle_category,['1','2','3'])) {
+            Log::channel('error')->error("Error inserting work: validation failed. Incorrect 'selected_cycle_category' input value: ".$request->selected_cycle_category.".", [
                 'employeeNo' => $employee_no,
             ]);
-            return back()->with('status_err', 'Nie udało się usunąć cyklu. Błąd systemu.')->withInput();
+            throw new Exception('Nie udało się dodać pracy. Błąd systemu.', 1);
+        }
+        if($request->selected_cycle_category == '1') {
+            if(!(ctype_digit($request->selected_component_cycle_id) and (int)$request->selected_component_cycle_id > 0
+                and ctype_digit($request->selected_prod_schema_cycle_id) and (int)$request->selected_prod_schema_cycle_id > 0) ) {
+                Log::channel('error')->error("Error inserting work: validation failed. Incorrect 'selected_component_cycle_id' or 'selected_prod_schema_cycle_id' input values:
+                component_cycle - " . $request->selected_component_cycle_id .
+                    "production_schema_cycle" . $request->selected_prod_schema_cycle_id . ".", [
+                    'employeeNo' => $employee_no,
+                ]);
+                throw new Exception('Nie udało się dodać pracy. Błąd systemu - nie znaleziono cyklu dla wybranego materiału.', 1);
+            }
+            if(!ProductionCycle::find($request->selected_component_cycle_id) instanceof ProductionCycle) {
+                Log::channel('error')->error("Error inserting work: validation failed. 'selected_component_cycle_id' input value error: Production cycle with id = ".$request->selected_component_cycle_id." not found.", [
+                    'employeeNo' => $employee_no,
+                ]);
+                throw new Exception('Nie udało się dodać pracy. Błąd systemu - nie znaleziono cyklu dla wybranego zadania.', 1);
+            }
+        }
+        if($request->selected_cycle_category == '2') {
+            if(!(ctype_digit($request->selected_prod_schema_cycle_id) and (int)$request->selected_prod_schema_cycle_id > 0) ) {
+                Log::channel('error')->error("Error inserting work: validation failed. Incorrect 'selected_prod_schema_cycle_id' input value: " . $request->selected_prod_schema_cycle_id . ".", [
+                    'employeeNo' => $employee_no,
+                ]);
+                throw new Exception('Nie udało się dodać pracy. Błąd systemu.', 1);
+            }
+            if(!ProductionCycle::find($request->selected_prod_schema_cycle_id) instanceof ProductionCycle) {
+                Log::channel('error')->error("Error inserting work: validation failed. 'selected_prod_schema_cycle_id' input value error: Production cycle with id = ".$request->selected_prod_schema_cycle_id." not found.", [
+                    'employeeNo' => $employee_no,
+                ]);
+                throw new Exception('Nie udało się dodać pracy. Błąd systemu - nie znaleziono cyklu dla wybranego zadania.', 1);
+            }
         }
 
-        return redirect()->route('production.index')->with('status', 'Usunięto cykl produkcji.');
+        $check_parameters = $request->only(preg_grep('/^check_/', $request->keys()));
+        if(count($check_parameters) == 0) {
+            throw new Exception('Aby dodać pracę wybierz wykonane podzadanie/pozdadania.', 2);
+        }
+
+        foreach ($check_parameters as $key => $value) {
+            if($value != 'on') {
+                Log::channel('error')->error("Error inserting work: validation failed. Incorrect '".$key."' checkbox input value: ".$value.".", [
+                    'employeeNo' => $employee_no,
+                ]);
+                throw new Exception('Nie udało się dodać pracy. Błąd systemu.', 1);
+            }
+            $suffix = substr($key, 5);
+            $rule_array = [
+                'start_time'.$suffix => ['required','date'],
+                'end_time'.$suffix => ['required', 'date', 'after_or_equal:start_time'.$suffix],
+                'work_duration'.$suffix => ['gt:0'],
+
+            ];
+            $reason_codes_array =
+                ['start_time'.$suffix.'.required' => 'Początek pracy dla jednego z podzadań jest nieokreślony. Podaj początek pracy.',
+                'end_time'.$suffix.'.required' => 'Zakończenie pracy dla jednego z podzadań jest nieokreślone. Podaj zakończenie pracy.',
+                'start_time'.$suffix.'.date' => 'Jeden z wprowadzonych czasów startu nie jest prawidłowy. Spróbuj ponownie.',
+                'end_time'.$suffix.'.date' => 'Jeden z wprowadzonych czasów zakończenia nie jest prawidłowy. Spróbuj ponownie.',
+                'end_time'.$suffix.'.after_or_equal' => 'Rozpoczęcie pracy musi być wcześniej niż zakończenie pracy.',
+                'work_duration'.$suffix.'.gt' => 'Czas pracy musi być większy od 0.',
+            ];
+            if($request->has('amount'.$suffix)) {
+                $rule_array['amount'.$suffix] = ['required','gt:0'];
+                $reason_codes_array['amount'.$suffix.'.required'] = 'Aby dodać pracę dla jednego z podzadań wymagane jest podanie ilości wykonanych sztuk.';
+                $reason_codes_array['amount'.$suffix.'.gt'] = 'Ilość wykonanych sztuk musi być większa od 0.';
+            }
+            if($request->has('employee'.$suffix)) {
+                $rule_array['employee'.$suffix] = ['required','exists:App\Models\User,id'];
+                $reason_codes_array['employee'.$suffix.'.required'] = 'Nie podano pracownika, który wykonał zadanie.';
+                $reason_codes_array['employee'.$suffix.'.exists'] = 'Podanego pracownika nie znaleziono w systemie';
+            }
+            $request->validate( $rule_array, $reason_codes_array);
+        }
     }
+
+
     private function insertProductionCycleUsers(array $employees, int $cycle_id, string $employee_no) : void
     {
         foreach ($employees as $id) {

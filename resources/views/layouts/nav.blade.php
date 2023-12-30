@@ -1,7 +1,7 @@
 
 @if(isset($user) and $user instanceof \App\Models\User)
     <div class="antialiased bg-gray-50 dark:bg-gray-900">
-        <nav class="bg-white border-b border-gray-200 px-4 py-2.5 dark:bg-gray-800 dark:border-gray-700 fixed left-0 right-0 top-0 z-50">
+        <nav class="bg-white border-b border-gray-200 px-4 py-1.5 dark:bg-gray-800 dark:border-gray-700 fixed left-0 right-0 top-0 z-50">
             <div class="flex flex-wrap justify-between items-center">
                 <div class="flex justify-start items-center">
                     <button data-drawer-target="drawer-navigation" data-drawer-toggle="drawer-navigation" aria-controls="drawer-navigation" class="p-2 mr-2 text-gray-600 rounded-lg cursor-pointer md:hidden hover:text-gray-900 hover:bg-gray-100 focus:bg-gray-100 dark:focus:bg-gray-700 focus:ring-2 focus:ring-gray-100 dark:focus:ring-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
@@ -15,7 +15,7 @@
                     </button>
                     <div class="shrink-0 flex items-center">
                         <a href="{{ route('dashboard') }}">
-                            <x-application-logo class="block h-20 w-auto fill-current text-gray-800"/>
+                            <x-application-logo class="block w-auto fill-current text-gray-800"/>
                         </a>
                     </div>
                 </div>
@@ -28,7 +28,7 @@
                     </button>
                     <button type="button" class="flex mx-3 text-sm rounded-full md:mr-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600" id="user-menu-button" aria-expanded="false" data-dropdown-toggle="dropdown">
                         <span class="sr-only">Open user menu</span>
-                        <svg fill="#000000"  id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="40px" height="40px" viewBox="0 0 45.532 45.532" xml:space="preserve">
+                        <svg fill="#000000"  id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="30px" height="30px" viewBox="0 0 45.532 45.532" xml:space="preserve">
 						<g>
                             <path d="M22.766,0.001C10.194,0.001,0,10.193,0,22.766s10.193,22.765,22.766,22.765c12.574,0,22.766-10.192,22.766-22.765
                                 S35.34,0.001,22.766,0.001z M22.766,6.808c4.16,0,7.531,3.372,7.531,7.53c0,4.159-3.371,7.53-7.531,7.53
