@@ -41,7 +41,6 @@ class ProductionCycleController extends Controller
         $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
         $users = User::select('id','employeeNo', 'role')->get();
         try {
-
             $filt_by_exp_end_table = $this->filterByExpectedEndTimeParentCycles($request);
             $parent_cycles = $filt_by_exp_end_table['parent_cycles'];
             $filt_start_time = $filt_by_exp_end_table['filt_start_time'];
@@ -58,6 +57,9 @@ class ProductionCycleController extends Controller
                 $parent_cycles = $parent_cycles->paginate(2);
             }
             else {
+                if(session('add_work')) {
+                    $parent_cycles->where('finished',0);
+                }
                 $parent_cycles = $parent_cycles->paginate(2);
             }
         } catch(Exception $e) {
@@ -94,6 +96,7 @@ class ProductionCycleController extends Controller
 
         $status_add_work = $this->getWorkStatus($request);
         $view = $is_work_cycle? 'work.work-cycle' : 'production.production';
+
         return view($view, [
             'parent_cycles' => $parent_cycles,
             'user' => $user,

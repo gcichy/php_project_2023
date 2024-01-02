@@ -13,7 +13,9 @@ use App\Models\ProductComponent;
 use App\Models\ProductionCycle;
 use App\Models\ProductionCycleUser;
 use App\Models\ProductionSchema;
+use App\Models\ReasonCode;
 use App\Models\StaticValue;
+use App\Models\Unit;
 use App\Models\User;
 use App\Models\WorkView;
 use Carbon\Carbon;
@@ -110,7 +112,8 @@ class WorkController extends Controller
         $parent_cycle = ParentCycleView::where('cycle_id', $id)->first();
         $users = User::select('id','employeeNo', 'role')->get();
         $child_cycles = ChildCycleView::where('parent_id', $id)->paginate(10);
-
+        $reason_codes = ReasonCode::select('reason_code',DB::raw("concat(reason_code, ' - ', description) as reason_code_desc"))->get();
+        $units = Unit::select('unit')->get();
         $modal_data = null;
         $child_components = null;
         $child_prod_schemas = null;
@@ -184,6 +187,8 @@ class WorkController extends Controller
             'modal_data' => $modal_data,
             'user' => $user,
             'users' => $users,
+            'reason_codes' => $reason_codes,
+            'units' => $units,
             'storage_path_products' => 'products',
             'storage_path_components' => 'components',
         ]);
@@ -213,8 +218,17 @@ class WorkController extends Controller
                 return back()->with('status_err', 'Nie udało się dodać pracy. Wystąpił nieoczekiwany błąd systemu.')->withInput();
             }
         }
-        dd($request);
 
+        $category = intval($request->selected_cycle_category);
+        if($category == 1) {
+
+        }
+        else if($category == 2) {
+
+        }
+        else if($category == 3) {
+
+        }
         return back();
     }
 
@@ -266,6 +280,7 @@ class WorkController extends Controller
             throw new Exception('Aby dodać pracę wybierz wykonane podzadanie/pozdadania.', 2);
         }
 
+        $time_array = array();
         foreach ($check_parameters as $key => $value) {
             if($value != 'on') {
                 Log::channel('error')->error("Error inserting work: validation failed. Incorrect '".$key."' checkbox input value: ".$value.".", [
@@ -299,10 +314,58 @@ class WorkController extends Controller
                 $reason_codes_array['employee'.$suffix.'.exists'] = 'Podanego pracownika nie znaleziono w systemie';
             }
             $request->validate( $rule_array, $reason_codes_array);
+
+            $start_time_input = 'start_time'.$suffix;
+            $end_time_input = 'end_time'.$suffix;
+
+            $time_array[] = [$request->$start_time_input, $request->$end_time_input];
         }
+        $this->validateWorkTimeOverlap($time_array);
     }
 
 
+    /**
+     * @throws Exception
+     */
+    private function validateWorkTimeOverlap($time_array)
+    {
+        if(count($time_array) > 0) {
+            for ($i = 0; $i < count($time_array) - 1; $i++) {
+                $start1 = new DateTime($time_array[$i][0]);
+                $end1 = new DateTime($time_array[$i][1]);
+
+                for ($j = $i + 1; $j < count($time_array); $j++) {
+                    $start2 = new DateTime($time_array[$j][0]);
+                    $end2 = new DateTime($time_array[$j][1]);
+
+                    if ($start1 < $end2 && $end1 > $start2) {
+                        throw new Exception('Daty 2 lub więcej zadań nachodzą na siebie.', 2);
+                    }
+                }
+            }
+        }
+
+        function hasOverlap($datePeriods): bool
+        {
+            $count = count($datePeriods);
+
+            for ($i = 0; $i < $count - 1; $i++) {
+                $start1 = new DateTime($datePeriods[$i][0]);
+                $end1 = new DateTime($datePeriods[$i][1]);
+
+                for ($j = $i + 1; $j < $count; $j++) {
+                    $start2 = new DateTime($datePeriods[$j][0]);
+                    $end2 = new DateTime($datePeriods[$j][1]);
+
+                    if ($start1 <= $end2 && $end1 >= $start2) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+    }
     private function insertProductionCycleUsers(array $employees, int $cycle_id, string $employee_no) : void
     {
         foreach ($employees as $id) {

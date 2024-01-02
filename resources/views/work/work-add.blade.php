@@ -316,10 +316,11 @@
                 if(disabledInputs.length > 0) {
                     if (checkboxInput.is(":checked")) {
                         disabledInputs.prop("disabled", false).removeClass('bg-gray-200').addClass('bg-white');
+                        parent.addClass('bg-blue-150');
                     } else {
                         disabledInputs.prop("disabled", true).removeClass('bg-white').addClass('bg-gray-200');
+                        parent.removeClass('bg-blue-150');
                         let durationHours = parent.find('.work-time-in-hours');
-                        console.log(durationHours);
                         if(durationHours.length > 0) {
                             durationHours.text('0:00');
                         }
@@ -601,40 +602,59 @@
                                                 <table class="w-full text-sm text-left rtl:text-right pb-2 bg-gray-100 text-gray-500 dark:text-gray-400 border-separate border-spacing-1 border-slate-300">
                                                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 whitespace-nowrap">
                                                     <tr>
-                                                        <th scope="col" class="px-2 py-3">
+                                                        <th scope="col" class="px-2 py-3 text-center">
                                                             Wybierz
                                                         </th>
-                                                        <th scope="col" class="px-2 py-3">
+                                                        <th scope="col" class="px-2 py-3 text-center">
                                                             Kol.
                                                         </th>
-                                                        <th scope="col" class="px-2 py-3">
+                                                        <th scope="col" class="px-2 py-3 text-center">
                                                             Podzadanie
                                                         </th>
-                                                        <th scope="col" class="px-2 py-3">
+                                                        <th scope="col" class="px-2 py-3 text-center">
                                                             Ilość (szt)
                                                         </th>
-                                                        <th scope="col" class="px-2 py-3">
+                                                        <th scope="col" class="px-2 py-3 text-center">
                                                             Start pracy
                                                         </th>
-                                                        <th scope="col" class="px-2 py-3">
+                                                        <th scope="col" class="px-2 py-3 text-center">
                                                             Koniec pracy
                                                         </th>
-                                                        <th scope="col" class="px-2 py-3">
+                                                        <th scope="col" class="px-2 py-3 text-center">
                                                             Czas pracy (h)
                                                         </th>
-                                                        <th scope="col" class="px-2 py-3">
+                                                        <th scope="col" class="px-2 py-3 text-center">
                                                             Pracownik
+                                                        </th>
+                                                        <th scope="col" class="px-2 py-3 text-center">
+                                                            Komentarz
+                                                        </th>
+                                                        <th scope="col" class="px-2 py-3 text-center">
+                                                            Defekty (szt)
+                                                        </th>
+                                                        <th scope="col" class="px-2 py-3 text-center">
+                                                            Defekty - przyczyna
+                                                        </th>
+                                                        <th scope="col" class="px-6 py-3 text-center">
+                                                            Odpady
+                                                        </th>
+                                                        <th scope="col" class="px-2 py-3 text-center">
+                                                            Odpady - jednostka
+                                                        </th>
+                                                        <th scope="col" class="px-2 py-3 text-center">
+                                                            Odpady - przyczyna
                                                         </th>
                                                     </tr>
                                                     </thead>
                                                     <tbody>
                                                     @foreach($child_prod_schemas as $schema_task)
-                                                        <tr id="row-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}" class="input-table-row font-medium text-gray-600 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border border-slate-300 ">
+                                                        <tr id="row-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}" class="input-table-row font-medium text-gray-600 dark:bg-gray-800 dark:border-gray-700 hover:bg-blue-150 dark:hover:bg-gray-600 border border-slate-300 ">
                                                             <td class="">
                                                                 <div class="w-full h-full flex justify-center items-center">
                                                                     <input type="checkbox" id="check-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
                                                                            name="check_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
-                                                                           class="selected-input-checkbox rounded-sm"/>
+                                                                           class="selected-input-checkbox rounded-sm"
+                                                                           value="{{old('check_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"/>
                                                                 </div>
                                                             </td>
                                                             <td class="col-value sequence-no px-2 py-3 whitespace-nowrap text-center rounded-md">
@@ -647,9 +667,10 @@
                                                                 <div class="p-1 flex justify-center flex-row items-center h-full">
                                                                     <div class="w-full p-1 flex justify-center items-center h-full">
                                                                         @if($schema_task->task_amount_required)
-                                                                            <input id="amount-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}" type="number" min="0" value="{{old('amount')}}"
+                                                                            <input id="{{'amount-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}" type="number" min="0"
                                                                                    class="disabled-input amount-input bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center"
-                                                                                   name="amount_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}" placeholder="0"
+                                                                                   name="{{'amount_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}" placeholder="0"
+                                                                                   value="{{old('amount_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
                                                                                    disabled>
                                                                         @else
                                                                             <div class="block w-full bg-gray-200 py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center">
@@ -660,36 +681,42 @@
                                                                 </div>
                                                             </td>
                                                             <td class="px-2 py-3 text-center">
-                                                                <input type="datetime-local" id="start-time-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}" name="start_time_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                <input type="datetime-local" id="{{'start-time-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                       name="{{'start_time_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
                                                                        min="2023-01-01T00:00" max="2023-12-31T23:59" step="60"
                                                                        class="disabled-input input-start-time selected-input-time bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                                                       value="{{old('start_time_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
                                                                        disabled>
                                                             </td>
                                                             <td class="px-2 py-3 text-center">
-                                                                <input type="datetime-local" id="end-time-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}" name="end_time_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                <input type="datetime-local" id="end-time-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                       name="{{'end_time_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
                                                                        min="2023-01-01T00:00" max="2023-12-31T23:59" step="60"
                                                                        class="disabled-input input-end-time selected-input-time bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
                                                                        disabled>
                                                             </td>
                                                             <td class="px-2 py-3 text-center">
-                                                                <div class="work-time-in-hours block w-full bg-white py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                <div class="work-time-in-hours disabled-input block w-full bg-gray-200 py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
                                                                     0:00
                                                                 </div>
-                                                                <input id="work-duration-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
-                                                                       type="number" name="work_duration_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                <input id="{{'work-duration-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                       type="number" name="{{'work_duration_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                       value="{{old('work_duration_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
                                                                        class="disabled-input work-duration hidden" disabled>
                                                             </td>
                                                             <td class="employee-no px-2 py-3 text-center">
                                                                 @if(isset($users) and in_array($user->role,['admin','manager']))
-                                                                    <div class="p-1 pl-5 flex justify-center items-center h-full">
-                                                                        <select id="{{'employees-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                    <div class="p-1 flex justify-center items-center h-full">
+                                                                        <select id="{{'employee-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
                                                                                 name="{{'employee_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
                                                                                 disabled class="disabled-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
                                                                             @foreach($users as $u)
                                                                                 <option value="{{$u->id}}" class="bg-white"
-                                                                                @if($user->id == $u->id)
-                                                                                    selected
-                                                                                @endif>
+                                                                                    @if(old('employee_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id))
+                                                                                        selected
+                                                                                    @elseif($user->id == $u->id)
+                                                                                        selected
+                                                                                    @endif>
                                                                                     {{$u->employeeNo}}
                                                                                 </option>
                                                                             @endforeach
@@ -700,6 +727,100 @@
                                                                         {{$user->employeeNo}}
                                                                     </div>
                                                                 @endif
+                                                            </td>
+                                                            <td class="px-2 py-3 text-center">
+                                                                <textarea id="{{'comment-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                          name="{{'comment_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                          class="disabled-input xl:p-2.5 bg-gray-200 block min-w-[250px] w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                                                          disabled placeholder="Komentarz" rows="1">{{old('comment_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}</textarea>
+                                                            </td>
+                                                            <td class="defect px-2 max-w-[50px]">
+                                                                <div class="p-1 flex justify-center flex-row items-center h-full">
+                                                                    <div class="w-full p-1 flex justify-center items-center h-full">
+                                                                        @if($schema_task->task_amount_required)
+                                                                            <input id="defect-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}" type="number" min="0" value="{{old('defect_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
+                                                                                   class="disabled-input defect-input bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center"
+                                                                                   name="defect_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}" placeholder="0"
+                                                                                   disabled>
+                                                                        @else
+                                                                            <div class="block w-full bg-gray-200 py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center">
+                                                                                -
+                                                                            </div>
+                                                                        @endif
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td class="defect-rc px-2 py-3 text-center">
+                                                                <div class="p-1 flex justify-center items-center h-full">
+                                                                    <select id="{{'defect-rc-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                            name="{{'defect_rc_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                            disabled class="disabled-input defect-rc-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                        <option value="" class="bg-white">
+                                                                        </option>
+                                                                        @if(isset($reason_codes))
+                                                                            @foreach($reason_codes as $code)
+                                                                                <option value="{{$code->reason_code}}" class="bg-white"
+                                                                                        @if(old('defect_rc_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id))
+                                                                                            selected
+                                                                                        @endif>
+                                                                                    {{$code->reason_code_desc}}
+                                                                                </option>
+                                                                            @endforeach
+                                                                        @endif
+
+                                                                    </select>
+                                                                </div>
+                                                            </td>
+                                                            <td class="waste px-2 max-w-[50px]">
+                                                                <div class="p-1 flex justify-center flex-row items-center h-full">
+                                                                    <div class="w-full p-1 flex justify-center items-center h-full">
+                                                                        <input id="waste-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                               type="number" min="0" step="any" value="{{old('waste_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
+                                                                               class="disabled-input waste-input bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center"
+                                                                               name="waste_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}" placeholder="0"
+                                                                               disabled>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td class="waste-unit px-2 py-3 text-center">
+                                                                <div class="p-1 flex justify-center items-center h-full">
+                                                                    <select id="{{'waste-unit-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                            name="{{'waste_unit_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                            disabled class="disabled-input waste-unit-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                        <option value="" class="bg-white">
+                                                                        </option>
+                                                                        @if(isset($units))
+                                                                            @foreach($units as $u)
+                                                                                <option value="{{$u->unit}}" class="bg-white"
+                                                                                        @if(old('waste_unit_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id))
+                                                                                            selected
+                                                                                        @endif>
+                                                                                    {{$u->unit}}
+                                                                                </option>
+                                                                            @endforeach
+                                                                        @endif
+                                                                    </select>
+                                                                </div>
+                                                            </td>
+                                                            <td class="waste-rc px-2 py-3 text-center">
+                                                                <div class="p-1 flex justify-center items-center h-full">
+                                                                    <select id="{{'waste-rc-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                            name="{{'waste_rc_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                            disabled class="disabled-input waste-rc-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                        <option value="" class="bg-white">
+                                                                        </option>
+                                                                        @if(isset($reason_codes))
+                                                                            @foreach($reason_codes as $code)
+                                                                                <option value="{{$code->reason_code}}" class="bg-white"
+                                                                                        @if(old('waste_rc_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id))
+                                                                                            selected
+                                                                                    @endif>
+                                                                                    {{$code->reason_code_desc}}
+                                                                                </option>
+                                                                            @endforeach
+                                                                        @endif
+                                                                    </select>
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                     @endforeach
@@ -911,29 +1032,47 @@
                                                                         <table class="w-full text-sm text-left rtl:text-right pb-2 bg-gray-100 text-gray-500 dark:text-gray-400 border-separate border-spacing-1 border-slate-300">
                                                                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 whitespace-nowrap">
                                                                             <tr>
-                                                                                <th scope="col" class="px-2 py-3 hidden-input hidden ">
+                                                                                <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
                                                                                     Wybierz
                                                                                 </th>
-                                                                                <th scope="col" class="px-2 py-3">
+                                                                                <th scope="col" class="px-2 py-3 text-center">
                                                                                     Kol.
                                                                                 </th>
-                                                                                <th scope="col" class="px-2 py-3">
+                                                                                <th scope="col" class="px-2 py-3 text-center">
                                                                                     Podzadanie
                                                                                 </th>
-                                                                                <th scope="col" class="px-2 py-3 hidden-input hidden ">
+                                                                                <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
                                                                                     Ilość (szt)
                                                                                 </th>
-                                                                                <th scope="col" class="px-2 py-3 hidden-input hidden ">
+                                                                                <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
                                                                                     Start pracy
                                                                                 </th>
-                                                                                <th scope="col" class="px-2 py-3 hidden-input hidden ">
+                                                                                <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
                                                                                     Koniec pracy
                                                                                 </th>
-                                                                                <th scope="col" class="px-2 py-3 hidden-input hidden ">
+                                                                                <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
                                                                                     Czas pracy (h)
                                                                                 </th>
-                                                                                <th scope="col" class="px-2 py-3 hidden-input hidden ">
+                                                                                <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
                                                                                     Pracownik
+                                                                                </th>
+                                                                                <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
+                                                                                    Komentarz
+                                                                                </th>
+                                                                                <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
+                                                                                    Defekty (szt)
+                                                                                </th>
+                                                                                <th scope="col" class="px-2 py-3 text-center">
+                                                                                    Defekty - przyczyna
+                                                                                </th>
+                                                                                <th scope="col" class="px-6 py-3 text-center">
+                                                                                    Odpady
+                                                                                </th>
+                                                                                <th scope="col" class="px-2 py-3 text-center">
+                                                                                    Odpady - jednostka
+                                                                                </th>
+                                                                                <th scope="col" class="px-2 py-3 text-center">
+                                                                                    Odpady - przyczyna
                                                                                 </th>
                                                                             </tr>
                                                                             </thead>
@@ -941,12 +1080,13 @@
                                                                             @php $current_schema_id = $prod_schema->prod_schema_id; @endphp
                                                                             @foreach($prod_schemas as $schema_task)
                                                                                 @if($current_schema_id == $schema_task->prod_schema_id)
-                                                                                    <tr id="row-{{$current_schema_id.'-'.$schema_task->task_id}}" class="input-table-row font-medium text-gray-600 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border border-slate-300 ">
+                                                                                    <tr id="row-{{$current_schema_id.'-'.$schema_task->task_id}}" class="input-table-row font-medium text-gray-600 dark:bg-gray-800 dark:border-gray-700 hover:bg-blue-150 dark:hover:bg-gray-600 border border-slate-300 ">
                                                                                         <td class="hidden-input hidden">
                                                                                             <div class="w-full h-full flex justify-center items-center">
                                                                                                 <input type="checkbox" id="check-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
                                                                                                        name="check_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
-                                                                                                        class="input-checkbox rounded-sm"/>
+                                                                                                       class="input-checkbox rounded-sm"
+                                                                                                       value="{{old('check_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"/>
                                                                                             </div>
                                                                                         </td>
                                                                                         <td class="col-value sequence-no px-2 py-3 whitespace-nowrap text-center rounded-md">
@@ -959,9 +1099,10 @@
                                                                                             <div class="p-1 flex justify-center flex-row items-center h-full">
                                                                                                 <div class="w-full p-1 flex justify-center items-center h-full">
                                                                                                     @if($schema_task->task_amount_required)
-                                                                                                        <input id="amount-{{$current_schema_id.'-'.$schema_task->task_id}}" type="number" min="0" value="{{old('amount')}}"
-                                                                                                               class="disabled-input amount-input bg-gray-200 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded  text-center"
-                                                                                                               name="amount_{{$current_schema_id.'_'.$schema_task->task_id}}" placeholder="0"
+                                                                                                        <input id="{{'amount-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}" type="number" min="0"
+                                                                                                               class="disabled-input amount-input bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center"
+                                                                                                               name="{{'amount_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}" placeholder="0"
+                                                                                                               value="{{old('amount_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
                                                                                                                disabled>
                                                                                                     @else
                                                                                                         <div class="block w-full bg-gray-200 py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center">
@@ -972,13 +1113,16 @@
                                                                                             </div>
                                                                                         </td>
                                                                                         <td class="hidden-input px-2 py-3 text-center hidden">
-                                                                                            <input type="datetime-local" id="start-time-{{$current_schema_id.'-'.$schema_task->task_id}}" name="start_time_{{$current_schema_id.'_'.$schema_task->task_id}}"
+                                                                                            <input type="datetime-local" id="{{'start-time-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                                   name="{{'start_time_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
                                                                                                    min="2023-01-01T00:00" max="2023-12-31T23:59" step="60"
                                                                                                    class="disabled-input input-start-time input-time bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                                                                                   value="{{old('start_time_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
                                                                                                    disabled>
                                                                                         </td>
                                                                                         <td class="hidden-input px-2 py-3 text-center hidden">
-                                                                                            <input type="datetime-local" id="end-time-{{$current_schema_id.'-'.$schema_task->task_id}}" name="end_time_{{$current_schema_id.'_'.$schema_task->task_id}}"
+                                                                                            <input type="datetime-local" id="end-time-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                                   name="{{'end_time_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
                                                                                                    min="2023-01-01T00:00" max="2023-12-31T23:59" step="60"
                                                                                                    class="disabled-input input-end-time input-time bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
                                                                                                    disabled>
@@ -987,19 +1131,22 @@
                                                                                             <div class="work-time-in-hours block w-full bg-white py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
                                                                                                 0:00
                                                                                             </div>
-                                                                                            <input id="work-duration-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
-                                                                                                   type="number"  name="work_duration_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                                            <input id="{{'work-duration-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                                   type="number" name="{{'work_duration_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                                                   value="{{old('work_duration_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
                                                                                                    class="disabled-input work-duration hidden" disabled>
                                                                                         </td>
                                                                                         <td class="hidden-input employee-no px-2 py-3 text-center hidden">
                                                                                             @if(isset($users) and in_array($user->role,['admin','manager']))
-                                                                                                <div class="p-1 pl-5 flex justify-center items-center h-full">
-                                                                                                    <select id="{{'employees-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                                <div class="p-1 flex justify-center items-center h-full">
+                                                                                                    <select id="{{'employee-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
                                                                                                             name="{{'employee_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
                                                                                                             disabled class="disabled-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
                                                                                                         @foreach($users as $u)
                                                                                                             <option value="{{$u->id}}" class="bg-white"
-                                                                                                                    @if($user->id == $u->id)
+                                                                                                                    @if(old('employee_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id))
+                                                                                                                        selected
+                                                                                                                    @elseif($user->id == $u->id)
                                                                                                                         selected
                                                                                                                 @endif>
                                                                                                                 {{$u->employeeNo}}
@@ -1012,6 +1159,100 @@
                                                                                                     {{$user->employeeNo}}
                                                                                                 </div>
                                                                                             @endif
+                                                                                        </td>
+                                                                                        <td class="hidden-input hidden px-2 py-3 text-center">
+                                                                                            <textarea id="{{'comment-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                                  name="{{'comment_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                                                  class="disabled-input xl:p-2.5 bg-gray-200 block min-w-[250px] w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                                                                                  disabled placeholder="Komentarz" rows="1">{{old('comment_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}</textarea>
+                                                                                        </td>
+                                                                                        <td class="hidden-input hidden defect px-2 max-w-[50px]">
+                                                                                            <div class="p-1 flex justify-center flex-row items-center h-full">
+                                                                                                <div class="w-full p-1 flex justify-center items-center h-full">
+                                                                                                    @if($schema_task->task_amount_required)
+                                                                                                        <input id="defect-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}" type="number" min="0" value="{{old('defect_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
+                                                                                                               class="disabled-input defect-input bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center"
+                                                                                                               name="defect_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}" placeholder="0"
+                                                                                                               disabled>
+                                                                                                    @else
+                                                                                                        <div class="block w-full bg-gray-200 py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center">
+                                                                                                            -
+                                                                                                        </div>
+                                                                                                    @endif
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </td>
+                                                                                        <td class="hidden-input hidden defect-rc px-2 py-3 text-center">
+                                                                                            <div class="p-1 flex justify-center items-center h-full">
+                                                                                                <select id="{{'defect-rc-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                                        name="{{'defect_rc_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                                                        disabled class="disabled-input defect-rc-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                                    <option value="" class="bg-white">
+                                                                                                    </option>
+                                                                                                    @if(isset($reason_codes))
+                                                                                                        @foreach($reason_codes as $code)
+                                                                                                            <option value="{{$code->reason_code}}" class="bg-white"
+                                                                                                                    @if(old('defect_rc_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id))
+                                                                                                                        selected
+                                                                                                                @endif>
+                                                                                                                {{$code->reason_code_desc}}
+                                                                                                            </option>
+                                                                                                        @endforeach
+                                                                                                    @endif
+
+                                                                                                </select>
+                                                                                            </div>
+                                                                                        </td>
+                                                                                        <td class="hidden-input hidden waste px-2 max-w-[50px]">
+                                                                                            <div class="p-1 flex justify-center flex-row items-center h-full">
+                                                                                                <div class="w-full p-1 flex justify-center items-center h-full">
+                                                                                                    <input id="waste-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                                           type="number" min="0" step="any" value="{{old('waste_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
+                                                                                                           class="disabled-input waste-input bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center"
+                                                                                                           name="waste_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}" placeholder="0"
+                                                                                                           disabled>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </td>
+                                                                                        <td class="hidden-input hidden waste-unit px-2 py-3 text-center">
+                                                                                            <div class="p-1 flex justify-center items-center h-full">
+                                                                                                <select id="{{'waste-unit-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                                        name="{{'waste_unit_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                                                        disabled class="disabled-input waste-unit-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                                    <option value="" class="bg-white">
+                                                                                                    </option>
+                                                                                                    @if(isset($units))
+                                                                                                        @foreach($units as $u)
+                                                                                                            <option value="{{$u->unit}}" class="bg-white"
+                                                                                                                    @if(old('waste_unit_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id))
+                                                                                                                        selected
+                                                                                                                @endif>
+                                                                                                                {{$u->unit}}
+                                                                                                            </option>
+                                                                                                        @endforeach
+                                                                                                    @endif
+                                                                                                </select>
+                                                                                            </div>
+                                                                                        </td>
+                                                                                        <td class="hidden-input hidden waste-rc px-2 py-3 text-center">
+                                                                                            <div class="p-1 flex justify-center items-center h-full">
+                                                                                                <select id="{{'waste-rc-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                                        name="{{'waste_rc_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                                                        disabled class="disabled-input waste-rc-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                                    <option value="" class="bg-white">
+                                                                                                    </option>
+                                                                                                    @if(isset($reason_codes))
+                                                                                                        @foreach($reason_codes as $code)
+                                                                                                            <option value="{{$code->reason_code}}" class="bg-white"
+                                                                                                                    @if(old('waste_rc_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id))
+                                                                                                                        selected
+                                                                                                                @endif>
+                                                                                                                {{$code->reason_code_desc}}
+                                                                                                            </option>
+                                                                                                        @endforeach
+                                                                                                    @endif
+                                                                                                </select>
+                                                                                            </div>
                                                                                         </td>
                                                                                     </tr>
                                                                                 @endif
@@ -1068,29 +1309,47 @@
                                                                     <table class="w-full text-sm text-left rtl:text-right pb-2 bg-gray-100 text-gray-500 dark:text-gray-400 border-separate border-spacing-1 border-slate-300">
                                                                         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 whitespace-nowrap">
                                                                         <tr>
-                                                                            <th scope="col" class="px-2 py-3">
+                                                                            <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
                                                                                 Wybierz
                                                                             </th>
-                                                                            <th scope="col" class="px-2 py-3">
+                                                                            <th scope="col" class="px-2 py-3 text-center">
                                                                                 Kol.
                                                                             </th>
-                                                                            <th scope="col" class="px-2 py-3">
+                                                                            <th scope="col" class="px-2 py-3 text-center">
                                                                                 Podzadanie
                                                                             </th>
-                                                                            <th scope="col" class="px-2 py-3 hidden-input hidden ">
+                                                                            <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
                                                                                 Ilość (szt)
                                                                             </th>
-                                                                            <th scope="col" class="px-2 py-3 hidden-input hidden ">
+                                                                            <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
                                                                                 Start pracy
                                                                             </th>
-                                                                            <th scope="col" class="px-2 py-3 hidden-input hidden ">
+                                                                            <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
                                                                                 Koniec pracy
                                                                             </th>
-                                                                            <th scope="col" class="px-2 py-3 hidden-input hidden ">
+                                                                            <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
                                                                                 Czas pracy (h)
                                                                             </th>
-                                                                            <th scope="col" class="px-2 py-3 hidden-input hidden ">
+                                                                            <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
                                                                                 Pracownik
+                                                                            </th>
+                                                                            <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
+                                                                                Komentarz
+                                                                            </th>
+                                                                            <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
+                                                                                Defekty (szt)
+                                                                            </th>
+                                                                            <th scope="col" class="px-2 py-3 text-center">
+                                                                                Defekty - przyczyna
+                                                                            </th>
+                                                                            <th scope="col" class="px-6 py-3 text-center">
+                                                                                Odpady
+                                                                            </th>
+                                                                            <th scope="col" class="px-2 py-3 text-center">
+                                                                                Odpady - jednostka
+                                                                            </th>
+                                                                            <th scope="col" class="px-2 py-3 text-center">
+                                                                                Odpady - przyczyna
                                                                             </th>
                                                                         </tr>
                                                                         </thead>
@@ -1098,12 +1357,13 @@
                                                                         @php $current_schema_id = $prod_schema->prod_schema_id; @endphp
                                                                         @foreach($child_prod_schemas as $schema_task)
                                                                             @if($current_schema_id == $schema_task->prod_schema_id)
-                                                                                <tr id="row-{{$current_schema_id.'-'.$schema_task->task_id}}" class="input-table-row font-medium text-gray-600 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border border-slate-300 ">
+                                                                                <tr id="row-{{$current_schema_id.'-'.$schema_task->task_id}}" class="input-table-row font-medium text-gray-600 dark:bg-gray-800 dark:border-gray-700 hover:bg-blue-150 dark:hover:bg-gray-600 border border-slate-300 ">
                                                                                     <td class="hidden-input hidden">
                                                                                         <div class="w-full h-full flex justify-center items-center">
                                                                                             <input type="checkbox" id="check-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
                                                                                                    name="check_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
-                                                                                                   class="input-checkbox rounded-sm"/>
+                                                                                                   class="input-checkbox rounded-sm"
+                                                                                                   value="{{old('check_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"/>
                                                                                         </div>
                                                                                     </td>
                                                                                     <td class="col-value sequence-no px-2 py-3 whitespace-nowrap text-center rounded-md">
@@ -1116,9 +1376,10 @@
                                                                                         <div class="p-1 flex justify-center flex-row items-center h-full">
                                                                                             <div class="w-full p-1 flex justify-center items-center h-full">
                                                                                                 @if($schema_task->task_amount_required)
-                                                                                                    <input id="amount-{{$current_schema_id.'-'.$schema_task->task_id}}" type="number" min="0" value="{{old('amount')}}"
-                                                                                                           class="disabled-input amount-input bg-gray-200 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center"
-                                                                                                           name="amount_{{$current_schema_id.'_'.$schema_task->task_id}}" placeholder="0"
+                                                                                                    <input id="{{'amount-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}" type="number" min="0"
+                                                                                                           class="disabled-input amount-input bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center"
+                                                                                                           name="{{'amount_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}" placeholder="0"
+                                                                                                           value="{{old('amount_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
                                                                                                            disabled>
                                                                                                 @else
                                                                                                     <div class="block w-full bg-gray-200 py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center">
@@ -1129,13 +1390,16 @@
                                                                                         </div>
                                                                                     </td>
                                                                                     <td class="hidden-input px-2 py-3 text-center hidden">
-                                                                                        <input type="datetime-local" id="start-time-{{$current_schema_id.'-'.$schema_task->task_id}}" name="start_time_{{$current_schema_id.'_'.$schema_task->task_id}}"
+                                                                                        <input type="datetime-local" id="{{'start-time-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                               name="{{'start_time_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
                                                                                                min="2023-01-01T00:00" max="2023-12-31T23:59" step="60"
-                                                                                               class="disabled-input input-start-time input-time bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                                                                               class="disabled-input input-start-time selected-input-time bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                                                                               value="{{old('start_time_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
                                                                                                disabled>
                                                                                     </td>
                                                                                     <td class="hidden-input px-2 py-3 text-center hidden">
-                                                                                        <input type="datetime-local" id="end-time-{{$current_schema_id.'-'.$schema_task->task_id}}" name="end_time_{{$current_schema_id.'_'.$schema_task->task_id}}"
+                                                                                        <input type="datetime-local" id="end-time-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                               name="{{'end_time_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
                                                                                                min="2023-01-01T00:00" max="2023-12-31T23:59" step="60"
                                                                                                class="disabled-input input-end-time input-time bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
                                                                                                disabled>
@@ -1144,19 +1408,22 @@
                                                                                         <div class="work-time-in-hours block w-full bg-white py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
                                                                                             0:00
                                                                                         </div>
-                                                                                        <input id="work-duration-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
-                                                                                               type="number"  name="work_duration_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                                        <input id="{{'work-duration-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                               type="number" name="{{'work_duration_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                                               value="{{old('work_duration_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
                                                                                                class="disabled-input work-duration hidden" disabled>
                                                                                     </td>
                                                                                     <td class="hidden-input employee-no px-2 py-3 text-center hidden">
                                                                                         @if(isset($users) and in_array($user->role,['admin','manager']))
-                                                                                            <div class="p-1 pl-5 flex justify-center items-center h-full">
-                                                                                                <select id="{{'employees-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                            <div class="p-1 flex justify-center items-center h-full">
+                                                                                                <select id="{{'employee-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
                                                                                                         name="{{'employee_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
                                                                                                         disabled class="disabled-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
                                                                                                     @foreach($users as $u)
                                                                                                         <option value="{{$u->id}}" class="bg-white"
-                                                                                                                @if($user->id == $u->id)
+                                                                                                                @if(old('employee_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id))
+                                                                                                                    selected
+                                                                                                                @elseif($user->id == $u->id)
                                                                                                                     selected
                                                                                                             @endif>
                                                                                                             {{$u->employeeNo}}
@@ -1169,6 +1436,100 @@
                                                                                                 {{$user->employeeNo}}
                                                                                             </div>
                                                                                         @endif
+                                                                                    </td>
+                                                                                    <td class="hidden-input hidden px-2 py-3 text-center">
+                                                                                        <textarea id="{{'comment-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                              name="{{'comment_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                                              class="disabled-input xl:p-2.5 bg-gray-200 block min-w-[250px] w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                                                                              disabled placeholder="Komentarz" rows="1">{{old('comment_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}</textarea>
+                                                                                    </td>
+                                                                                    <td class="hidden-input hidden defect px-2 max-w-[50px]">
+                                                                                        <div class="p-1 flex justify-center flex-row items-center h-full">
+                                                                                            <div class="w-full p-1 flex justify-center items-center h-full">
+                                                                                                @if($schema_task->task_amount_required)
+                                                                                                    <input id="defect-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}" type="number" min="0" value="{{old('defect_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
+                                                                                                           class="disabled-input defect-input bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center"
+                                                                                                           name="defect_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}" placeholder="0"
+                                                                                                           disabled>
+                                                                                                @else
+                                                                                                    <div class="block w-full bg-gray-200 py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center">
+                                                                                                        -
+                                                                                                    </div>
+                                                                                                @endif
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </td>
+                                                                                    <td class="hidden-input hidden defect-rc px-2 py-3 text-center">
+                                                                                        <div class="p-1 flex justify-center items-center h-full">
+                                                                                            <select id="{{'defect-rc-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                                    name="{{'defect_rc_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                                                    disabled class="disabled-input defect-rc-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                                <option value="" class="bg-white">
+                                                                                                </option>
+                                                                                                @if(isset($reason_codes))
+                                                                                                    @foreach($reason_codes as $code)
+                                                                                                        <option value="{{$code->reason_code}}" class="bg-white"
+                                                                                                                @if(old('defect_rc_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id))
+                                                                                                                    selected
+                                                                                                            @endif>
+                                                                                                            {{$code->reason_code_desc}}
+                                                                                                        </option>
+                                                                                                    @endforeach
+                                                                                                @endif
+
+                                                                                            </select>
+                                                                                        </div>
+                                                                                    </td>
+                                                                                    <td class="hidden-input hidden waste px-2 max-w-[50px]">
+                                                                                        <div class="p-1 flex justify-center flex-row items-center h-full">
+                                                                                            <div class="w-full p-1 flex justify-center items-center h-full">
+                                                                                                <input id="waste-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                                       type="number" min="0" step="any" value="{{old('waste_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
+                                                                                                       class="disabled-input waste-input bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center"
+                                                                                                       name="waste_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}" placeholder="0"
+                                                                                                       disabled>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </td>
+                                                                                    <td class="hidden-input hidden waste-unit px-2 py-3 text-center">
+                                                                                        <div class="p-1 flex justify-center items-center h-full">
+                                                                                            <select id="{{'waste-unit-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                                    name="{{'waste_unit_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                                                    disabled class="disabled-input waste-unit-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                                <option value="" class="bg-white">
+                                                                                                </option>
+                                                                                                @if(isset($units))
+                                                                                                    @foreach($units as $u)
+                                                                                                        <option value="{{$u->unit}}" class="bg-white"
+                                                                                                                @if(old('waste_unit_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id))
+                                                                                                                    selected
+                                                                                                            @endif>
+                                                                                                            {{$u->unit}}
+                                                                                                        </option>
+                                                                                                    @endforeach
+                                                                                                @endif
+                                                                                            </select>
+                                                                                        </div>
+                                                                                    </td>
+                                                                                    <td class="hidden-input hidden waste-rc px-2 py-3 text-center">
+                                                                                        <div class="p-1 flex justify-center items-center h-full">
+                                                                                            <select id="{{'waste-rc-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                                    name="{{'waste_rc_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                                                    disabled class="disabled-input waste-rc-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                                <option value="" class="bg-white">
+                                                                                                </option>
+                                                                                                @if(isset($reason_codes))
+                                                                                                    @foreach($reason_codes as $code)
+                                                                                                        <option value="{{$code->reason_code}}" class="bg-white"
+                                                                                                                @if(old('waste_rc_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id))
+                                                                                                                    selected
+                                                                                                            @endif>
+                                                                                                            {{$code->reason_code_desc}}
+                                                                                                        </option>
+                                                                                                    @endforeach
+                                                                                                @endif
+                                                                                            </select>
+                                                                                        </div>
                                                                                     </td>
                                                                                 </tr>
                                                                             @endif
