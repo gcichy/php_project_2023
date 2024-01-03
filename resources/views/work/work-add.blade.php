@@ -699,7 +699,7 @@
                                                         <tr id="row-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}" class="input-table-row font-medium text-gray-600 dark:bg-gray-800 dark:border-gray-700 hover:bg-blue-150 dark:hover:bg-gray-600 border border-slate-300 ">
                                                             <td class="">
                                                                 <div class="w-full h-full flex justify-center items-center">
-                                                                    <input type="checkbox" id="check-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                    <input type="checkbox" id="selected-check-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
                                                                            name="check_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
                                                                            class="selected-input-checkbox rounded-sm"
                                                                            value="{{old('check_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"/>
