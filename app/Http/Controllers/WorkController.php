@@ -108,6 +108,7 @@ class WorkController extends Controller
 
     public function addWork(Request $request, $id): View|RedirectResponse
     {
+
         $user = Auth::user();
         $parent_cycle = ParentCycleView::where('cycle_id', $id)->first();
         $users = User::select('id','employeeNo', 'role')->get();
@@ -179,15 +180,27 @@ class WorkController extends Controller
             return back();
         }
 
+        $checked_boxes_id_string = null;
+        if(count(old()) > 0) {
+            $checked_boxes_id_string = $this->getOldCheckedRowsId(old());
+        }
+
+        $max_time = new DateTime('now');
+        $max_time->setTime(23, 59);
+        $max_time = $max_time->format('Y-m-d\TH:i');
+
+
         return view('work.work-add', [
             'p_cycle' => $parent_cycle,
             'child_cycles' => $child_cycles,
             'child_components' => $child_components,
             'child_prod_schemas' => $child_prod_schemas,
             'modal_data' => $modal_data,
+            'checked_boxes_id_string' => $checked_boxes_id_string,
             'user' => $user,
             'users' => $users,
             'reason_codes' => $reason_codes,
+            'max_time' => $max_time,
             'units' => $units,
             'storage_path_products' => 'products',
             'storage_path_components' => 'components',
@@ -232,6 +245,28 @@ class WorkController extends Controller
         return back();
     }
 
+
+    private function getOldDuration(string $duration_minutes): string
+    {
+        $hours = floor($duration_minutes / 60);
+        $minutes = $duration_minutes % 60;
+        return sprintf('%d:%02d', $hours, $minutes);
+
+    }
+    private function getOldCheckedRowsId(array $old): string
+    {
+        $checkedRows = array_intersect_key($old, array_flip(preg_grep('/^check_/', array_keys($old))));
+//        dd($old);
+        $checkbox_id_string = '';
+        foreach ($checkedRows as $key => $value) {
+            $parts = explode('check_', $key);
+            if(count($parts) > 0) {
+                $ids = $parts[count($parts)-1];
+                $checkbox_id_string .= 'selected-check-'.str_replace('_', '-', $ids).';';
+            }
+        }
+        return $checkbox_id_string;
+    }
     /**
      * @throws Exception
      */
@@ -276,18 +311,14 @@ class WorkController extends Controller
         }
 
         $check_parameters = $request->only(preg_grep('/^check_/', $request->keys()));
+
         if(count($check_parameters) == 0) {
             throw new Exception('Aby dodać pracę wybierz wykonane podzadanie/pozdadania.', 2);
         }
 
         $time_array = array();
+
         foreach ($check_parameters as $key => $value) {
-            if($value != 'on') {
-                Log::channel('error')->error("Error inserting work: validation failed. Incorrect '".$key."' checkbox input value: ".$value.".", [
-                    'employeeNo' => $employee_no,
-                ]);
-                throw new Exception('Nie udało się dodać pracy. Błąd systemu.', 1);
-            }
             $suffix = substr($key, 5);
             $rule_array = [
                 'start_time'.$suffix => ['required','date'],
@@ -312,6 +343,26 @@ class WorkController extends Controller
                 $rule_array['employee'.$suffix] = ['required','exists:App\Models\User,id'];
                 $reason_codes_array['employee'.$suffix.'.required'] = 'Nie podano pracownika, który wykonał zadanie.';
                 $reason_codes_array['employee'.$suffix.'.exists'] = 'Podanego pracownika nie znaleziono w systemie';
+            }
+            $defect_name = 'defect'.$suffix;
+            if($request->has($defect_name) and !is_null($request->$defect_name)) {
+                $rule_array[$defect_name] = ['integer','gt:0'];
+                $reason_codes_array[$defect_name.'.integer'] = 'Liczba wyprodukowanych defektów musi być całkowita.';
+                $reason_codes_array[$defect_name.'.gt'] = 'Liczba defektów musi być większa od 0. Jeśli nie wyprodukowano defektów pozostaw puste pole.';
+                $rule_array['defect_rc'.$suffix] = ['required','exists:App\Models\ReasonCode,reason_code'];
+                $reason_codes_array['defect_rc'.$suffix.'.required'] = 'Jeśli wyprodukowano defekty podaj kod błędu.';
+                $reason_codes_array['defect_rc'.$suffix.'.exists'] = 'Podanego kodu błedu nie znaleziono w systemie.';
+            }
+            $waste_name = 'waste'.$suffix;
+            if(!is_null($request->$waste_name)) {
+                $rule_array[$waste_name] = ['gt:0'];
+                $reason_codes_array[$waste_name.'.gt'] = 'Odpad musi być większy od 0. Jeśli nie wyprodukowano odpadu pozostaw puste pole.';
+                $rule_array['waste_rc'.$suffix] = ['required','exists:App\Models\ReasonCode,reason_code'];
+                $reason_codes_array['waste_rc'.$suffix.'.required'] = 'Jeśli wyprodukowano odpad podaj kod błędu.';
+                $reason_codes_array['waste_rc'.$suffix.'.exists'] = 'Podanego kodu błedu nie znaleziono w systemie.';
+                $rule_array['waste_unit'.$suffix] = ['required','exists:App\Models\Unit,unit'];
+                $reason_codes_array['waste_unit'.$suffix.'.required'] = 'Jeśli wyprodukowano odpad podaj jednostkę.';
+                $reason_codes_array['waste_unit'.$suffix.'.exists'] = 'Podanegj jednostki nie znaleziono w systemie.';
             }
             $request->validate( $rule_array, $reason_codes_array);
 
@@ -343,26 +394,6 @@ class WorkController extends Controller
                     }
                 }
             }
-        }
-
-        function hasOverlap($datePeriods): bool
-        {
-            $count = count($datePeriods);
-
-            for ($i = 0; $i < $count - 1; $i++) {
-                $start1 = new DateTime($datePeriods[$i][0]);
-                $end1 = new DateTime($datePeriods[$i][1]);
-
-                for ($j = $i + 1; $j < $count; $j++) {
-                    $start2 = new DateTime($datePeriods[$j][0]);
-                    $end2 = new DateTime($datePeriods[$j][1]);
-
-                    if ($start1 <= $end2 && $end1 >= $start2) {
-                        return true;
-                    }
-                }
-            }
-            return false;
         }
 
     }
