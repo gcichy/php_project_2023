@@ -4,7 +4,7 @@
     @endphp
     <x-information-panel :viewName="$viewName">
         @if(isset($prod_schema) and isset($user) and in_array($user->role,array('admin','manager')))
-            <x-nav-button href="{{route('schema.add-similar', ['id' => $prod_schema->id])}}" class="similar hover:bg-gray-700 ml-1 lg:ml-3">
+            <x-nav-button href="{{route('schema.add-similar', ['id' => $prod_schema->id])}}" class="similar bg-green-450 hover:bg-green-700 ml-1 lg:ml-3">
                 {{ __('Dodaj Podobne') }}
             </x-nav-button>
             <x-nav-button href="{{route('schema.add-similar', ['id' => $prod_schema->id])}}" class="edit bg-orange-500 hover:bg-orange-800 ml-1 lg:ml-3 mr-3 lg:mr-5">

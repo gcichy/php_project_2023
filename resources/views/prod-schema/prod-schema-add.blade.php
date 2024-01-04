@@ -236,16 +236,11 @@
             <x-input-error :messages="session('status')" class="w-full !text-md lg:text-xl font-medium text-center p-6"/>
         </div>
     @endif
-    <section class="gradient-form h-full dark:bg-neutral-700 flex justify-center">
-        <div class="container h-full w-full p-10">
+    <div class="gradient-form h-full dark:bg-neutral-700 flex justify-center w-full">
+        <div class="h-full w-full p-10">
             <div class="g-6 flex h-full flex-wrap items-center justify-center text-neutral-800 dark:text-neutral-200">
                 <div class="w-full">
-
-                    @if(isset($update) and $update)
-                        <form method="POST" action="{{ route('schema.update') }}" enctype="multipart/form-data">
-                    @else
-                        <form method="POST" action="{{ route('schema.store') }}" enctype="multipart/form-data">
-                    @endif
+                        <form method="POST" action="{{(isset($update) and $update)? route('schema.update') : route('schema.store')}}" enctype="multipart/form-data">
                         @csrf
                         <div class="block rounded-lg bg-white shadow-lg dark:bg-neutral-800">
                             <div class="g-0 lg:flex lg:flex-wrap">
@@ -432,22 +427,29 @@
                                                     <div id="task-dropdown" class="w-full">
                                                         @php $j = 0; @endphp
                                                         @foreach($tasks as $task)
-                                                            <x-list-element class="list-element-{{$xListElem}} list-element w-full hidden flex-col text-md lg:text-lg lg:py-4 my-3"
+                                                            <x-list-element class="list-element-{{$xListElem}} list-element w-full hidden text-md flex-col lg:py-0 py-0"
                                                                             id="task-{{$task->task_id}}">
-                                                                <div class="w-[100%] flex justify-between items-center">
-                                                                    <div class="w-full flex justify-between items-center">
+                                                                <div class="w-full flex flex-row justify-center">
+                                                                    <div class="w-[85%] flex flex-col justify-between items-center">
                                                                         <div class="w-full flex justify-left items-center">
-                                                                            <p class="inline-block list-element-name text-md xl:text-lg">{{$task->task_name}}</p>
+                                                                            <p class="my-2 mr-2 rounded-lg inline-block text-white bg-blue-450 shadow-lg list-element-name py-2 px-3 xl:text-lg text-md whitespace-nowrap overflow-clip">
+                                                                                {{$task->task_name}}
+                                                                            </p>
                                                                         </div>
                                                                     </div>
-                                                                    <div id="expbtn-{{$task->task_id}}" class="expand-btn inline-block bg-gray-800 w-4 h-4 lg:w-6 lg:h-6 md:rounded-md rounded-sm rotate-0 transition-all mr-0">
-                                                                        <img src="{{asset('storage/expand-down.png') }}">
+                                                                    <div class="w-[15%] flex justify-end items-center">
+                                                                        <div id="expbtn-{{$task->task_id}}" class="expand-btn inline-block  p-0.5 bg-gray-800 rounded-md rotate-0 transition-all mr-1">
+                                                                            <svg width="30px" height="30px" viewBox="0 0 1024 1024" class="w-5 h-5 lg:w-6 lg:h-6"  xmlns="http://www.w3.org/2000/svg">
+                                                                                <title>szczegóły podzadania</title>
+                                                                                <path d="M903.232 256l56.768 50.432L512 768 64 306.432 120.768 256 512 659.072z" fill="#ffffff" />
+                                                                            </svg>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                                 <div class="task-list-{{$task->task_id}} w-full hidden my-4 text-xs lg:text-sm text-left ml-2 text-gray-600">
                                                                     <p>{{$task->task_desc}}</p>
                                                                 </div>
-                                                                <div class="sequence-no mt-4 w-full ml-[3%] hidden">
+                                                                <div class="sequence-no my-4 w-full ml-[3%] hidden">
                                                                     <div id="sequence-no-{{$task->task_id}}" class="flex flex-row justify-start items-center w-full xl:w-full">
                                                                         <div class="w-[40%] mr-[3%]">
                                                                             @php $sequenceno = 'sequenceno_'.$task->task_id @endphp
@@ -561,5 +563,5 @@
                 </div>
             </div>
         </div>
-    </section>
+    </div>
 </x-app-layout>

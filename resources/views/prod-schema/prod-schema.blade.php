@@ -10,7 +10,7 @@
             if($('.list-element.active-list-elem').length === 0) {
                 remove.removeClass('bg-red-600').addClass('bg-gray-400')
                 details.removeClass('bg-blue-450').addClass('bg-gray-400').attr('href', $(location).attr('href'));
-                similar.removeClass('bg-gray-800').addClass('bg-gray-400').attr('href', $(location).attr('href'));
+                similar.removeClass('bg-green-450').addClass('bg-gray-400').attr('href', $(location).attr('href'));
                 edit.removeClass('bg-orange-500').addClass('bg-gray-400').attr('href', $(location).attr('href'));
             }
             //else if id is set properly, url is set to be classified as product.details route
@@ -28,13 +28,13 @@
 
                     remove.removeClass('bg-gray-400').addClass('bg-red-600').prop('disabled', false)
                     details.removeClass('bg-gray-400').addClass('bg-blue-450').attr('href', newUrl);
-                    similar.removeClass('bg-gray-400').addClass('bg-gray-800').attr('href', similarUrl);
+                    similar.removeClass('bg-gray-400').addClass('bg-green-450').attr('href', similarUrl);
                     edit.removeClass('bg-gray-400').addClass('bg-orange-500').attr('href', editUrl);
                 }
                 else {
                     remove.removeClass('bg-red-600').addClass('bg-gray-400')
                     details.removeClass('bg-blue-450').addClass('bg-gray-400').attr('href', $(location).attr('href'));
-                    similar.removeClass('bg-gray-800').addClass('bg-gray-400').attr('href', $(location).attr('href'));
+                    similar.removeClass('bg-green-450').addClass('bg-gray-400').attr('href', $(location).attr('href'));
                     edit.removeClass('bg-orange-500').addClass('bg-gray-400').attr('href', $(location).attr('href'));
                 }
             }
@@ -112,7 +112,7 @@
                     {{ __('Szczegóły') }}
                 </x-nav-button>
                 @if(in_array($user->role,array('admin','manager')))
-                    <x-nav-button :href="route('schema.add')" class="ml-1 lg:ml-3">
+                    <x-nav-button :href="route('schema.add')" class="bg-green-450 hover:bg-gray-700 ml-1 lg:ml-3 ">
                         {{ __('Dodaj') }}
                     </x-nav-button>
                     <x-nav-button class="on-select similar hover:bg-gray-700 ml-1 lg:ml-3">
@@ -134,11 +134,13 @@
                         @foreach($schema_data as $prod_schema_tasks)
                             @if(count($prod_schema_tasks) > 0)
                                 <div class="{{$remove_elem_class}} hidden" id="{{$remove_elem_id}}{{$prod_schema_tasks[0]->prod_schema_id}}">
-                                    <x-list-element class="flex-col">
-                                        <div class="w-[100%] flex justify-between items-center">
-                                            <div class="w-full flex justify-between items-center">
+                                    <x-list-element class="flex-col mx-5 lg:py-0 py-0">
+                                        <div class="w-full flex flex-row justify-center">
+                                            <div class="w-full flex flex-col justify-between items-center">
                                                 <div class="w-full flex justify-left items-center">
-                                                    <p class="inline-block list-element-name ">{{$prod_schema_tasks[0]->prod_schema}}</p>
+                                                    <p class="my-2 mr-2 rounded-lg inline-block text-white bg-blue-450 shadow-lg list-element-name py-2 px-3 xl:text-lg text-md whitespace-nowrap overflow-clip">
+                                                        {{$prod_schema_tasks[0]->prod_schema}}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>
@@ -162,20 +164,27 @@
                         @php $j = 0; @endphp
                         @foreach($schema_data as $prod_schema_tasks)
                             @if(count($prod_schema_tasks) > 0)
-                                <x-list-element class="list-element-{{$xListElem}} list-element w-full flex-col text-md lg:text-lg lg:py-4" id="prodschema-{{$prod_schema_tasks[0]->prod_schema_id}}">
-                                    <div class="w-[100%] flex justify-between items-center">
-                                        <div class="w-full flex justify-between items-center">
+                                <x-list-element class="list-element-{{$xListElem}} list-element w-full flex-col text-md lg:text-lg lg:py-0 py-0" id="prodschema-{{$prod_schema_tasks[0]->prod_schema_id}}">
+                                    <div class="w-full flex flex-row justify-center">
+                                        <div class="w-[85%] flex flex-col justify-between items-center">
                                             <div class="w-full flex justify-left items-center">
-                                                <p class="inline-block list-element-name ">{{$prod_schema_tasks[0]->prod_schema}}</p>
+                                                <p class="my-2 mr-2 rounded-lg inline-block text-white bg-blue-450 shadow-lg list-element-name py-2 px-3 xl:text-lg text-md whitespace-nowrap overflow-clip">
+                                                    {{$prod_schema_tasks[0]->prod_schema}}
+                                                </p>
                                             </div>
                                         </div>
-                                        <div id="expbtn-{{$prod_schema_tasks[0]->prod_schema_id}}" class="expand-btn inline-block bg-gray-800 w-4 h-4 lg:w-6 lg:h-6 md:rounded-md rounded-sm rotate-0 transition-all mr-0">
-                                            <img src="{{asset('storage/expand-down.png') }}">
+                                        <div class="w-[15%] flex justify-end items-center">
+                                            <div id="expbtn-{{$prod_schema_tasks[0]->prod_schema_id}}" class="expand-btn inline-block  p-0.5 bg-gray-800 rounded-md rotate-0 transition-all mr-1">
+                                                <svg width="30px" height="30px" viewBox="0 0 1024 1024" class="w-5 h-5 lg:w-6 lg:h-6"  xmlns="http://www.w3.org/2000/svg">
+                                                    <title>szczegóły zadania</title>
+                                                    <path d="M903.232 256l56.768 50.432L512 768 64 306.432 120.768 256 512 659.072z" fill="#ffffff" />
+                                                </svg>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="production-standard mt-4 w-full ml-[3%] hidden">
                                     </div>
-                                    <ul class="prodschema-list-{{$prod_schema_tasks[0]->prod_schema_id}} mt-[3%] ml-[3%] relative m-0 w-full hidden list-none overflow-hidden p-0 transition-[height] duration-200 ease-in-out text-xs md:text-sm lg:text-md">
+                                    <ul class="prodschema-list-{{$prod_schema_tasks[0]->prod_schema_id}} my-[3%] ml-[3%] relative m-0 w-full hidden list-none overflow-hidden p-0 transition-[height] duration-200 ease-in-out text-xs md:text-sm lg:text-md">
                                         @if(!empty($prod_schema_tasks[0]->prod_std_id))
                                             <table class="w-full text-sm xl:text-lg xl:h-[90%] text-left text-gray-700 dark:text-gray-400 shadow-md mt-3 mb-5">
                                                 <thead class="text-gray-950 bg-gray-50 dark:bg-gray-700 dark:text-gray-400 font-medium">

@@ -15,6 +15,7 @@ use App\Models\ProductionCycleUser;
 use App\Models\ProductionSchema;
 use App\Models\ReasonCode;
 use App\Models\StaticValue;
+use App\Models\Task;
 use App\Models\Unit;
 use App\Models\User;
 use App\Models\WorkView;
@@ -209,10 +210,11 @@ class WorkController extends Controller
 
     public function storeWork(Request $request, int $id): RedirectResponse
     {
+        dd($request);
         $user = Auth::user();
         $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
         try {
-            $this->validateWork($request, $employee_no);
+            $suffix_array = $this->validateWork($request, $id, $employee_no);
         }
         catch (Exception $e) {
             if($e instanceof ValidationException) {
@@ -232,26 +234,115 @@ class WorkController extends Controller
             }
         }
 
-        $category = intval($request->selected_cycle_category);
-        if($category == 1) {
+        try {
+            DB::beginTransaction();
+            $category = intval($request->selected_cycle_category);
+            if($category == 1) {
 
-        }
-        else if($category == 2) {
+            }
+            else if($category == 2) {
 
+            }
+            else if($category == 3) {
+                $parent_cycle = ProductionCycle::where('id', $id)->first();
+                foreach ($suffix_array as $suffix) {
+                    $ids = $this->parseSuffix($suffix, $employee_no);
+                    $prod_schema_id = $ids[0];
+                    $task_id = $ids[1];
+                    $work_id = $this->insertWork($request, $parent_cycle, $id, $suffix, $prod_schema_id, $task_id, $employee_no);
+                }
+            }
+            DB::rollBack();
         }
-        else if($category == 3) {
+        catch (Exception $e) {
+            DB::rollBack();
+            if($e->getCode() == 1) {
+                return back()->with('status_err', $e->getMessage())->withInput();
+            }
+            else {
+                Log::channel('error')->error("Error inserting work: ".$e->getMessage(), [
+                    'employeeNo' => $employee_no,
+                ]);
+                return back()->with('status_err', 'Nie udało się dodać pracy. Wystąpił nieoczekiwany błąd przy wprowadzaniu danych do systemu.')->withInput();
+            }
+        }
 
-        }
         return back();
     }
 
 
-    private function getOldDuration(string $duration_minutes): string
-    {
-        $hours = floor($duration_minutes / 60);
-        $minutes = $duration_minutes % 60;
-        return sprintf('%d:%02d', $hours, $minutes);
 
+    private function insertWork(Request $request, ProductionCycle $parent_cycle, int $cycle_id, string $suffix, int $prod_schema_id, int $task_id, string $employee_no): int
+    {
+        $product_id = $parent_cycle->product_id;
+        $start_time = 'start_time'.$suffix;
+        $end_time = 'end_time'.$suffix;
+        $duration_minute = 'work_duration'.$suffix;
+        $additional_comment = 'comment'.$suffix;
+        $amount = 'amount'.$suffix;
+        $defect_amount = 'defect'.$suffix;
+        $defect_reason_code = 'defect_rc'.$suffix;
+        $waste_amount = 'waste'.$suffix;
+        $waste_reason_code = 'waste_rc'.$suffix;
+        $waste_unit = 'waste_unit'.$suffix;
+        $waste_unit_id = Unit::where('unit', $request->$waste_unit)->select('id')->first();
+
+
+        $work_id = DB::table('work')->insertGetId([
+            'production_cycle_id' => $cycle_id,
+            'production_schema_id' => $prod_schema_id,
+            'task_id' => $task_id,
+            'product_id' => $product_id,
+            'start_time' => $request->$start_time,
+            'end_time' => $request->$end_time,
+            'duration_minute' => $request->$duration_minute,
+            'amount' => $request->$amount,
+            'defect_amount' => $request->$defect_amount,
+            'defect_reason_code' => $request->$defect_reason_code,
+            'waste_amount' => $request->$waste_amount,
+            'waste_reason_code' => $request->$waste_reason_code,
+            'waste_unit_id' => $waste_unit_id,
+            'additional_comment' => $request->$additional_comment,
+            'created_by' => $employee_no,
+            'updated_by' => $employee_no,
+            'created_at' => date('y-m-d h:i:s'),
+            'updated_at' => date('y-m-d h:i:s'),
+        ]);
+
+
+        dd($request);
+        return 0;
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function parseSuffix(string $suffix, string $employee_no): array
+    {
+        $id_parts = substr($suffix, 1);
+        $id_parts = explode('_',$id_parts);
+        if(count($id_parts) != 2) {
+            Log::channel('error')->error("Error inserting work: parsing suffix error. Suffix: '".$suffix."' doesn't contain prod_schema_id or task_id", [
+                'employeeNo' => $employee_no,
+            ]);
+            throw new Exception('Nie udało się dodać pracy. Błąd systemu - nie udało się przetworzyć danych.', 1);
+        }
+        $id_parts[0] = intval($id_parts[0]);
+        $id_parts[1] = intval($id_parts[1]);
+        if(!ProductionSchema::find($id_parts[0]) instanceof ProductionSchema) {
+            Log::channel('error')->error("Error inserting work: parsing suffix error. ProductionSchema with id: ".$id_parts[0]." extracted from Suffix: '".$suffix."' not found in the system.", [
+                'employeeNo' => $employee_no,
+            ]);
+            throw new Exception('Nie udało się dodać pracy. Błąd systemu - nie udało się przetworzyć danych.', 1);
+        }
+        if(!Task::find($id_parts[1]) instanceof Task) {
+            Log::channel('error')->error("Error inserting work: parsing suffix error. Task with id: ".$id_parts[1]." extracted from Suffix: '".$suffix."' not found in the system.", [
+                'employeeNo' => $employee_no,
+            ]);
+            throw new Exception('Nie udało się dodać pracy. Błąd systemu - nie udało się przetworzyć danych.', 1);
+        }
+
+        return $id_parts;
     }
     private function getOldCheckedRowsId(array $old): string
     {
@@ -270,13 +361,19 @@ class WorkController extends Controller
     /**
      * @throws Exception
      */
-    private function validateWork(Request $request,string $employee_no): void
+    private function validateWork(Request $request, int $id, string $employee_no): array
     {
+        if(!ProductionCycle::where(['id' => $id, 'parent_id' => null])->first() instanceof ProductionCycle) {
+            Log::channel('error')->error("Error inserting work: validation failed. ProductionCycle with id: ".$id." not found.", [
+                'employeeNo' => $employee_no,
+            ]);
+            throw new Exception('Nie udało się dodać pracy. Błąd systemu przy walidacji danych.', 1);
+        }
         if(is_null($request->selected_cycle_category) or !in_array($request->selected_cycle_category,['1','2','3'])) {
             Log::channel('error')->error("Error inserting work: validation failed. Incorrect 'selected_cycle_category' input value: ".$request->selected_cycle_category.".", [
                 'employeeNo' => $employee_no,
             ]);
-            throw new Exception('Nie udało się dodać pracy. Błąd systemu.', 1);
+            throw new Exception('Nie udało się dodać pracy. Błąd systemu przy walidacji danych.', 1);
         }
         if($request->selected_cycle_category == '1') {
             if(!(ctype_digit($request->selected_component_cycle_id) and (int)$request->selected_component_cycle_id > 0
@@ -300,7 +397,7 @@ class WorkController extends Controller
                 Log::channel('error')->error("Error inserting work: validation failed. Incorrect 'selected_prod_schema_cycle_id' input value: " . $request->selected_prod_schema_cycle_id . ".", [
                     'employeeNo' => $employee_no,
                 ]);
-                throw new Exception('Nie udało się dodać pracy. Błąd systemu.', 1);
+                throw new Exception('Nie udało się dodać pracy. Błąd systemu przy walidacji danych.', 1);
             }
             if(!ProductionCycle::find($request->selected_prod_schema_cycle_id) instanceof ProductionCycle) {
                 Log::channel('error')->error("Error inserting work: validation failed. 'selected_prod_schema_cycle_id' input value error: Production cycle with id = ".$request->selected_prod_schema_cycle_id." not found.", [
@@ -317,9 +414,10 @@ class WorkController extends Controller
         }
 
         $time_array = array();
-
+        $suffix_array = array();
         foreach ($check_parameters as $key => $value) {
             $suffix = substr($key, 5);
+            $suffix_array[] = $suffix;
             $rule_array = [
                 'start_time'.$suffix => ['required','date'],
                 'end_time'.$suffix => ['required', 'date', 'after_or_equal:start_time'.$suffix],
@@ -372,6 +470,8 @@ class WorkController extends Controller
             $time_array[] = [$request->$start_time_input, $request->$end_time_input];
         }
         $this->validateWorkTimeOverlap($time_array);
+
+        return $suffix_array;
     }
 
 

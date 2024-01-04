@@ -6,7 +6,7 @@
     <a class ='block w-full xl:w-1/3 py-4 pl-3 pr-4 bg-white border-blue-450 border-l-4 lg:border-l-8 text-md md:text-lg lg:text-2xl text-left font-medium text-gray-800  transition duration-150 ease-in-out'>
         {{$viewName}}
     </a>
-    <div class="p-2 xl:mt-0 w-full xl:w-3/4 bg-gray-50 xl:bg-white flex justify-center xl:justify-end align-middle">
+    <div class="p-2 xl:mt-0 w-full xl:w-3/4 bg-gray-50 xl:bg-white flex justify-center xl:justify-end align-middle flex-wrap">
         {{$slot}}
     </div>
 </div>

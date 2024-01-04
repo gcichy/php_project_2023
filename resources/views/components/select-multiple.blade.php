@@ -61,13 +61,12 @@
     <select x-cloak id="select-{{$uniqueId}}">
         {{$options}}
     </select>
-
     <div x-data="dropdown()" x-init="loadOptions('select-{{$uniqueId}}')" class="w-full flex flex-col items-center mx-auto">
         <input name="{{$uniqueId}}" id="{{$uniqueId}}-input" type="text" class="hidden" x-bind:value="selectedValues()">
         <div class="inline-block relative w-full">
             <div class="flex flex-col items-center relative">
                 <div x-on:click="open" class="w-full  svelte-1l8159u">
-                    <div class="my-2 xl:p-1 flex border border-gray-200 bg-white rounded text-xs xl:text-sm svelte-1l8159u">
+                    <div class="{{isset($classes)? $classes : 'bg-white'}} my-2 xl:p-1 flex border border-gray-200  rounded text-xs xl:text-sm svelte-1l8159u">
                         <div x-show="selected.length    == 0" class="flex-1">
                             <input placeholder="{{$placeholder}}"
                                    class="bg-transparent p-1 px-0.5 appearance-none outline-none h-full w-full text-gray-800"
@@ -118,7 +117,7 @@ c0.27-0.268,0.707-0.268,0.979,0l7.908,7.83c0.27,0.268,0.27,0.701,0,0.969c-0.271,
                     </div>
                 </div>
             </div>
-            <div class="w-full px-4">
+            <div class="multi-select-list w-full px-4 {{(isset($disabled) and $disabled)? 'hidden' : ''}}">
                 <div x-show.transition.origin.top="isOpen()"
                      class="absolute shadow top-100 bg-white z-40 w-full left-0 rounded max-h-select overflow-y-auto"
                      x-on:click.away="close">

@@ -183,7 +183,6 @@
             if(workTimeElem.length > 0) {
                 workTimeElem.text(workDuration);
             }
-
         }
 
         function calculateTimeDiff(startDate,endDate) {
@@ -358,7 +357,12 @@
                     if (checkboxInput.is(":checked")) {
                         disabledInputs.prop("disabled", false).removeClass('bg-gray-200').addClass('bg-white');
                         parent.addClass('bg-blue-150');
-                    } else {
+                        let multiSelectList = parent.find('.multi-select-list');
+                         if(multiSelectList.length > 0) {
+                            multiSelectList.removeClass('hidden');
+                        }
+                    }
+                    else {
                         disabledInputs.prop("disabled", true).removeClass('bg-white').addClass('bg-gray-200');
                         parent.removeClass('bg-blue-150');
                         let durationHours = parent.find('.work-time-in-hours');
@@ -368,6 +372,10 @@
                         let nullableInputs = parent.find('.nullable-input');
                         if(nullableInputs.length > 0) {
                             nullableInputs.val(null)
+                        }
+                        let multiSelectList = parent.find('.multi-select-list');
+                        if(multiSelectList.length > 0) {
+                            multiSelectList.addClass('hidden');
                         }
                     }
                 }
@@ -646,7 +654,7 @@
                                 <div id="input-container" class="w-full">
                                     @if($p_cycle->category == 3 and isset($child_prod_schemas) )
                                         <div class="input-table shadow-md rounded-b-xl mb-4">
-                                            <div class="relative overflow-x-scroll">
+                                            <div class="relative overflow-scroll max-h-[400px]">
                                                 <table class="w-full text-sm text-left rtl:text-right pb-2 bg-gray-100 text-gray-500 dark:text-gray-400 border-separate border-spacing-1 border-slate-300">
                                                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 whitespace-nowrap">
                                                     <tr>
@@ -764,21 +772,23 @@
                                                             </td>
                                                             <td class="employee-no px-2 py-3 text-center">
                                                                 @if(isset($users) and in_array($user->role,['admin','manager']))
-                                                                    <div class="p-1 flex justify-center items-center h-full">
-                                                                        <select id="{{'employee-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
-                                                                                name="{{'employee_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
-                                                                                disabled class="disabled-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
-                                                                            @foreach($users as $u)
-                                                                                <option value="{{$u->id}}" class="bg-white"
-                                                                                    @if(old('employee_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id))
-                                                                                        selected
-                                                                                    @elseif($user->id == $u->id)
-                                                                                        selected
-                                                                                    @endif>
-                                                                                    {{$u->employeeNo}}
-                                                                                </option>
-                                                                            @endforeach
-                                                                        </select>
+                                                                    <div class="p-1 flex justify-center items-center h-full min-w-[225px]">
+                                                                        @php $unique_id = 'employee_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id; @endphp
+                                                                        <x-select-multiple :uniqueId="$unique_id" :placeholder="__('Pracownicy')"
+                                                                                           :classes="__('disabled-input bg-gray-200')" :disabled="__(true)">
+                                                                            <x-slot name="options">
+                                                                                @foreach($users as $u)
+                                                                                    <option value="{{$u->id}}"
+                                                                                            @if(old('employee_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id))
+                                                                                                selected
+                                                                                            @elseif($user->id == $u->id)
+                                                                                                selected
+                                                                                        @endif>
+                                                                                        {{$u->employeeNo}}
+                                                                                    </option>
+                                                                                @endforeach
+                                                                            </x-slot>
+                                                                        </x-select-multiple>
                                                                     </div>
                                                                 @else
                                                                     <div class="block w-full bg-white py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
@@ -1091,7 +1101,7 @@
                                                                     </div>
                                                                 </div>
                                                                 <div class="input-table shadow-md rounded-b-xl mb-4">
-                                                                    <div class="relative overflow-x-scroll">
+                                                                    <div class="relative overflow-scroll max-h-[400px]">
                                                                         <table class="w-full text-sm text-left rtl:text-right pb-2 bg-gray-100 text-gray-500 dark:text-gray-400 border-separate border-spacing-1 border-slate-300">
                                                                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 whitespace-nowrap">
                                                                             <tr>
@@ -1383,7 +1393,7 @@
                                                                 </div>
                                                             </div>
                                                             <div class="input-table shadow-md rounded-b-xl mb-4">
-                                                                <div class="relative overflow-x-scroll">
+                                                                <div class="relative overflow-scroll max-h-[400px]">
                                                                     <table class="w-full text-sm text-left rtl:text-right pb-2 bg-gray-100 text-gray-500 dark:text-gray-400 border-separate border-spacing-1 border-slate-300">
                                                                         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 whitespace-nowrap">
                                                                         <tr>

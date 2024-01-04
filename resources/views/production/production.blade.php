@@ -159,7 +159,7 @@
                 $name = 'Dodaj cykl produkcji';
                 $button_id = 'add-cycle';
                 $id = '';
-                $bg_classes = 'bg-green-450 hover:bg-green-700';
+                $bg_classes = 'bg-green-450 hover:bg-green-700 focus:bg-green-700  focus:ring-green-300';
                 $button_text = 'Dodaj'
             @endphp
             <x-modal :name="$name" :button_id="$button_id" :id="$id" :bg_classes="$bg_classes" :button_text="$button_text">

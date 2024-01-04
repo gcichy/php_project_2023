@@ -510,9 +510,10 @@ class ProdSchemaController
             $data = DB::select('select
                                        min(t.id) as task_id,
                                        t.name as task_name,
-                                       t.description as task_desc
+                                       t.description as task_desc,
+                                       t.amount_required as task_amount_required
                                 from task t
-                                group by t.name, t.description
+                                group by t.name, t.description, t.amount_required
                                 order by task_id');
         }
 
@@ -542,6 +543,8 @@ class ProdSchemaController
         $sequence_no_count = empty($tasks) ? $new_task_count : count($tasks) + $new_task_count;
         $sequence_no_arr = array_map(function($x) { return $x; }, range(1, $sequence_no_count));
         $taks_names_arr = array();
+
+        $is_amount_required = false;
         foreach ($new_task_id_arr  as $new_task_id) {
             if($new_task_id > 0) {
                 $sequence_no = 'new_sequence_no_'.$new_task_id;
@@ -550,7 +553,7 @@ class ProdSchemaController
                 $desc = 'new_desc_'.$new_task_id;
 
                 if($request->$sequence_no == null or !in_array($request->$sequence_no, $sequence_no_arr)) {
-                    $error_arr[] = 'Niepoprawne wartości Kolejność wykonania. Podzadania powinny zawierać liczby od 1 do '.$sequence_no_count.' (w dowolnej kolejności).';
+                    $error_arr[] = "Niepoprawne wartości 'Kolejność wykonania'. Podzadania powinny zawierać liczby od 1 do ".$sequence_no_count.' (w dowolnej kolejności).';
                 } else {
                     array_splice($sequence_no_arr,array_search($request->$sequence_no, $sequence_no_arr),1);
                 }
@@ -561,6 +564,14 @@ class ProdSchemaController
                     $error_arr[] = 'Nie można dodać 2 zadań o identycznej nazwie.';
                 } else {
                     $taks_names_arr[] = $request->$name;
+                }
+                if(!is_null($request->$amount_required)) {
+                    if($is_amount_required) {
+                        $error_arr[] = "Pole 'Ilość wymagana' może być zaznaczone dla maksymalnie 1 podzadania.";
+                    }
+                    else {
+                        $is_amount_required = true;
+                    }
                 }
 
                 $error_arr = array_unique($error_arr);
@@ -585,7 +596,7 @@ class ProdSchemaController
                     $sequence_no = 'sequenceno_'.$task_id;
                     $amount_required = 'amount_required_'.$task_id;
                     if($request->$sequence_no == null or !in_array($request->$sequence_no, $sequence_no_arr)) {
-                        $error_arr[] = 'Niepoprawne wartości Kolejność wykonania. Podzadania powinny zawierać liczby od 1 do '.$sequence_no_count.' (w dowolnej kolejności).';
+                        $error_arr[] = "Niepoprawne wartości 'Kolejność wykonania'. Podzadania powinny zawierać liczby od 1 do ".$sequence_no_count.' (w dowolnej kolejności).';
                     } else {
                         array_splice($sequence_no_arr,array_search($request->$sequence_no, $sequence_no_arr),1);
                     }
@@ -594,6 +605,15 @@ class ProdSchemaController
                     } else {
                         $taks_names_arr[] = $name;
                     }
+                    if(!is_null($request->$amount_required)) {
+                        if($is_amount_required) {
+                            $error_arr[] = "Pole 'Ilość wymagana' może być zaznaczone dla maksymalnie 1 podzadania.";
+                        }
+                        else {
+                            $is_amount_required = true;
+                        }
+                    }
+
                     $error_arr = array_unique($error_arr);
                     if(count($error_arr) == 0) {
                         $insert_arr[$task_id] = array(

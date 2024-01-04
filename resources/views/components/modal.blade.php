@@ -17,8 +17,8 @@
 
     <button type="button" id="{{$button_id}}"
             class="btn btn-primary on-select modal2-button inline-flex items-center shadow-md
-                    {{isset($button_classes)? $button_classes : 'ml-1 lg:ml-3 px-2 py-1 lg:px-4 lg:py-2 rounded-md text-sm md:text-md xl:text-lg'}}
-                    {{$bg_classes}} border border-transparent  font-semibold  text-white uppercase tracking-widest focus:bg-gray-700  focus:ring-4 focus:outline-none focus:ring-gray-300  focus:ring-offset-2 transition ease-in-out duration-150">
+                    {{isset($button_classes)? $button_classes : 'ml-1 lg:ml-3 px-2 my-1 py-1 lg:px-4 lg:py-2 rounded-md text-xs md:text-sm xl:text-lg'}}
+                    {{$bg_classes}} border border-transparent  font-semibold  text-white uppercase tracking-widest [:where(&)]:focus:bg-gray-700  focus:ring-4 focus:outline-none [:where(&)]:focus:ring-gray-300  focus:ring-offset-2 transition ease-in-out duration-150">
         {{$button_text}}
     </button>
     <!-- Modal Background -->

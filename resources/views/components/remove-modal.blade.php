@@ -29,8 +29,8 @@
 
     <button type="button" id="{{$button_id}}" {{$disabled}}
         class="btn btn-primary on-select remove inline-flex items-center bg-red-600 hover:bg-red-800 shadow-md
-               {{isset($button_classes)? $button_classes : 'rounded-md ml-1 lg:ml-3 lg:mr-5 px-2 py-1 lg:px-4 lg:py-2 text-sm md:text-md xl:text-lg' }}
-               border border-transparent font-semibold text-white uppercase tracking-widest focus:bg-gray-700  focus:ring-4 focus:outline-none focus:ring-gray-300  focus:ring-offset-2 transition ease-in-out duration-150">
+               {{isset($button_classes)? $button_classes : 'rounded-md ml-1 lg:ml-3 lg:mr-5 my-1 px-2 py-1 lg:px-4 lg:py-2 text-xs md:text-sm xl:text-lg' }}
+               border border-transparent font-semibold text-white uppercase tracking-widest [:where(&)]:focus:bg-red-800  focus:ring-4 focus:outline-none [:where(&)]:focus:ring-red-300  focus:ring-offset-2 transition ease-in-out duration-150">
         {{__('Usuń')}}
     </button>
     <!-- Modal Background -->
@@ -61,10 +61,18 @@
                     <x-input-error :messages="$errors->get('confirmation')" class="mt-2 pl-2 lg:pl-4" />
                 </div>
             </div>
-            <div class="mt-4 w-[100%] flex flex-row justify-center items-center bg-gray-200 p-2 rounded-b-lg">
-                <x-submit-button id="submit-remove-{{$id}}" type="submit" class="ml-[5%] bg-red-600 hover:bg-red-800 text-sm">
+            <div class="mt-4 w-[100%] flex flex-row justify-center items-center bg-gray-200 rounded-b-lg">
+{{--                <x-submit-button id="submit-remove-{{$id}}" type="submit" class="ml-[5%] bg-red-600 hover:bg-red-800 text-sm">--}}
+{{--                    {{__('Usuń')}}--}}
+{{--                </x-submit-button>--}}
+                <button
+                    class="inline-block rounded-b-lg px-6 py-2 md:py-4 text-xs font-medium uppercase w-full text-md md:text-lg xl:text-xl bg-red-600 hover:bg-red-800 leading-normal text-white focus:ring-4 focus:outline-none focus:ring-blue-300 shadow-[0_4px_9px_-4px_rgba(0,0,0,0.2)] transition duration-150 ease-in-out hover:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] focus:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] active:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)]"
+                    type="submit"
+                    id="submit-remove-{{$id}}"
+                    data-te-ripple-init
+                    data-te-ripple-color="light">
                     {{__('Usuń')}}
-                </x-submit-button>
+                </button>
             </div>
             <input type="text" id="remove-id-{{$id}}" name="remove_id" value="" class="hidden">
         </form>
