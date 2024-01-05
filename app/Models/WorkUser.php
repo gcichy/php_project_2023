@@ -15,6 +15,7 @@ class WorkUser extends Model
     protected $fillable = [
         'work_id',
         'user_id',
+        'duration_minute_per_user',         //working time per user
     ];
 
     /**

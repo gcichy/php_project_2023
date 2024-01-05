@@ -41,7 +41,7 @@
                     let progress = $(this).find('.progress');
                     if(progress.length === 1) {
                         let width = parseInt(styles[1]);
-                        if(width === '100') {
+                        if(width >= 100) {
                             $(progress).addClass('rounded-lg');
                         } else {
                             $(progress).addClass('rounded-l-lg');
@@ -389,7 +389,7 @@
                             <div class="col-span-2 flex flex-col bg-gray-200/50 border-r">
                                 <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Postęp</dt>
                                 <div class="flex justify-center items-center w-full h-full p-2">
-                                    <div class="rounded-lg w-1/2 border h-[32px]  relative bg-white">
+                                    <div class="rounded-lg w-1/2 border h-[32px]  relative bg-white shadow-md">
                                         <div class="absolute h-1/2 w-full top-[16%] lg:top-[8%] flex justify-center text-sm lg:text-lg font-semibold">
                                             {{$p_cycle->current_amount}}/{{$p_cycle->total_amount}}
                                         </div>

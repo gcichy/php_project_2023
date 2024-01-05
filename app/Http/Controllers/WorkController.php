@@ -18,6 +18,8 @@ use App\Models\StaticValue;
 use App\Models\Task;
 use App\Models\Unit;
 use App\Models\User;
+use App\Models\Work;
+use App\Models\WorkUser;
 use App\Models\WorkView;
 use Carbon\Carbon;
 use DateInterval;
@@ -32,6 +34,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use JetBrains\PhpStorm\NoReturn;
 
 class WorkController extends Controller
 {
@@ -186,10 +189,10 @@ class WorkController extends Controller
             $checked_boxes_id_string = $this->getOldCheckedRowsId(old());
         }
 
-        $max_time = new DateTime('now');
-        $max_time->setTime(23, 59);
-        $max_time = $max_time->format('Y-m-d\TH:i');
-
+//        $max_time = new DateTime('now');
+//        $max_time->setTime(23, 59);
+//        $max_time = $max_time->format('Y-m-d\TH:i');
+        $max_time = date("Y-m-d");
 
         return view('work.work-add', [
             'p_cycle' => $parent_cycle,
@@ -210,18 +213,21 @@ class WorkController extends Controller
 
     public function storeWork(Request $request, int $id): RedirectResponse
     {
-        dd($request);
         $user = Auth::user();
         $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
         try {
-            $suffix_array = $this->validateWork($request, $id, $employee_no);
+            $return_array = $this->validateWork($request, $id, $employee_no);
+            $suffix_array = $return_array['SUFFIX'];
+            $employee_id_array = $return_array['EMPLOYEEID'];
         }
         catch (Exception $e) {
             if($e instanceof ValidationException) {
-                return back()->with('validation_err', $e->validator->getMessageBag()->all())->withInput();
+                $error_arr = $e->validator->getMessageBag()->all();
+                $error_arr[] = "- Zwróć uwagę na kolumnę 'Pracownicy'. Jeśli dodałeś więcej niż jednego pracownika do któregoś podzadania, uzupełnij ją ponownie.";
+                return back()->with('validation_err', $error_arr)->withInput();
             }
             else if ($e->getCode() == 2) {
-                return back()->with('validation_err', [$e->getMessage()])->withInput();
+                return back()->with('validation_err', [$e->getMessage(),"- Zwróć uwagę na kolumnę 'Pracownicy'. Jeśli dodałeś więcej niż jednego pracownika do któregoś podzadania, uzupełnij ją ponownie."])->withInput();
             }
             else if($e->getCode() == 1) {
                 return back()->with('status_err', $e->getMessage())->withInput();
@@ -245,12 +251,25 @@ class WorkController extends Controller
             }
             else if($category == 3) {
                 $parent_cycle = ProductionCycle::where('id', $id)->first();
+                $work_id_array = [];
                 foreach ($suffix_array as $suffix) {
                     $ids = $this->parseSuffix($suffix, $employee_no);
                     $prod_schema_id = $ids[0];
                     $task_id = $ids[1];
-                    $work_id = $this->insertWork($request, $parent_cycle, $id, $suffix, $prod_schema_id, $task_id, $employee_no);
+                    if(!(array_key_exists($suffix, $employee_id_array) and is_array($employee_id_array[$suffix]))) {
+                        Log::channel('error')->error('Error inserting work: Error while processing insert. $employee_id_array does not contain key: '.$suffix
+                            .' or entry is not an array.', [
+                            'employeeNo' => $employee_no,
+                        ]);
+                        throw new Exception('Nie udało się dodać pracy. Błąd systemu przy wprowadzaniu danych.', 1);
+                    }
+                    $employee_id_task_array = $employee_id_array[$suffix];
+                    $work_id = $this->insertWork($request, $parent_cycle, $id, $suffix, $prod_schema_id, $task_id, $employee_id_task_array, $employee_no);
+
+                    $work_id_array[] = $work_id;
                 }
+
+                $this->updateProdSchemaCycle($id, $parent_cycle, $work_id_array, $employee_no);
             }
             DB::rollBack();
         }
@@ -272,12 +291,14 @@ class WorkController extends Controller
 
 
 
-    private function insertWork(Request $request, ProductionCycle $parent_cycle, int $cycle_id, string $suffix, int $prod_schema_id, int $task_id, string $employee_no): int
+    private function insertWork(Request $request, ProductionCycle $parent_cycle, int $cycle_id, string $suffix,
+                                int $prod_schema_id, int $task_id, array $employee_id_task_array, string $employee_no): int
     {
         $product_id = $parent_cycle->product_id;
         $start_time = 'start_time'.$suffix;
         $end_time = 'end_time'.$suffix;
         $duration_minute = 'work_duration'.$suffix;
+        $duration_coef = max(count($employee_id_task_array), 1);
         $additional_comment = 'comment'.$suffix;
         $amount = 'amount'.$suffix;
         $defect_amount = 'defect'.$suffix;
@@ -286,6 +307,12 @@ class WorkController extends Controller
         $waste_reason_code = 'waste_rc'.$suffix;
         $waste_unit = 'waste_unit'.$suffix;
         $waste_unit_id = Unit::where('unit', $request->$waste_unit)->select('id')->first();
+        if($waste_unit_id instanceof  Unit) {
+            $waste_unit_id = $waste_unit_id->id;
+        }
+        else {
+            $waste_unit_id = null;
+        }
 
 
         $work_id = DB::table('work')->insertGetId([
@@ -295,7 +322,7 @@ class WorkController extends Controller
             'product_id' => $product_id,
             'start_time' => $request->$start_time,
             'end_time' => $request->$end_time,
-            'duration_minute' => $request->$duration_minute,
+            'duration_minute' => $request->$duration_minute * $duration_coef,
             'amount' => $request->$amount,
             'defect_amount' => $request->$defect_amount,
             'defect_reason_code' => $request->$defect_reason_code,
@@ -310,10 +337,53 @@ class WorkController extends Controller
         ]);
 
 
-        dd($request);
-        return 0;
+        foreach ($employee_id_task_array as $user_id) {
+            DB::table('work_user')->insert([
+                'work_id' => $work_id,
+                'user_id' => $user_id,
+                'duration_minute_per_user' => $request->$duration_minute,
+                'created_by' => $employee_no,
+                'updated_by' => $employee_no,
+                'created_at' => date('y-m-d h:i:s'),
+                'updated_at' => date('y-m-d h:i:s'),
+            ]);
+        }
+        return $work_id;
     }
 
+    private function updateProdSchemaCycle(int $cycle_id, ProductionCycle $parent_cycle,
+                                           array $work_id_array, string $employee_no): void
+    {
+        $update_stats = Work::whereIn('id', $work_id_array)
+            ->select(DB::raw('min(start_time) as work_start, max(end_time) as work_end,
+                            sum(duration_minute) as sum_duration, max(amount) as amount,
+                            max(defect_amount) as defect_amount'))->first();
+
+
+        $update_start_time = is_null($parent_cycle->start_time)? $update_stats->work_start : $parent_cycle->start_time;
+        $update_duration_minute_sum = $parent_cycle->duration_minute_sum + $update_stats->sum_duration;
+        $update_amount = $parent_cycle->current_amount + $update_stats->amount;
+        $update_finished = $update_amount >= $parent_cycle->total_amount? 1 : 0;
+        $update_end_time = null;
+        if($update_finished == 1) {
+            $max_cycle_end_time = Work::where('production_cycle_id', $cycle_id)->select(DB::raw('max(end_time) as end_time'))->first();
+            if($max_cycle_end_time instanceof Work) {
+                $update_end_time = $max_cycle_end_time->end_time;
+            }
+        }
+        $update_defect_amount = $parent_cycle->defect_amount + $update_stats->defect_amount;
+
+        DB::table('production_cycle')->where('id',$cycle_id)->update([
+            'start_time' => $update_start_time,
+            'end_time' => $update_end_time,
+            'duration_minute_sum' => $update_duration_minute_sum,
+            'current_amount' => $update_amount,
+            'defect_amount' => $update_defect_amount,
+            'finished' => $update_finished,
+            'updated_by' => $employee_no,
+            'updated_at' => date('y-m-d h:i:s'),
+        ]);
+    }
     /**
      * @throws Exception
      */
@@ -347,7 +417,6 @@ class WorkController extends Controller
     private function getOldCheckedRowsId(array $old): string
     {
         $checkedRows = array_intersect_key($old, array_flip(preg_grep('/^check_/', array_keys($old))));
-//        dd($old);
         $checkbox_id_string = '';
         foreach ($checkedRows as $key => $value) {
             $parts = explode('check_', $key);
@@ -406,7 +475,6 @@ class WorkController extends Controller
                 throw new Exception('Nie udało się dodać pracy. Błąd systemu - nie znaleziono cyklu dla wybranego zadania.', 1);
             }
         }
-
         $check_parameters = $request->only(preg_grep('/^check_/', $request->keys()));
 
         if(count($check_parameters) == 0) {
@@ -415,9 +483,11 @@ class WorkController extends Controller
 
         $time_array = array();
         $suffix_array = array();
+        $employee_id_array = [];
         foreach ($check_parameters as $key => $value) {
             $suffix = substr($key, 5);
             $suffix_array[] = $suffix;
+            $employee_id_task_array = array();
             $rule_array = [
                 'start_time'.$suffix => ['required','date'],
                 'end_time'.$suffix => ['required', 'date', 'after_or_equal:start_time'.$suffix],
@@ -425,77 +495,148 @@ class WorkController extends Controller
 
             ];
             $reason_codes_array =
-                ['start_time'.$suffix.'.required' => 'Początek pracy dla jednego z podzadań jest nieokreślony. Podaj początek pracy.',
-                'end_time'.$suffix.'.required' => 'Zakończenie pracy dla jednego z podzadań jest nieokreślone. Podaj zakończenie pracy.',
-                'start_time'.$suffix.'.date' => 'Jeden z wprowadzonych czasów startu nie jest prawidłowy. Spróbuj ponownie.',
-                'end_time'.$suffix.'.date' => 'Jeden z wprowadzonych czasów zakończenia nie jest prawidłowy. Spróbuj ponownie.',
-                'end_time'.$suffix.'.after_or_equal' => 'Rozpoczęcie pracy musi być wcześniej niż zakończenie pracy.',
-                'work_duration'.$suffix.'.gt' => 'Czas pracy musi być większy od 0.',
+                ['start_time'.$suffix.'.required' => '- Początek pracy dla jednego z podzadań jest nieokreślony. Podaj początek pracy.',
+                'end_time'.$suffix.'.required' => '- Zakończenie pracy dla jednego z podzadań jest nieokreślone. Podaj zakończenie pracy.',
+                'start_time'.$suffix.'.date' => '- Jeden z wprowadzonych czasów startu nie jest prawidłowy. Spróbuj ponownie.',
+                'end_time'.$suffix.'.date' => '- Jeden z wprowadzonych czasów zakończenia nie jest prawidłowy. Spróbuj ponownie.',
+                'end_time'.$suffix.'.after_or_equal' => '- Rozpoczęcie pracy musi być wcześniej niż zakończenie pracy.',
+                'work_duration'.$suffix.'.gt' => '- Czas pracy musi być większy od 0.',
             ];
             if($request->has('amount'.$suffix)) {
                 $rule_array['amount'.$suffix] = ['required','gt:0'];
-                $reason_codes_array['amount'.$suffix.'.required'] = 'Aby dodać pracę dla jednego z podzadań wymagane jest podanie ilości wykonanych sztuk.';
-                $reason_codes_array['amount'.$suffix.'.gt'] = 'Ilość wykonanych sztuk musi być większa od 0.';
+                $reason_codes_array['amount'.$suffix.'.required'] = '- Aby dodać pracę dla jednego z podzadań wymagane jest podanie ilości wykonanych sztuk.';
+                $reason_codes_array['amount'.$suffix.'.gt'] = '- Ilość wykonanych sztuk musi być większa od 0.';
             }
-            if($request->has('employee'.$suffix)) {
-                $rule_array['employee'.$suffix] = ['required','exists:App\Models\User,id'];
-                $reason_codes_array['employee'.$suffix.'.required'] = 'Nie podano pracownika, który wykonał zadanie.';
-                $reason_codes_array['employee'.$suffix.'.exists'] = 'Podanego pracownika nie znaleziono w systemie';
+            $employee_name = 'employee'.$suffix;
+            if($request->has($employee_name)) {
+                $employee_id_task_array[] = $request->$employee_name;
+                $rule_array[$employee_name] = ['required','exists:App\Models\User,id'];
+                $reason_codes_array[$employee_name.'.required'] = '- Nie podano pracownika, który wykonał zadanie.';
+                $reason_codes_array[$employee_name.'.exists'] = '- Podanego pracownika nie znaleziono w systemie';
             }
             $defect_name = 'defect'.$suffix;
             if($request->has($defect_name) and !is_null($request->$defect_name)) {
                 $rule_array[$defect_name] = ['integer','gt:0'];
-                $reason_codes_array[$defect_name.'.integer'] = 'Liczba wyprodukowanych defektów musi być całkowita.';
-                $reason_codes_array[$defect_name.'.gt'] = 'Liczba defektów musi być większa od 0. Jeśli nie wyprodukowano defektów pozostaw puste pole.';
+                $reason_codes_array[$defect_name.'.integer'] = '- Liczba wyprodukowanych defektów musi być całkowita.';
+                $reason_codes_array[$defect_name.'.gt'] = '- Liczba defektów musi być większa od 0. Jeśli nie wyprodukowano defektów pozostaw puste pole.';
                 $rule_array['defect_rc'.$suffix] = ['required','exists:App\Models\ReasonCode,reason_code'];
-                $reason_codes_array['defect_rc'.$suffix.'.required'] = 'Jeśli wyprodukowano defekty podaj kod błędu.';
-                $reason_codes_array['defect_rc'.$suffix.'.exists'] = 'Podanego kodu błedu nie znaleziono w systemie.';
+                $reason_codes_array['defect_rc'.$suffix.'.required'] = '- Jeśli wyprodukowano defekty podaj kod błędu.';
+                $reason_codes_array['defect_rc'.$suffix.'.exists'] = '- Podanego kodu błedu nie znaleziono w systemie.';
             }
             $waste_name = 'waste'.$suffix;
             if(!is_null($request->$waste_name)) {
                 $rule_array[$waste_name] = ['gt:0'];
-                $reason_codes_array[$waste_name.'.gt'] = 'Odpad musi być większy od 0. Jeśli nie wyprodukowano odpadu pozostaw puste pole.';
+                $reason_codes_array[$waste_name.'.gt'] = '- Odpad musi być większy od 0. Jeśli nie wyprodukowano odpadu pozostaw puste pole.';
                 $rule_array['waste_rc'.$suffix] = ['required','exists:App\Models\ReasonCode,reason_code'];
-                $reason_codes_array['waste_rc'.$suffix.'.required'] = 'Jeśli wyprodukowano odpad podaj kod błędu.';
-                $reason_codes_array['waste_rc'.$suffix.'.exists'] = 'Podanego kodu błedu nie znaleziono w systemie.';
+                $reason_codes_array['waste_rc'.$suffix.'.required'] = '- Jeśli wyprodukowano odpad podaj kod błędu.';
+                $reason_codes_array['waste_rc'.$suffix.'.exists'] = '- Podanego kodu błedu nie znaleziono w systemie.';
                 $rule_array['waste_unit'.$suffix] = ['required','exists:App\Models\Unit,unit'];
-                $reason_codes_array['waste_unit'.$suffix.'.required'] = 'Jeśli wyprodukowano odpad podaj jednostkę.';
-                $reason_codes_array['waste_unit'.$suffix.'.exists'] = 'Podanegj jednostki nie znaleziono w systemie.';
+                $reason_codes_array['waste_unit'.$suffix.'.required'] = '- Jeśli wyprodukowano odpad podaj jednostkę.';
+                $reason_codes_array['waste_unit'.$suffix.'.exists'] = '- Podanej jednostki nie znaleziono w systemie.';
+            }
+            $employee_count_name = 'employee_count'.$suffix;
+            $employee_count = $request->$employee_count_name;
+            if(intval($employee_count) <= 0) {
+                Log::channel('error')->error("Error inserting work: validation failed. 'employee_count".$suffix."' input value error: ".$employee_count." is not proper integer value.", [
+                    'employeeNo' => $employee_no,
+                ]);
+                throw new Exception('Nie udało się dodać pracy. Błąd systemu - nie znaleziono cyklu dla wybranego zadania.', 1);
+
+            }
+
+            //first employee is validated earlier
+            if(intval($employee_count) > 1) {
+                for($i = 2; $i <= intval($employee_count); $i++) {
+                    $employee_name = $i.'_employee'.$suffix;
+                    if($request->has($employee_name)) {
+                        $employee_id_task_array[] = $request->$employee_name;
+                        $rule_array[$employee_name] = ['required','exists:App\Models\User,id'];
+                        $reason_codes_array[$employee_name.'.required'] = '- Nie podano pracownika, który wykonał zadanie. Żadna z dodanych list z nazwą pracownika nie może być pusta.';
+                        $reason_codes_array[$employee_name.'.exists'] = '- Jednego z podanych pracowników nie znaleziono w systemie';
+                    }
+                    else {
+                        throw new Exception('- Nie podano pracownika, który wykonał zadanie. Żadna z dodanych list z nazwą pracownika nie może być pusta.', 2);
+                    }
+                }
             }
             $request->validate( $rule_array, $reason_codes_array);
 
+
+            if(!($employee_id_task_array === array_unique($employee_id_task_array))) {
+                throw new Exception("- Dla jednego z podzadań wybrano więcej niż 1 raz tego samego pracownika w kolumnie 'Pracownicy'.", 2);
+            }
             $start_time_input = 'start_time'.$suffix;
             $end_time_input = 'end_time'.$suffix;
 
             $time_array[] = [$request->$start_time_input, $request->$end_time_input];
+            $employee_id_array[$suffix] = $employee_id_task_array;
         }
-        $this->validateWorkTimeOverlap($time_array);
 
-        return $suffix_array;
+        $this->validateWorkTimeOverlap($time_array, $employee_id_array, $employee_no);
+
+        return array('SUFFIX' =>$suffix_array, 'EMPLOYEEID' => $employee_id_array);
     }
 
 
     /**
      * @throws Exception
      */
-    private function validateWorkTimeOverlap($time_array)
+    private function validateWorkTimeOverlap(array $time_array, array $employee_id_array, string $employee_no): void
     {
+        if(count($time_array) != count($employee_id_array)) {
+            Log::channel('error')->error('Error inserting work: validation failed in validateWorkTimeOverlap method. $time_array and $employee_id_array counts differ.', [
+                'employeeNo' => $employee_no,
+            ]);
+            throw new Exception('Nie udało się dodać pracy. Błąd systemu przy walidacji czasów pracy', 1);
+        }
+        $employee_id_array = array_values($employee_id_array);
+
         if(count($time_array) > 0) {
-            for ($i = 0; $i < count($time_array) - 1; $i++) {
-                $start1 = new DateTime($time_array[$i][0]);
-                $end1 = new DateTime($time_array[$i][1]);
-
-                for ($j = $i + 1; $j < count($time_array); $j++) {
-                    $start2 = new DateTime($time_array[$j][0]);
-                    $end2 = new DateTime($time_array[$j][1]);
-
-                    if ($start1 < $end2 && $end1 > $start2) {
-                        throw new Exception('Daty 2 lub więcej zadań nachodzą na siebie.', 2);
+            if(count(($time_array)) == 1) {
+                $start = new DateTime($time_array[0][0]);
+                $end = new DateTime($time_array[0][1]);
+                $this->validateOtherWorks($start, $end, $employee_id_array[0]);
+            }
+            else {
+                for ($i = 0; $i < count($time_array) - 1; $i++) {
+                    $start1 = new DateTime($time_array[$i][0]);
+                    $end1 = new DateTime($time_array[$i][1]);
+                    $this->validateOtherWorks($start1, $end1, $employee_id_array[$i]);
+                    for ($j = $i + 1; $j < count($time_array); $j++) {
+                        $start2 = new DateTime($time_array[$j][0]);
+                        $end2 = new DateTime($time_array[$j][1]);
+                        if ($start1 < $end2 && $end1 > $start2) {
+                            throw new Exception('Daty 2 lub więcej zadań nachodzą na siebie.', 2);
+                        }
                     }
                 }
             }
-        }
 
+        }
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function validateOtherWorks($start, $end, $employee_id_array): void
+    {
+        $where_start1 = $start->format('Y-m-d H:i:s');
+        $where_end1 = $end->format('Y-m-d H:i:s');
+        $work_query = WorkUser::whereIn('user_id',$employee_id_array)
+            ->join('work','work.id', '=', 'work_user.work_id');
+        $work_query_start = clone $work_query;
+        $work_query_start = $work_query_start->where('start_time','<',$where_start1)
+            ->where('end_time', '>', $where_start1)->get();
+        $work_query_end = clone $work_query;
+        $work_query_end = $work_query_end->where('start_time','<',$where_end1)
+            ->where('end_time', '>', $where_end1)->get();
+
+        if(count($work_query_start) > 0){
+            throw new Exception('- O godzinie '.$where_start1.' jeden z wybranych użytkowników wykonywał inną pracę.', 2);
+        }
+        else if (count($work_query_end) > 0) {
+            throw new Exception('- O godzinie '.$where_end1.' jeden z wybranych użytkowników wykonywał inną pracę.', 2);
+        }
     }
     private function insertProductionCycleUsers(array $employees, int $cycle_id, string $employee_no) : void
     {
@@ -510,327 +651,6 @@ class WorkController extends Controller
         }
     }
 
-    private function deleteProductionCycle(int $category, int $id): void
-    {
-        //remove product cycle
-        if($category == 1) {
-            $cycles_2 = ProductionCycle::where('parent_id', $id)->select('id')->get();
-            foreach ($cycles_2 as $cycle) {
-                ProductionCycle::where('parent_id', $cycle->id)->delete();
-            }
-            ProductionCycle::where('parent_id', $id)->delete();
-            ProductionCycle::where('id', $id)->delete();
-        }
-        //remove component cycle
-        else if($category == 2) {
-            ProductionCycle::where('parent_id', $id)->delete();
-            ProductionCycle::where('id', $id)->delete();
-        }
-        //remove prod_schema cycle
-        else {
-            ProductionCycle::where('id', $id)->delete();
-        }
-    }
-    private function updateProductionCycleUsers(array $employees, int $cycle_id, string $employee_no) : void
-    {
-        if(empty($employees)) {
-            ProductionCycleUser::where('production_cycle_id', $cycle_id)->delete();
-        }
-        else {
-            $cycle_users = ProductionCycleUser::where('production_cycle_id', $cycle_id)->select('production_cycle_id', 'user_id')->get();
-            if(count($cycle_users) == 0) {
-                foreach ($employees as $id) {
-                    DB::table('production_cycle_user')->insert([
-                        'production_cycle_id' => $cycle_id,
-                        'user_id' => $id,
-                        'created_by' => $employee_no,
-                        'updated_by' => $employee_no,
-                        'created_at' => date('y-m-d h:i:s'),
-                        'updated_at' => date('y-m-d h:i:s'),]);
-                }
-            }
-            else {
-                foreach ($cycle_users as $user) {
-                    //if user isn't in employees input, remove it, and remove its id from input array
-                    if(!in_array($user->user_id,$employees)) {
-                        ProductionCycleUser::where(['production_cycle_id' => $cycle_id,
-                                                    'user_id' => $user->user_id])->delete();
-                    } else {
-                        array_splice($employees,array_search($user->user_id, $employees),1);
-                    }
-
-                }
-                //insert new row for not spliced ids
-                foreach ($employees as $id) {
-                    DB::table('production_cycle_user')->insert([
-                        'production_cycle_id' => $cycle_id,
-                        'user_id' => $id,
-                        'created_by' => $employee_no,
-                        'updated_by' => $employee_no,
-                        'created_at' => date('y-m-d h:i:s'),
-                        'updated_at' => date('y-m-d h:i:s'),]);
-                }
-            }
-
-        }
-    }
-
-    private function validateEmployees(string|null $employees, string $employee_no, bool $edit = false) : array
-    {
-        if(is_null($employees)) {
-            return [];
-        }
-        $keyword1 = $edit? 'updating' : 'inserting';
-        $keyword2 = $edit? 'edytować' : 'dodać';
-        $employees_tab = explode(',',$employees);
-        if(count(User::whereIn('id', $employees_tab)->get()) != count($employees_tab)) {
-            Log::channel('error')->error("Error '.$keyword1.' cycle: incorrect 'employees' input value: ".$employees.".", [
-                'employeeNo' => $employee_no,
-            ]);
-            throw new Exception('Nie udało się '.$keyword2.' cyklu. Błąd systemu.', 1);
-        }
-        return $employees_tab;
-    }
-
-    /**
-     * @throws Exception
-     */
-    private function insertProductionCycle($request, string $employee_no) : int
-    {
-        $category = intval($request->category);
-        $id = intval($request->id);
-        $amount = intval($request->amount);
-        $parent_id = null;
-        if(!in_array($category, [1,2,3])) {
-            Log::channel('error')->error('Error inserting cycle: incorrect $request->category value: '.$request->category, [
-                'employeeNo' => $employee_no,
-            ]);
-            throw new Exception('Nie udało się dodać cyklu. Błąd systemu przy ustalaniu kategorii.',1);
-        }
-            //product
-        if($category == 1) {
-            if(count(ProductionCycle::where(['product_id' => $id, 'parent_id' => null, 'finished' => 0])->get()) > 0) {
-                throw new Exception('Nie można dodać nowego cyklu - istnieje rozpoczęty cykl dla tego produktu. Aby dodać nowy cykl zakończ poprzedni.',1);
-            }
-            if(!Product::find($id) instanceof Product) {
-                Log::channel('error')->error('Error inserting cycle: incorrect $request->id value: '.$request->id.'. Product with provided id not found.', [
-                    'employeeNo' => $employee_no,
-                ]);
-                throw new Exception('Nie udało się dodać cyklu dla produktu. Błąd systemu.',1);
-            }
-
-            $parent_id = DB::table('production_cycle')->insertGetId([
-                'level' => 1,
-                'category' => 1,
-                'product_id' => $id,
-                'expected_start_time' => $request->exp_start.' 00:00:00',
-                'expected_end_time' => $request->exp_end.' 23:59:59',
-                'total_amount' => $amount,
-                'additional_comment' => $request->comment,
-                'created_by' => $employee_no,
-                'updated_by' => $employee_no,
-                'created_at' => date('y-m-d h:i:s'),
-                'updated_at' => date('y-m-d h:i:s'),]
-
-            );
-            $components = ProductComponent::where('product_id', $id)->select('component_id', 'amount_per_product')->get();
-
-            foreach ($components as $comp) {
-                $parent_id2 = DB::table('production_cycle')->insertGetId([
-                        'level' => 2,
-                        'category' => 2,
-                        'component_id' => $comp->component_id,
-                        'parent_id' => $parent_id,
-                        'expected_start_time' => $request->exp_start.' 00:00:00',
-                        'expected_end_time' => $request->exp_end.' 23:59:59',
-                        'total_amount' => $amount * $comp->amount_per_product,
-                        'created_by' => $employee_no,
-                        'updated_by' => $employee_no,
-                        'created_at' => date('y-m-d h:i:s'),
-                        'updated_at' => date('y-m-d h:i:s'),]
-
-                );
-
-                $comp_prod_schemas = ComponentProductionSchema::where('component_id', $comp->component_id)->select('production_schema_id','sequence_no')->get();
-                foreach ($comp_prod_schemas as $prod_schema) {
-                    DB::table('production_cycle')->insert([
-                        'level' => 3,
-                        'category' => 3,
-                        'production_schema_id' => $prod_schema->production_schema_id,
-                        'parent_id' => $parent_id2,
-                        'sequence_no' => $prod_schema->sequence_no,
-                        'expected_start_time' => $request->exp_start.' 00:00:00',
-                        'expected_end_time' => $request->exp_end.' 23:59:59',
-                        'total_amount' => $amount * $comp->amount_per_product,
-                        'created_by' => $employee_no,
-                        'updated_by' => $employee_no,
-                        'created_at' => date('y-m-d h:i:s'),
-                        'updated_at' => date('y-m-d h:i:s'),]);
-                }
-            }
-
-        }
-        else if($category == 2) {
-            if(count(ProductionCycle::where(['component_id' => $id, 'parent_id' => null, 'finished' => 0])->get()) > 0) {
-                throw new Exception('Nie można dodać nowego cyklu - istnieje rozpoczęty cykl dla tego materiału. Aby dodać nowy cykl zakończ poprzedni.',1);
-            }
-            if(!Component::find($id) instanceof Component) {
-                Log::channel('error')->error('Error inserting cycle: incorrect $request->id value: '.$request->id.'. Component with provided id not found.', [
-                    'employeeNo' => $employee_no,
-                ]);
-                throw new Exception('Nie udało się dodać cyklu dla materiału. Błąd systemu.',1);
-            }
-            $parent_id = DB::table('production_cycle')->insertGetId([
-                'level' => 1,
-                'category' => 2,
-                'component_id' => $id,
-                'expected_start_time' => $request->exp_start.' 00:00:00',
-                'expected_end_time' => $request->exp_end.' 23:59:59',
-                'total_amount' => $amount,
-                'additional_comment' => $request->comment,
-                'created_by' => $employee_no,
-                'updated_by' => $employee_no,
-                'created_at' => date('y-m-d h:i:s'),
-                'updated_at' => date('y-m-d h:i:s'),]);
-
-            $comp_prod_schemas = ComponentProductionSchema::where('component_id', $id)->select('production_schema_id','sequence_no')->get();
-            foreach ($comp_prod_schemas as $prod_schema) {
-                DB::table('production_cycle')->insert([
-                    'level' => 2,
-                    'category' => 3,
-                    'component_id' => $prod_schema->production_schema_id,
-                    'parent_id' => $parent_id,
-                    'sequence_no' => $prod_schema->sequence_no,
-                    'expected_start_time' => $request->exp_start.' 00:00:00',
-                    'expected_end_time' => $request->exp_end.' 23:59:59',
-                    'total_amount' => $amount,
-                    'additional_comment' => $request->comment,
-                    'created_by' => $employee_no,
-                    'updated_by' => $employee_no,
-                    'created_at' => date('y-m-d h:i:s'),
-                    'updated_at' => date('y-m-d h:i:s'),]);
-            }
-        }
-        else if($category == 3) {
-            if(!is_null($request->pack_prod_id)) {
-                if(count(ProductionCycle::where(['production_schema_id' => $id, 'parent_id' => null, 'finished' => 0])->get()) > 0) {
-                    throw new Exception('Nie można dodać nowego cyklu - istnieje rozpoczęty cykl dla tego zadania. Aby dodać nowy cykl zakończ poprzedni.',1);
-                }
-            } else {
-                if(count(ProductionCycle::where(['production_schema_id' => $id, 'product_id' => $request->pack_prod_id, 'parent_id' => null, 'finished' => 0])->get()) > 0) {
-                    throw new Exception('Nie można dodać nowego cyklu - istnieje rozpoczęty cykl dla tego zadania. Aby dodać nowy cykl zakończ poprzedni.',1);
-                }
-            }
-
-            if(!ProductionSchema::find($id) instanceof ProductionSchema) {
-                Log::channel('error')->error('Error inserting cycle: incorrect $request->id value: '.$request->id.'. ProductionSchema with provided id not found.', [
-                    'employeeNo' => $employee_no,
-                ]);
-                throw new Exception('Nie udało się dodać cyklu dla zadania. Błąd systemu.',1);
-            }
-            $pack_prod_id = Product::where('id', $request->pack_prod_id) instanceof Product? $request->pack_prod_id : null;
-            $parent_id = DB::table('production_cycle')->insertGetId([
-                'level' => 1,
-                'category' => 3,
-                'production_schema_id' => $id,
-                'product_id' => $pack_prod_id,
-                'total_amount' => $amount,
-                'expected_start_time' => $request->exp_start.' 00:00:00',
-                'expected_end_time' => $request->exp_end.' 23:59:59',
-                'additional_comment' => $request->comment,
-                'created_by' => $employee_no,
-                'updated_by' => $employee_no,
-                'created_at' => date('y-m-d h:i:s'),
-                'updated_at' => date('y-m-d h:i:s'),]);
-
-        }
-        return $parent_id;
-    }
-
-    /**
-     * @throws Exception
-     */
-    private function updateProductionCycle($request, string $employee_no) : void
-    {
-        $category = intval($request->category);
-        $id = intval($request->id);
-        $amount = intval($request->amount);
-
-        if(!in_array($category, [1,2,3])) {
-            Log::channel('error')->error('Error updating cycle: incorrect $request->category value: '.$request->category, [
-                'employeeNo' => $employee_no,
-            ]);
-            throw new Exception('Nie udało się edytować cyklu. Błąd systemu przy ustalaniu kategorii.',1);
-        }
-        if (!ProductionCycle::find($id) instanceof ProductionCycle) {
-            Log::channel('error')->error('Error updating cycle: incorrect $request->id value: ' . $request->id . '. ProductionCycle with provided id not found.', [
-                'employeeNo' => $employee_no,
-            ]);
-            throw new Exception('Nie udało się edytować cyklu. Błąd systemu.', 1);
-        }
-
-        //product cycle update
-        if($category == 1) {
-            $amount_coef = ProductionCycle::where('id',$id)->select('total_amount')->first();
-            $amount_coef = $amount_coef instanceof ProductionCycle? $amount / $amount_coef->total_amount : 1;
-            DB::table('production_cycle')->where('id', $id)->update([
-                    'expected_start_time' => $request->exp_start.' 00:00:00',
-                    'expected_end_time' => $request->exp_end.' 23:59:59',
-                    'total_amount' => $amount,
-                    'additional_comment' => $request->comment,
-                    'updated_by' => $employee_no,
-                    'updated_at' => date('y-m-d h:i:s'),]
-
-            );
-            $cycles_2 = ProductionCycle::where('parent_id', $id)->select('id', 'total_amount')->get();
-
-            foreach ($cycles_2 as $cycle) {
-                DB::table('production_cycle')->where('id', $cycle->id)->update([
-                        'expected_start_time' => $request->exp_start.' 00:00:00',
-                        'expected_end_time' => $request->exp_end.' 23:59:59',
-                        'total_amount' => $amount_coef * $cycle->total_amount,
-                        'updated_by' => $employee_no,
-                        'updated_at' => date('y-m-d h:i:s'),]
-
-                );
-                DB::table('production_cycle')->where('parent_id', $cycle->id)->update([
-                    'expected_start_time' => $request->exp_start.' 00:00:00',
-                    'expected_end_time' => $request->exp_end.' 23:59:59',
-                    'total_amount' => $amount_coef * $cycle->total_amount,
-                    'updated_by' => $employee_no,
-                    'updated_at' => date('y-m-d h:i:s'),]);
-            }
-        }
-        //component cycle update
-        else if($category == 2) {
-            DB::table('production_cycle')->where('id', $id)->update([
-                'expected_start_time' => $request->exp_start.' 00:00:00',
-                'expected_end_time' => $request->exp_end.' 23:59:59',
-                'total_amount' => $amount,
-                'additional_comment' => $request->comment,
-                'updated_by' => $employee_no,
-                'updated_at' => date('y-m-d h:i:s'),]);
-
-            DB::table('production_cycle')->where('parent_id', $id)->update([
-                    'expected_start_time' => $request->exp_start.' 00:00:00',
-                    'expected_end_time' => $request->exp_end.' 23:59:59',
-                    'total_amount' => $amount,
-                    'additional_comment' => $request->comment,
-                    'updated_by' => $employee_no,
-                    'updated_at' => date('y-m-d h:i:s'),]);
-        }
-        //production schema update
-        else if($category == 3) {
-
-            DB::table('production_cycle')->where('id', $id)->update([
-                'total_amount' => $amount,
-                'expected_start_time' => $request->exp_start . ' 00:00:00',
-                'expected_end_time' => $request->exp_end . ' 23:59:59',
-                'additional_comment' => $request->comment,
-                'updated_by' => $employee_no,
-                'updated_at' => date('y-m-d h:i:s'),]);
-        }
-    }
     private function filterWorkByEndTime(Request $request): array
     {
         $work_start_from = Carbon::parse($request->work_start_from);

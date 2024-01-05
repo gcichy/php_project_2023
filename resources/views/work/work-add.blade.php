@@ -2,43 +2,36 @@
     <script type="module">
         function selectOldElements() {
             let category = $('#selected-cycle-category').val();
-            console.log(category);
             if(category == 1) {
-                console.log(category);
                 let selectedCompCycleId = $('#selected-comp-cycle-id').val();
                 let selectedSchemaCycleId = $('#selected-prod-schema-cycle-id').val();
-                console.log(Number.isInteger(parseInt(selectedCompCycleId, 10)) && parseInt(selectedCompCycleId, 10) > 0
-                    && Number.isInteger(parseInt(selectedSchemaCycleId, 10)) && parseInt(selectedSchemaCycleId, 10) > 0);
                 if(Number.isInteger(parseInt(selectedCompCycleId, 10)) && parseInt(selectedCompCycleId, 10) > 0
                     && Number.isInteger(parseInt(selectedSchemaCycleId, 10)) && parseInt(selectedSchemaCycleId, 10) > 0) {
                     let elementCompCycleId = '#comp-' + selectedCompCycleId;
                     $(elementCompCycleId).trigger('click');
                     let elementSchemaCycleId = '#schemacycle-' + selectedSchemaCycleId +'-compcycle-' + selectedCompCycleId;
-                    console.log($(elementSchemaCycleId), elementSchemaCycleId);
                     $(elementSchemaCycleId).trigger('click');
                 }
             }
             else if(category == 2) {
-                let selectedSchemaCycleId = $('#selected_prod_schema_cycle_id').val();
+                let selectedSchemaCycleId = $('#selected-prod-schema-cycle-id').val();
+                console.log($(selectedSchemaCycleId));
                 if(Number.isInteger(parseInt(selectedSchemaCycleId, 10)) && parseInt(selectedSchemaCycleId, 10) > 0) {
                     let elementSchemaCycleId = '#schemacycle-' + selectedSchemaCycleId;
+                    console.log($(elementSchemaCycleId));
                     $(elementSchemaCycleId).trigger("click");
                 }
             }
             let checkedBoxesIdString = $('#checked-boxes-id-string').val();
             let checkedBoxesIdArray = checkedBoxesIdString.split(';');
-            console.log(checkedBoxesIdArray);
             checkedBoxesIdArray.forEach(function(elem) {
                 if(elem.length > 0) {
                     let id = $('#'+elem);
-                    console.log(id);
                     if(id.length > 0) {
                         id.trigger("click");
                     }
                 }
             });
-
-
         }
 
         function adjustSelectedElement(elemClass, container) {
@@ -139,6 +132,20 @@
                         })
                         timeInputs.removeClass('input-time').addClass('selected-input-time');
                     }
+                    let removeEmployeeBtns = inputTableCloned.find('.remove-employee');
+                    if(removeEmployeeBtns.length > 0) {
+                        removeEmployeeBtns.on('click', function() {
+                            removeEmployee($(this));
+                        });
+                    }
+                    let addEmployeeBtns = inputTableCloned.find('.add-employee');
+                    if(addEmployeeBtns.length > 0) {
+                        addEmployeeBtns.each(function () {
+                            $(this).attr('id', 'selected-'+$(this).attr('id'));
+                        })
+                        addEmployeeBtns.addClass('selected-add-employee').removeClass('add-employee');
+                        addEmployeeBtns.on('click', addEmployee);
+                    }
                     let prodSchemaCheckboxes = inputTableCloned.find('.input-checkbox');
                     if(prodSchemaCheckboxes.length > 0) {
                         prodSchemaCheckboxes.each(function () {
@@ -149,7 +156,7 @@
                             toggleInputsDisability($(this));
                         });
                     }
-
+                    console.log(inputTableCloned.find('option'));
                     $('#input-container').append(inputTableCloned);
                     $('.selected-input-time').on('change', function () {
                         calculateWorkDuration($(this));
@@ -263,7 +270,7 @@
                 if(sourceText === 'Po terminie') {
                     elem.addClass('bg-red-500');
                 } else if(sourceText === 'Zakończony') {
-                    elem.addClass('bg-red-500');
+                    elem.addClass('bg-green-450');
                 } else if(sourceText === 'Aktywny') {
                     elem.addClass('bg-blue-450');
                 } else {
@@ -312,7 +319,7 @@
                     let progress = $(this).find('.progress');
                     if(progress.length === 1) {
                         let width = parseInt(styles[1]);
-                        if(width === '100') {
+                        if(width >= 100) {
                             $(progress).addClass('rounded-lg');
                         } else {
                             $(progress).addClass('rounded-l-lg');
@@ -344,7 +351,7 @@
 
         function setMaxInputTime() {
             let currentDate = new Date();
-            currentDate.setHours(currentDate.getHours() + 5);
+            currentDate.setHours(currentDate.getHours() + 9);
             let formattedDatetime = currentDate.toISOString().slice(0, 16);
             $(".selected-input-time").attr("max", formattedDatetime);
         }
@@ -353,13 +360,13 @@
             let parent = checkboxInput.closest('.input-table-row');
             if(parent.length > 0) {
                 let disabledInputs = parent.find('.disabled-input');
+                let employeeBtns = parent.find('.disabled-input-employee-btn');
                 if(disabledInputs.length > 0) {
                     if (checkboxInput.is(":checked")) {
                         disabledInputs.prop("disabled", false).removeClass('bg-gray-200').addClass('bg-white');
                         parent.addClass('bg-blue-150');
-                        let multiSelectList = parent.find('.multi-select-list');
-                         if(multiSelectList.length > 0) {
-                            multiSelectList.removeClass('hidden');
+                        if(employeeBtns.length > 0) {
+                            employeeBtns.prop("disabled", false)
                         }
                     }
                     else {
@@ -373,10 +380,10 @@
                         if(nullableInputs.length > 0) {
                             nullableInputs.val(null)
                         }
-                        let multiSelectList = parent.find('.multi-select-list');
-                        if(multiSelectList.length > 0) {
-                            multiSelectList.addClass('hidden');
+                        if(employeeBtns.length > 0) {
+                            employeeBtns.prop("disabled", true)
                         }
+                        removeAllEmployees(checkboxInput);
                     }
                 }
             }
@@ -434,6 +441,70 @@
                 }
             }
         }
+
+        function addEmployee() {
+            let parent = $(this).closest('.input-table-row');
+            let employeeCount = parent.find('.employee-input-count');
+            let count = parseInt(employeeCount.val());
+            if(employeeCount.length > 0 && count > 0) {
+                count += 1;
+            }
+            let firstEmployee = parent.find('.employee-input');
+            if(firstEmployee.length > 0 ) {
+                let clonedSelect = firstEmployee.clone();
+
+                clonedSelect.attr({
+                    'id': count.toString()+'-'+firstEmployee.attr('id'),
+                    'name': count.toString()+'_'+firstEmployee.attr('name')  // You may adjust the name attribute as needed
+                }).removeClass('employee-input').addClass('added-employee-input');
+                // let emptyOption = $('<option>', { value: '', text: '', selected: true });
+                // clonedSelect.append(emptyOption);
+                clonedSelect.val(null);
+                if(count < 6) {
+                    if(count > 2) {
+                        let previousCount = count - 1;
+                        let previousInput = $('#'+ previousCount.toString()+'-'+firstEmployee.attr('id'));
+                        if(previousInput.length > 0) {
+                            clonedSelect.insertAfter(previousInput);
+                        }
+                        else {
+                            clonedSelect.insertAfter(firstEmployee);
+                        }
+                    }
+                    else {
+                        clonedSelect.insertAfter(firstEmployee);
+                    }
+                    employeeCount.val(count);
+                }
+            }
+        }
+
+        function removeEmployee(elem) {
+            let parent = elem.closest('.input-table-row');
+            let firstEmployee = parent.find('.employee-input');
+            let employeeCount = parent.find('.employee-input-count');
+            let count = parseInt(employeeCount.val());
+            if (employeeCount.length > 0 && count > 1 && firstEmployee.length > 0) {
+                let previousInput = $('#' + count.toString() + '-' + firstEmployee.attr('id'));
+                if (previousInput.length > 0) {
+                    previousInput.remove();
+                    employeeCount.val(count - 1);
+                } else {
+                    $('.added-employee-input').remove();
+                    employeeCount.val(1);
+                }
+            }
+        }
+
+        function removeAllEmployees(elem) {
+            let parent = elem.closest('.input-table-row');
+            let employeeCount = parent.find('.employee-input-count');
+            let count = parseInt(employeeCount.val());
+            while(count > 1) {
+                removeEmployee(elem);
+                count = parseInt(employeeCount.val());
+            }
+        }
         $(document).ready(function() {
             addCycleStyles();
             setMaxInputTime();
@@ -489,9 +560,6 @@
                 getRowData(idArr[idArr.length-1]);
             });
 
-            $('#selected-prod-schema-container').on('click', function () {
-                // console.log($(this).find('.open-modal'));
-            });
 
             $('.expand-btn').on('click', function () {
                 expandButtonOnClick($(this),'#list-');
@@ -502,6 +570,12 @@
 
             $('.selected-input-checkbox ').change(function() {
                 toggleInputsDisability($(this));
+            });
+
+            $(".add-employee").on("click", addEmployee);
+
+            $('.remove-employee').on("click", function() {
+                removeEmployee($(this));
             });
 
             selectOldElements();
@@ -539,7 +613,9 @@
                 <div id="cycle-{{$p_cycle->cycle_id}}" class="cycle w-[95%] rounded-xl bg-white my-5 shadow-md">
                     <p class="cycle_status hidden">{{$p_cycle->status}}</p>
                     <p class="cycle_styles hidden">{{$p_cycle->status}};{{$p_cycle->style_progress}}</p>
-                    <form method="POST" action="{{ route('work.store',['id' => $p_cycle->cycle_id]) }}" enctype="multipart/form-data" class="w-full">
+                    @if($p_cycle->finished == 0)
+                        <form method="POST" action="{{ route('work.store',['id' => $p_cycle->cycle_id]) }}" enctype="multipart/form-data" class="w-full">
+                    @endif
                         @csrf
                         <dl class="grid grid-cols-4 xl:grid-cols-8 overflow-hidden text-left rounded-xl">
                             <div class="col-span-4 flex flex-col bg-gray-200/50 xl:border-r-2">
@@ -556,7 +632,7 @@
                             <div class="col-span-2 flex flex-col bg-gray-200/50 border-r">
                                 <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Postęp</dt>
                                 <div class="flex justify-center items-center w-full h-full p-2">
-                                    <div class="rounded-lg w-1/2 border h-[32px]  relative bg-white">
+                                    <div class="rounded-lg w-1/2 border h-[32px]  relative bg-white shadow-md">
                                         <div class="absolute h-1/2 w-full top-[16%] lg:top-[8%] flex justify-center text-sm lg:text-lg font-semibold">
                                             {{$p_cycle->current_amount}}/{{$p_cycle->total_amount}}
                                         </div>
@@ -680,7 +756,7 @@
                                                             Czas pracy (h)
                                                         </th>
                                                         <th scope="col" class="px-2 py-3 text-center">
-                                                            Pracownik
+                                                            Pracownicy
                                                         </th>
                                                         <th scope="col" class="px-2 py-3 text-center">
                                                             Komentarz
@@ -739,7 +815,7 @@
                                                             <td class="px-2 py-3 text-center">
                                                                 <input type="datetime-local" id="{{'start-time-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
                                                                        name="{{'start_time_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
-                                                                       min="2024-01-01T00:00" max="{{isset($max_time)? $max_time : '2060-12-31T23:59'}}" step="60"
+                                                                       min="2024-01-01T00:00" max="{{isset($max_time)? $max_time.'T23:59' : '2060-12-31T23:59'}}" step="60"
                                                                        class="disabled-input input-start-time selected-input-time nullable-input bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
                                                                        value="{{old('start_time_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
                                                                        disabled>
@@ -747,7 +823,7 @@
                                                             <td class="px-2 py-3 text-center">
                                                                 <input type="datetime-local" id="end-time-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
                                                                        name="{{'end_time_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
-                                                                       min="2024-01-01T00:00" max="{{isset($max_time)? $max_time : '2060-12-31T23:59'}}" step="60"
+                                                                       min="2024-01-01T00:00" max="{{isset($max_time)? $max_time.'T23:59' : '2060-12-31T23:59'}}" step="60"
                                                                        class="disabled-input input-end-time selected-input-time nullable-input bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
                                                                        value="{{old('end_time_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
                                                                        disabled>
@@ -772,23 +848,55 @@
                                                             </td>
                                                             <td class="employee-no px-2 py-3 text-center">
                                                                 @if(isset($users) and in_array($user->role,['admin','manager']))
-                                                                    <div class="p-1 flex justify-center items-center h-full min-w-[225px]">
-                                                                        @php $unique_id = 'employee_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id; @endphp
-                                                                        <x-select-multiple :uniqueId="$unique_id" :placeholder="__('Pracownicy')"
-                                                                                           :classes="__('disabled-input bg-gray-200')" :disabled="__(true)">
-                                                                            <x-slot name="options">
-                                                                                @foreach($users as $u)
-                                                                                    <option value="{{$u->id}}"
-                                                                                            @if(old('employee_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id))
-                                                                                                selected
-                                                                                            @elseif($user->id == $u->id)
-                                                                                                selected
-                                                                                        @endif>
-                                                                                        {{$u->employeeNo}}
-                                                                                    </option>
-                                                                                @endforeach
-                                                                            </x-slot>
-                                                                        </x-select-multiple>
+                                                                    <div class="p-1 flex justify-start items-center flex-row h-full min-w-[130px]">
+{{--                                                                        @php $unique_id = 'employee_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id; @endphp--}}
+{{--                                                                        <x-select-multiple :uniqueId="$unique_id" :placeholder="__('Pracownicy')"--}}
+{{--                                                                                           :classes="__('disabled-input bg-gray-200')" :disabled="__(true)">--}}
+{{--                                                                            <x-slot name="options">--}}
+{{--                                                                                @foreach($users as $u)--}}
+{{--                                                                                    <option value="{{$u->id}}"--}}
+{{--                                                                                            @if(old('employee_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id))--}}
+{{--                                                                                                selected--}}
+{{--                                                                                            @elseif($user->id == $u->id)--}}
+{{--                                                                                                selected--}}
+{{--                                                                                        @endif>--}}
+{{--                                                                                        {{$u->employeeNo}}--}}
+{{--                                                                                    </option>--}}
+{{--                                                                                @endforeach--}}
+{{--                                                                            </x-slot>--}}
+{{--                                                                        </x-select-multiple>--}}
+                                                                        <div class="flex justify-center flex-col mr-2">
+                                                                            <button type="button" id="{{'employee-add-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                    disabled class="disabled-input-employee-btn add-employee employee-btn inline-block  p-0.5 bg-gray-800 rounded-sm m-0.5">
+                                                                                <svg width="30px" height="30px" viewBox="0 0 24 24" fill="none" class="w-3 h-3" xmlns="http://www.w3.org/2000/svg">
+                                                                                    <title>dodaj pracownika</title>
+                                                                                    <path d="M4 12H20M12 4V20" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                                                </svg>
+                                                                            </button>
+                                                                            <button type="button" id="{{'employee-remove-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}" disabled class="disabled-input-employee-btn remove-employee employee-btn inline-block  p-0.5 bg-gray-800 rounded-sm m-0.5">
+                                                                                <svg width="30px" height="30px" viewBox="0 0 24 24" fill="none" class="w-3 h-3" xmlns="http://www.w3.org/2000/svg">
+                                                                                    <title>usuń pracownika</title>
+                                                                                    <path d="M6 12L18 12" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                                                </svg>
+                                                                            </button>
+                                                                        </div>
+                                                                        <input id="{{'employee-count-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}" type="number" value="1"
+                                                                               name="{{'employee_count_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                               disabled class="disabled-input employee-input-count hidden">
+                                                                        <select id="{{'employee-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                name="{{'employee_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                                disabled class="disabled-input employee-input bg-gray-200 w-[100px] mr-2 block py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                            @foreach($users as $u)
+                                                                                <option value="{{$u->id}}" class="bg-white"
+                                                                                        @if(old('employee_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id) == $u->id)
+                                                                                            selected
+                                                                                        @elseif($user->id == $u->id)
+                                                                                            selected
+                                                                                    @endif>
+                                                                                    {{$u->employeeNo}}
+                                                                                </option>
+                                                                            @endforeach
+                                                                        </select>
                                                                     </div>
                                                                 @else
                                                                     <div class="block w-full bg-white py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
@@ -905,16 +1013,24 @@
                                 </div>
                             </div>
                             <div class="col-span-4 xl:col-span-8 w-full text-center">
-                                <button  id="add-work-button"
-                                    class="inline-block px-6 py-2 md:py-4 text-xs font-medium uppercase w-full text-md md:text-lg xl:text-xl leading-normal text-white focus:outline-none shadow-[0_4px_9px_-4px_rgba(0,0,0,0.2)] transition duration-150 ease-in-out hover:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] focus:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] active:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)]"
-                                    data-te-ripple-init
-                                    data-te-ripple-color="light"
-                                    type="submit">
-                                    {{ __('Raportuj pracę') }}
-                                </button>
+                                @if($p_cycle->finished == 0)
+                                    <button  id="add-work-button"
+                                             class="inline-block px-6 py-2 md:py-4 text-xs font-medium uppercase w-full text-md md:text-lg xl:text-xl leading-normal text-white focus:outline-none shadow-[0_4px_9px_-4px_rgba(0,0,0,0.2)] transition duration-150 ease-in-out hover:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] focus:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] active:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)]"
+                                             data-te-ripple-init
+                                             data-te-ripple-color="light"
+                                             type="submit">
+                                        {{ __('Raportuj pracę') }}
+                                    </button>
+                                @else
+                                    <div class="inline-block px-6 py-2 md:py-4 bg-green-450 text-xs font-medium uppercase w-full text-md md:text-lg xl:text-xl leading-normal text-white focus:outline-none shadow-[0_4px_9px_-4px_rgba(0,0,0,0.2)] transition duration-150 ease-in-out hover:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] focus:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)] active:shadow-[0_8px_9px_-4px_rgba(0,0,0,0.1),0_4px_18px_0_rgba(0,0,0,0.2)]">
+                                        {{ __('Cykl zakończony') }}
+                                    </div>
+                                @endif
                             </div>
                         </dl>
-                    </form>
+                    @if($p_cycle->finished == 0)
+                        </form>
+                    @endif
                 </div>
             </div>
             @if($p_cycle->category != 3 and isset($child_prod_schemas))
@@ -1127,7 +1243,7 @@
                                                                                     Czas pracy (h)
                                                                                 </th>
                                                                                 <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
-                                                                                    Pracownik
+                                                                                    Pracownicy
                                                                                 </th>
                                                                                 <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
                                                                                     Komentarz
@@ -1188,7 +1304,7 @@
                                                                                         <td class="hidden-input px-2 py-3 text-center hidden">
                                                                                             <input type="datetime-local" id="{{'start-time-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
                                                                                                    name="{{'start_time_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
-                                                                                                   min="2024-01-01T00:00" max="{{isset($max_time)? $max_time : '2060-12-31T23:59'}}" step="60"
+                                                                                                   min="2024-01-01T00:00" max="{{isset($max_time)? $max_time.'T23:59' : '2060-12-31T23:59'}}" step="60"
                                                                                                    class="disabled-input input-start-time input-time nullable-input bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
                                                                                                    value="{{old('start_time_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
                                                                                                    disabled>
@@ -1196,7 +1312,7 @@
                                                                                         <td class="hidden-input px-2 py-3 text-center hidden">
                                                                                             <input type="datetime-local" id="end-time-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
                                                                                                    name="{{'end_time_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
-                                                                                                   min="2024-01-01T00:00" max="{{isset($max_time)? $max_time : '2060-12-31T23:59'}}" step="60"
+                                                                                                   min="2024-01-01T00:00" max="{{isset($max_time)? $max_time.'T23:59' : '2060-12-31T23:59'}}" step="60"
                                                                                                    class="disabled-input input-end-time input-time nullable-input bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
                                                                                                    value="{{old('end_time_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
                                                                                                    disabled>
@@ -1221,13 +1337,30 @@
                                                                                         </td>
                                                                                         <td class="hidden-input employee-no px-2 py-3 text-center hidden">
                                                                                             @if(isset($users) and in_array($user->role,['admin','manager']))
-                                                                                                <div class="p-1 flex justify-center items-center h-full">
+                                                                                                <div class="p-1 flex justify-start items-center h-full">
+                                                                                                    <div class="flex justify-center flex-col mr-2">
+                                                                                                        <button type="button" id="" disabled class="disabled-input-employee-btn add-employee employee-btn inline-block  p-0.5 bg-gray-800 rounded-sm m-0.5">
+                                                                                                            <svg width="30px" height="30px" viewBox="0 0 24 24" fill="none" class="w-3 h-3" xmlns="http://www.w3.org/2000/svg">
+                                                                                                                <title>dodaj pracownika</title>
+                                                                                                                <path d="M4 12H20M12 4V20" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                                                                            </svg>
+                                                                                                        </button>
+                                                                                                        <button type="button" id="" disabled class="disabled-input-employee-btn remove-employee employee-btn inline-block  p-0.5 bg-gray-800 rounded-sm m-0.5">
+                                                                                                            <svg width="30px" height="30px" viewBox="0 0 24 24" fill="none" class="w-3 h-3" xmlns="http://www.w3.org/2000/svg">
+                                                                                                                <title>usuń pracownika</title>
+                                                                                                                <path d="M6 12L18 12" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                                                                            </svg>
+                                                                                                        </button>
+                                                                                                    </div>
+                                                                                                    <input id="{{'employee-count-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}" type="number" value="1"
+                                                                                                           name="{{'employee_count_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                                                           disabled class="disabled-input employee-input-count hidden">
                                                                                                     <select id="{{'employee-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
                                                                                                             name="{{'employee_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
-                                                                                                            disabled class="disabled-input nullable-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                                            disabled class="disabled-input employee-input bg-gray-200 w-[100px] mr-2 block py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
                                                                                                         @foreach($users as $u)
                                                                                                             <option value="{{$u->id}}" class="bg-white"
-                                                                                                                    @if(old('employee_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id))
+                                                                                                                    @if(old('employee_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id) == $u->id)
                                                                                                                         selected
                                                                                                                     @elseif($user->id == $u->id)
                                                                                                                         selected
@@ -1419,7 +1552,7 @@
                                                                                 Czas pracy (h)
                                                                             </th>
                                                                             <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
-                                                                                Pracownik
+                                                                                Pracownicy
                                                                             </th>
                                                                             <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
                                                                                 Komentarz
@@ -1480,7 +1613,7 @@
                                                                                     <td class="hidden-input px-2 py-3 text-center hidden">
                                                                                         <input type="datetime-local" id="{{'start-time-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
                                                                                                name="{{'start_time_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
-                                                                                               min="2024-01-01T00:00" max="{{isset($max_time)? $max_time : '2060-12-31T23:59'}}" step="60"
+                                                                                               min="2024-01-01T00:00" max="{{isset($max_time)? $max_time.'T23:59' : '2060-12-31T23:59'}}" step="60"
                                                                                                class="disabled-input input-start-time selected-input-time nullable-input bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
                                                                                                value="{{old('start_time_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
                                                                                                disabled>
@@ -1488,7 +1621,7 @@
                                                                                     <td class="hidden-input px-2 py-3 text-center hidden">
                                                                                         <input type="datetime-local" id="end-time-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
                                                                                                name="{{'end_time_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
-                                                                                               min="2024-01-01T00:00" max="{{isset($max_time)? $max_time : '2060-12-31T23:59'}}" step="60"
+                                                                                               min="2024-01-01T00:00" max="{{isset($max_time)? $max_time.'T23:59' : '2060-12-31T23:59'}}" step="60"
                                                                                                class="disabled-input input-end-time input-time nullable-input bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
                                                                                                value="{{old('end_time_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
                                                                                                disabled>
@@ -1513,13 +1646,30 @@
                                                                                     </td>
                                                                                     <td class="hidden-input employee-no px-2 py-3 text-center hidden">
                                                                                         @if(isset($users) and in_array($user->role,['admin','manager']))
-                                                                                            <div class="p-1 flex justify-center items-center h-full">
+                                                                                            <div class="p-1 flex justify-start items-center h-full">
+                                                                                                <div class="flex justify-center flex-col mr-2">
+                                                                                                    <button type="button" id="" disabled class="disabled-input-employee-btn add-employee employee-btn inline-block  p-0.5 bg-gray-800 rounded-sm m-0.5">
+                                                                                                        <svg width="30px" height="30px" viewBox="0 0 24 24" fill="none" class="w-3 h-3" xmlns="http://www.w3.org/2000/svg">
+                                                                                                            <title>dodaj pracownika</title>
+                                                                                                            <path d="M4 12H20M12 4V20" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                                                                        </svg>
+                                                                                                    </button>
+                                                                                                    <button type="button" id="" disabled class="disabled-input-employee-btn remove-employee employee-btn inline-block  p-0.5 bg-gray-800 rounded-sm m-0.5">
+                                                                                                        <svg width="30px" height="30px" viewBox="0 0 24 24" fill="none" class="w-3 h-3" xmlns="http://www.w3.org/2000/svg">
+                                                                                                            <title>usuń pracownika</title>
+                                                                                                            <path d="M6 12L18 12" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                                                                        </svg>
+                                                                                                    </button>
+                                                                                                </div>
+                                                                                                <input id="{{'employee-count-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}" type="number" value="1"
+                                                                                                       name="{{'employee_count_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                                                       disabled class="disabled-input employee-input-count hidden">
                                                                                                 <select id="{{'employee-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
                                                                                                         name="{{'employee_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
-                                                                                                        disabled class="disabled-input nullable-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                                        disabled class="disabled-input employee-input bg-gray-200 w-[100px] mr-2 block py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
                                                                                                     @foreach($users as $u)
                                                                                                         <option value="{{$u->id}}" class="bg-white"
-                                                                                                                @if(old('employee_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id))
+                                                                                                                @if(old('employee_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id) == $u->id)
                                                                                                                     selected
                                                                                                                 @elseif($user->id == $u->id)
                                                                                                                     selected

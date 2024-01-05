@@ -22,6 +22,7 @@ return new class extends Migration
                 ->constrained('users')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
+            $table->unsignedBigInteger('duration_minute_per_user');
             $table->string('created_by',30)->nullable();
             $table->string('updated_by',30)->nullable();
             $table->timestamps();
