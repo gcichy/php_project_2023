@@ -545,6 +545,7 @@ class ProdSchemaController
         $taks_names_arr = array();
 
         $is_amount_required = false;
+        $max_sequence_no = 0;
         foreach ($new_task_id_arr  as $new_task_id) {
             if($new_task_id > 0) {
                 $sequence_no = 'new_sequence_no_'.$new_task_id;
@@ -565,13 +566,18 @@ class ProdSchemaController
                 } else {
                     $taks_names_arr[] = $request->$name;
                 }
-                if(!is_null($request->$amount_required)) {
+
+                if($request->$sequence_no > $max_sequence_no) {
+                    $max_sequence_no = $request->$sequence_no;
                     if($is_amount_required) {
-                        $error_arr[] = "Pole 'Ilość wymagana' może być zaznaczone dla maksymalnie 1 podzadania.";
+                        $error_arr[] = "Pole 'Ilość wymagana' może być zaznaczone tylko dla ostatniego podzadania.";
                     }
                     else {
                         $is_amount_required = true;
                     }
+                }
+                else if(!is_null($request->$amount_required)) {
+                    $error_arr[] = "Pole 'Ilość wymagana' może być zaznaczone tylko dla ostatniego podzadania.";
                 }
 
                 $error_arr = array_unique($error_arr);
@@ -587,7 +593,7 @@ class ProdSchemaController
         }
 
         if(!empty($tasks)) {
-            //case when there are tasks existing tasks selected
+            //case when there are existing tasks selected
             foreach ($tasks as $task) {
                 $task_id = intval($task);
                 if($task_id > 0) {
@@ -595,23 +601,30 @@ class ProdSchemaController
                     $name = $name instanceof Task ? $name->name : null;
                     $sequence_no = 'sequenceno_'.$task_id;
                     $amount_required = 'amount_required_'.$task_id;
-                    if($request->$sequence_no == null or !in_array($request->$sequence_no, $sequence_no_arr)) {
-                        $error_arr[] = "Niepoprawne wartości 'Kolejność wykonania'. Podzadania powinny zawierać liczby od 1 do ".$sequence_no_count.' (w dowolnej kolejności).';
-                    } else {
-                        array_splice($sequence_no_arr,array_search($request->$sequence_no, $sequence_no_arr),1);
-                    }
                     if(in_array($name, $taks_names_arr)) {
                         $error_arr[] = 'Nie można dodać 2 zadań o identycznej nazwie.';
-                    } else {
+                    }
+                    else {
                         $taks_names_arr[] = $name;
                     }
-                    if(!is_null($request->$amount_required)) {
+                    if($request->$sequence_no == null or !in_array($request->$sequence_no, $sequence_no_arr)) {
+                        $error_arr[] = "Niepoprawne wartości 'Kolejność wykonania'. Podzadania powinny zawierać liczby od 1 do ".$sequence_no_count.' (w dowolnej kolejności).';
+                    }
+                    else {
+                        array_splice($sequence_no_arr,array_search($request->$sequence_no, $sequence_no_arr),1);
+                    }
+
+                    if($request->$sequence_no > $max_sequence_no) {
+                        $max_sequence_no = $request->$sequence_no;
                         if($is_amount_required) {
-                            $error_arr[] = "Pole 'Ilość wymagana' może być zaznaczone dla maksymalnie 1 podzadania.";
+                            $error_arr[] = "Pole 'Ilość wymagana' może być zaznaczone tylko dla ostatniego podzadania.";
                         }
                         else {
                             $is_amount_required = true;
                         }
+                    }
+                    else if(!is_null($request->$amount_required)) {
+                        $error_arr[] = "Pole 'Ilość wymagana' może być zaznaczone tylko dla ostatniego podzadania.";
                     }
 
                     $error_arr = array_unique($error_arr);

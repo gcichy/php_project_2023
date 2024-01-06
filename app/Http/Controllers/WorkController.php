@@ -112,7 +112,6 @@ class WorkController extends Controller
 
     public function addWork(Request $request, $id): View|RedirectResponse
     {
-
         $user = Auth::user();
         $parent_cycle = ParentCycleView::where('cycle_id', $id)->first();
         $users = User::select('id','employeeNo', 'role')->get();
@@ -194,6 +193,7 @@ class WorkController extends Controller
 //        $max_time = $max_time->format('Y-m-d\TH:i');
         $max_time = date("Y-m-d");
 
+        dd($child_prod_schemas);
         return view('work.work-add', [
             'p_cycle' => $parent_cycle,
             'child_cycles' => $child_cycles,
@@ -244,34 +244,60 @@ class WorkController extends Controller
             DB::beginTransaction();
             $category = intval($request->selected_cycle_category);
             if($category == 1) {
+                $parent_cycle = ProductionCycle::where('id', $id)->first();
+                $component_cycle_id = intval($request->selected_component_cycle_id);
+                $prod_schema_cycle_id = intval($request->selected_prod_schema_cycle_id);
 
+                $child_component_cycle = ProductionCycle::where('id', $component_cycle_id)->first();
+                $other_child_component_cycles = ProductionCycle::where('parent_id', $id)
+                    ->where('id', '!=', $component_cycle_id);
+                $child_schema_cycle = ProductionCycle::where('id', $prod_schema_cycle_id)->first();
+                $other_child_schema_cycles = ProductionCycle::where('parent_id', $component_cycle_id)
+                    ->where('id', '!=', $prod_schema_cycle_id);
+
+                $work_id_array = $this->insertWorkWrapper($request, $employee_id_array, $suffix_array,
+                    $id, $employee_no, $child_component_cycle->component_id, $parent_cycle->product_id);
+
+                $work_stats = $this->updateProdSchemaCycle($id, $prod_schema_cycle_id, $child_schema_cycle, $work_id_array, $employee_no);
+
+                $updated_child_schema_cycle  = ProductionCycle::where('id', $prod_schema_cycle_id)->first();
+
+                $this->updateComponentCycle($child_component_cycle, $updated_child_schema_cycle,
+                    $other_child_schema_cycles, $work_stats, $employee_no);
+
+                $updated_child_component_cycle  = ProductionCycle::where('id', $component_cycle_id)->first();
+
+                $this->updateProductCycle($parent_cycle, $updated_child_component_cycle,
+                    $other_child_component_cycles, $work_stats, $employee_no);
             }
             else if($category == 2) {
+                $parent_cycle = ProductionCycle::where('id', $id)->first();
+                $prod_schema_cycle_id = intval($request->selected_prod_schema_cycle_id);
+                $child_schema_cycle = ProductionCycle::where('id', $prod_schema_cycle_id)->first();
+                $other_child_schema_cycles = ProductionCycle::where('parent_id', $id)
+                    ->where('id', '!=', $prod_schema_cycle_id);
+
+                $work_id_array = $this->insertWorkWrapper($request, $employee_id_array, $suffix_array,
+                                                           $id, $employee_no, $parent_cycle->component_id, null);
+
+                $work_stats = $this->updateProdSchemaCycle($id, $prod_schema_cycle_id, $child_schema_cycle, $work_id_array, $employee_no);
+
+                $updated_child_schema_cycle  = ProductionCycle::where('id', $prod_schema_cycle_id)->first();
+
+                $this->updateComponentCycle($parent_cycle, $updated_child_schema_cycle,$other_child_schema_cycles,
+                                            $work_stats, $employee_no);
+
 
             }
             else if($category == 3) {
                 $parent_cycle = ProductionCycle::where('id', $id)->first();
-                $work_id_array = [];
-                foreach ($suffix_array as $suffix) {
-                    $ids = $this->parseSuffix($suffix, $employee_no);
-                    $prod_schema_id = $ids[0];
-                    $task_id = $ids[1];
-                    if(!(array_key_exists($suffix, $employee_id_array) and is_array($employee_id_array[$suffix]))) {
-                        Log::channel('error')->error('Error inserting work: Error while processing insert. $employee_id_array does not contain key: '.$suffix
-                            .' or entry is not an array.', [
-                            'employeeNo' => $employee_no,
-                        ]);
-                        throw new Exception('Nie udało się dodać pracy. Błąd systemu przy wprowadzaniu danych.', 1);
-                    }
-                    $employee_id_task_array = $employee_id_array[$suffix];
-                    $work_id = $this->insertWork($request, $parent_cycle, $id, $suffix, $prod_schema_id, $task_id, $employee_id_task_array, $employee_no);
 
-                    $work_id_array[] = $work_id;
-                }
+                $work_id_array = $this->insertWorkWrapper($request, $employee_id_array, $suffix_array,
+                    $id, $employee_no, null, null);
 
-                $this->updateProdSchemaCycle($id, $parent_cycle, $work_id_array, $employee_no);
+                $this->updateProdSchemaCycle($id, $id, $parent_cycle, $work_id_array, $employee_no);
             }
-            DB::rollBack();
+            DB::commit();
         }
         catch (Exception $e) {
             DB::rollBack();
@@ -286,15 +312,39 @@ class WorkController extends Controller
             }
         }
 
-        return back();
+        return back()->with('status', 'Dodano pracę.');
     }
 
 
-
-    private function insertWork(Request $request, ProductionCycle $parent_cycle, int $cycle_id, string $suffix,
-                                int $prod_schema_id, int $task_id, array $employee_id_task_array, string $employee_no): int
+    /**
+     * @throws Exception
+     */
+    private function insertWorkWrapper(Request $request, array $employee_id_array, array   $suffix_array, int $id,
+                                       string $employee_no, $component_id = null, $product_id = null): array
     {
-        $product_id = $parent_cycle->product_id;
+        $work_id_array = [];
+        foreach ($suffix_array as $suffix) {
+            $ids = $this->parseSuffix($suffix, $employee_no);
+            $prod_schema_id = $ids[0];
+            $task_id = $ids[1];
+            if(!(array_key_exists($suffix, $employee_id_array) and is_array($employee_id_array[$suffix]))) {
+                Log::channel('error')->error('Error inserting work: Error while processing work table insert. $employee_id_array does not contain key: '.$suffix
+                    .' or entry is not an array.', [
+                    'employeeNo' => $employee_no,
+                ]);
+                throw new Exception('Nie udało się dodać pracy. Błąd systemu przy wprowadzaniu danych.', 1);
+            }
+            $employee_id_task_array = $employee_id_array[$suffix];
+            $work_id = $this->insertWork($request, $id, $suffix, $product_id, $component_id, $prod_schema_id, $task_id, $employee_id_task_array, $employee_no);
+
+            $work_id_array[] = $work_id;
+        }
+        return $work_id_array;
+    }
+    private function insertWork(Request $request, int $cycle_id, string $suffix,
+                                int|null $product_id, int|null $component_id,  int $prod_schema_id, int $task_id,
+                                array $employee_id_task_array, string $employee_no): int
+    {
         $start_time = 'start_time'.$suffix;
         $end_time = 'end_time'.$suffix;
         $duration_minute = 'work_duration'.$suffix;
@@ -319,6 +369,7 @@ class WorkController extends Controller
             'production_cycle_id' => $cycle_id,
             'production_schema_id' => $prod_schema_id,
             'task_id' => $task_id,
+            'component_id' => $component_id,
             'product_id' => $product_id,
             'start_time' => $request->$start_time,
             'end_time' => $request->$end_time,
@@ -351,29 +402,111 @@ class WorkController extends Controller
         return $work_id;
     }
 
-    private function updateProdSchemaCycle(int $cycle_id, ProductionCycle $parent_cycle,
-                                           array $work_id_array, string $employee_no): void
+    private function updateProductCycle(ProductionCycle $product_cycle, ProductionCycle $updated_child_component_cycle,
+                                          Builder $other_child_component_cycles, Work $work_stats, string $employee_no): void
     {
-        $update_stats = Work::whereIn('id', $work_id_array)
-            ->select(DB::raw('min(start_time) as work_start, max(end_time) as work_end,
-                            sum(duration_minute) as sum_duration, max(amount) as amount,
-                            max(defect_amount) as defect_amount'))->first();
+        $update_amount = $product_cycle->current_amount;
+        $update_finished = 0;
+        $update_start_time = $product_cycle->start_time;
+        $update_end_time = $product_cycle->end_time;
+        $update_duration_minute_sum = $product_cycle->duration_minute_sum + $work_stats->sum_duration;
 
+        $updated_child_component_amount = $updated_child_component_cycle->current_amount;
+        $updated_child_component_start_time = $updated_child_component_cycle->start_time;
+        $updated_child_component_end_time = $updated_child_component_cycle->end_time;
+        $other_stats = $other_child_component_cycles->select(DB::raw('min(current_amount) as min_amount'))->first();
 
-        $update_start_time = is_null($parent_cycle->start_time)? $update_stats->work_start : $parent_cycle->start_time;
-        $update_duration_minute_sum = $parent_cycle->duration_minute_sum + $update_stats->sum_duration;
-        $update_amount = $parent_cycle->current_amount + $update_stats->amount;
-        $update_finished = $update_amount >= $parent_cycle->total_amount? 1 : 0;
-        $update_end_time = null;
-        if($update_finished == 1) {
-            $max_cycle_end_time = Work::where('production_cycle_id', $cycle_id)->select(DB::raw('max(end_time) as end_time'))->first();
-            if($max_cycle_end_time instanceof Work) {
-                $update_end_time = $max_cycle_end_time->end_time;
+        //amount of prod cycle is updated only when current_amount for each child comp cycle is greater than prod cycle current_amount
+        if($other_stats instanceof  ProductionCycle and !is_null($other_stats->min_amount)) {
+            if(min($other_stats->min_amount, $updated_child_component_amount) > $product_cycle->current_amount) {
+                $update_amount = min($other_stats->min_amount, $updated_child_component_amount);
             }
         }
-        $update_defect_amount = $parent_cycle->defect_amount + $update_stats->defect_amount;
+        else {
+            if($updated_child_component_amount > $product_cycle->current_amount) {
+                $update_amount = $updated_child_component_amount;
+            }
+        }
 
-        DB::table('production_cycle')->where('id',$cycle_id)->update([
+        //start_time is set if it was null before or work start time was earlier than cycle start time
+        if(is_null($update_start_time) or $updated_child_component_start_time < $update_start_time) {
+            $update_start_time = $updated_child_component_start_time;
+        }
+
+        //comp cycle is finished if calculated amount exceeds total_amount
+        if($update_amount >= $product_cycle->total_amount) {
+            $update_finished = 1;
+        }
+
+        //end time is set if cycle is marked as finished
+        if($update_finished == 1) {
+            $update_end_time = $updated_child_component_end_time;
+        }
+
+        DB::table('production_cycle')->where('id',$product_cycle->id)->update([
+            'start_time' => $update_start_time,
+            'end_time' => $update_end_time,
+            'duration_minute_sum' => $update_duration_minute_sum,
+            'current_amount' => $update_amount,
+            'finished' => $update_finished,
+            'updated_by' => $employee_no,
+            'updated_at' => date('y-m-d h:i:s'),
+        ]);
+    }
+    private function updateComponentCycle(ProductionCycle $component_cycle, ProductionCycle $updated_child_schema_cycle,
+                                          Builder $other_child_schema_cycles, Work $work_stats, string $employee_no) :void
+    {
+        $update_amount = $component_cycle->current_amount;
+        $update_defect_amount = $component_cycle->defect_amount;
+        $update_finished = 0;
+        $update_start_time = $component_cycle->start_time;
+        $update_end_time = $component_cycle->end_time;
+        $update_duration_minute_sum = $component_cycle->duration_minute_sum + $work_stats->sum_duration;
+
+        $updated_child_schema_amount = $updated_child_schema_cycle->current_amount;
+        $updated_child_schema_start_time = $updated_child_schema_cycle->start_time;
+        $updated_child_schema_end_time = $updated_child_schema_cycle->end_time;
+
+        $other_stats = $other_child_schema_cycles->select(DB::raw('min(current_amount) as min_amount, max(sequence_no) as max_sequence_no'))->first();
+
+        //amount of comp cycle is updated only when current_amount for each child cycle is greater
+        if($other_stats instanceof  ProductionCycle and !is_null($other_stats->min_amount)) {
+            if(min($other_stats->min_amount, $updated_child_schema_amount) > $component_cycle->current_amount) {
+                $update_amount = min($other_stats->min_amount, $updated_child_schema_amount);
+            }
+        }
+        else {
+            if($updated_child_schema_amount > $component_cycle->current_amount) {
+                $update_amount = $updated_child_schema_amount;
+            }
+        }
+
+        //defect is added to component cycle only if defect for last prod schema cycle was reported
+        if($other_stats instanceof ProductionCycle and !is_null($other_stats->max_sequence_no)) {
+            if($updated_child_schema_cycle->sequence_no > $other_stats->max_sequence_no) {
+                $update_defect_amount += $work_stats->defect_amount;
+            }
+        }
+        else {
+            $update_defect_amount += $work_stats->defect_amount;
+        }
+
+        //start_time is set if it was null before or work start time was earlier than cycle start time
+        if(is_null($update_start_time) or $updated_child_schema_start_time < $update_start_time) {
+            $update_start_time = $updated_child_schema_start_time;
+        }
+
+        //comp cycle is finished if calculated amount exceeds total_amount
+        if($update_amount >= $component_cycle->total_amount) {
+            $update_finished = 1;
+        }
+
+        //end time is set if cycle is marked as finished
+        if($update_finished == 1) {
+            $update_end_time = $updated_child_schema_end_time;
+        }
+
+        DB::table('production_cycle')->where('id',$component_cycle->id)->update([
             'start_time' => $update_start_time,
             'end_time' => $update_end_time,
             'duration_minute_sum' => $update_duration_minute_sum,
@@ -383,6 +516,42 @@ class WorkController extends Controller
             'updated_by' => $employee_no,
             'updated_at' => date('y-m-d h:i:s'),
         ]);
+    }
+    private function updateProdSchemaCycle(int $parent_cycle_id, int $schema_cycle_id, ProductionCycle $prod_schema_cycle,
+                                           array $work_id_array, string $employee_no): Work
+    {
+        $update_stats = Work::whereIn('id', $work_id_array)
+            ->select(DB::raw('min(start_time) as work_start, max(end_time) as work_end,
+                            sum(duration_minute) as sum_duration, max(amount) as amount,
+                            max(defect_amount) as defect_amount'))->first();
+
+
+        $update_start_time = (is_null($prod_schema_cycle->start_time) or $update_stats->work_start < $prod_schema_cycle->start_time)? $update_stats->work_start : $prod_schema_cycle->start_time;
+        $update_duration_minute_sum = $prod_schema_cycle->duration_minute_sum + $update_stats->sum_duration;
+        $update_amount = $prod_schema_cycle->current_amount + $update_stats->amount;
+        $update_finished = $update_amount >= $prod_schema_cycle->total_amount? 1 : 0;
+        $update_end_time = null;
+        if($update_finished == 1) {
+            //max end time among all cycle's works is taken as cycle end time
+            $max_cycle_end_time = Work::where('production_cycle_id', $parent_cycle_id)->select(DB::raw('max(end_time) as end_time'))->first();
+            if($max_cycle_end_time instanceof Work) {
+                $update_end_time = $max_cycle_end_time->end_time;
+            }
+        }
+        $update_defect_amount = $prod_schema_cycle->defect_amount + $update_stats->defect_amount;
+
+        DB::table('production_cycle')->where('id',$schema_cycle_id)->update([
+            'start_time' => $update_start_time,
+            'end_time' => $update_end_time,
+            'duration_minute_sum' => $update_duration_minute_sum,
+            'current_amount' => $update_amount,
+            'defect_amount' => $update_defect_amount,
+            'finished' => $update_finished,
+            'updated_by' => $employee_no,
+            'updated_at' => date('y-m-d h:i:s'),
+        ]);
+
+        return $update_stats;
     }
     /**
      * @throws Exception

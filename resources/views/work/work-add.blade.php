@@ -266,6 +266,7 @@
             }
         }
         function modalStatusStyles(colName, elem, sourceText) {
+            console.log(colName, elem, sourceText);
             if(colName === 'status') {
                 if(sourceText === 'Po terminie') {
                     elem.addClass('bg-red-500');
@@ -538,15 +539,18 @@
             });
 
             $('.list-element-2').on('click', function () {
-                if($(event).length === 0) {
-                    clickListElement2($(this));
+                if(!$(this).hasClass('finished')) {
+                    if($(event).length === 0) {
+                        clickListElement2($(this));
+                    }
+                    else if(!($(event.target).is("a.open-modal") || $(event.target).closest("a.open-modal").length > 0
+                        || $(event.target).is("div.expand-btn") || $(event.target).closest("div.expand-btn").length > 0)) {
+                        removeSelectedElements();
+                        removeInputTable();
+                        clickListElement2($(this));
+                    }
                 }
-                else if(!($(event.target).is("a.open-modal") || $(event.target).closest("a.open-modal").length > 0
-                    || $(event.target).is("div.expand-btn") || $(event.target).closest("div.expand-btn").length > 0)) {
-                    removeSelectedElements();
-                    removeInputTable();
-                    clickListElement2($(this));
-                }
+
 
             });
 
@@ -1059,6 +1063,11 @@
                                                                 <p class="my-2 mr-2 rounded-lg inline-block text-white bg-blue-450 shadow-lg list-element-name py-2 px-3 xl:text-lg text-md whitespace-nowrap overflow-clip">
                                                                     {{$comp->name}}
                                                                 </p>
+                                                                @if($comp->status == 0)
+                                                                    <p class="my-2 rounded-lg inline-block text-white bg-green-450 shadow-lg list-element-name py-1.5 px-2 text-xs whitespace-nowrap overflow-clip">
+                                                                        Zakończone
+                                                                    </p>
+                                                                @endif
                                                             </div>
                                                         </div>
                                                         <div class="w-[15%] flex justify-end items-center">
@@ -1079,7 +1088,7 @@
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div id="list-{{$comp->child_id}}" class="dropdown hidden mt-6 mb-4 w-full w-[95%] mr-1">
+                                                    <div id="list-{{$comp->child_id}}" class="dropdown hidden mt-6 mb-4 w-[95%] mr-1">
                                                         <div class="relative overflow-x-auto shadow-md">
                                                             <table class="w-full text-sm md:text-lg text-left text-gray-500 dark:text-gray-400">
                                                                 <thead class="text-sm md:text-lg text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -1177,20 +1186,26 @@
                                     </div>
                                 @endif
                                 <div class="w-full h-full max-h-[400px] overflow-y-scroll flex justify-center items-start">
-                                    <div class="{{$p_cycle->category == 1? 'w-[90%]' : 'w-[70%]'}} p-2 ">
+                                    <div class="w-[95%] p-2 ">
                                         @if(is_array($child_prod_schemas))
                                             @foreach($child_prod_schemas as $comp_cycle_id => $prod_schemas)
                                                 @php $current_id = 0; @endphp
                                                 @foreach($prod_schemas as $prod_schema)
                                                     @if($prod_schema->child_id != $current_id)
-                                                        <x-list-element id="schemacycle-{{$prod_schema->child_id}}-compcycle-{{$comp_cycle_id}}" class="{{'comp-'.$comp_cycle_id}} my-6 list-element-2 flex-col w-full lg:py-0 py-0 hidden">
+                                                        <x-list-element id="schemacycle-{{$prod_schema->child_id}}-compcycle-{{$comp_cycle_id}}"
+                                                                        class="{{'comp-'.$comp_cycle_id}} {{($prod_schema->status == 0)? 'finished' : ''}} my-6 list-element-2 flex-col w-full lg:py-0 py-0 hidden">
                                                             <div class="flex flex-row justify-between w-full">
                                                                 <input type="number" class="schema-list-element-id hidden" value="{{$prod_schema->child_id}}">
-                                                                <div class="w-[85%] flex flex-col justify-between items-center">
-                                                                    <div class="w-full flex justify-left items-center">
+                                                                <div class="w-[80%] flex flex-col justify-between items-center">
+                                                                    <div class="w-full flex flex-row justify-left items-center">
                                                                         <p class="my-2 mr-2 rounded-lg inline-block text-white bg-blue-450 shadow-lg list-element-name py-2 px-3 xl:text-lg text-md whitespace-nowrap overflow-clip">
                                                                             {{$prod_schema->name}}
                                                                         </p>
+                                                                        @if($prod_schema->status == 0)
+                                                                            <p class="my-2 rounded-lg inline-block text-white bg-green-450 shadow-lg list-element-name py-1.5 px-2 text-xs whitespace-nowrap overflow-clip">
+                                                                                Zakończone
+                                                                            </p>
+                                                                        @endif
                                                                     </div>
                                                                 </div>
                                                                 <div class="w-[15%] flex justify-end items-center">
@@ -1492,14 +1507,20 @@
                                             @php $current_id = 0; @endphp
                                             @foreach($child_prod_schemas  as $prod_schema)
                                                 @if($prod_schema->child_id != $current_id)
-                                                    <x-list-element id="schemacycle-{{$prod_schema->child_id}}" class="comp my-6 list-element-2 flex-col w-full lg:py-0 py-0">
+                                                    <x-list-element id="schemacycle-{{$prod_schema->child_id}}"
+                                                                    class="{{($prod_schema->status == 0)? 'finished' : ''}} comp my-6 list-element-2 flex-col w-full lg:py-0 py-0">
                                                         <div class="flex flex-row justify-between w-full">
                                                             <input type="number" class="schema-list-element-id hidden" value="{{$prod_schema->child_id}}">
-                                                            <div class="w-[85%] flex flex-col justify-between items-center">
-                                                                <div class="w-full flex justify-left items-center">
+                                                            <div class="w-[80%] flex flex-col justify-between items-center">
+                                                                <div class="w-full flex flex-row justify-left items-center">
                                                                     <p class="my-2 mr-2 rounded-lg inline-block text-white bg-blue-450 shadow-lg list-element-name py-2 px-3 xl:text-lg text-md whitespace-nowrap overflow-clip">
                                                                         {{$prod_schema->name}}
                                                                     </p>
+                                                                    @if($prod_schema->status == 0)
+                                                                        <p class="my-2 rounded-lg inline-block text-white bg-green-450 shadow-lg list-element-name py-1.5 px-2 text-xs whitespace-nowrap overflow-clip">
+                                                                            Zakończone
+                                                                        </p>
+                                                                    @endif
                                                                 </div>
                                                             </div>
                                                             <div class="w-[15%] flex justify-end items-center">

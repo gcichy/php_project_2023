@@ -224,6 +224,8 @@
                 }
             });
 
+
+
         });
 
     </script>
@@ -264,7 +266,7 @@
                                                 </textarea>
                                             <x-input-error :messages="$errors->get('description')" class="mt-2" />
                                         </div>
-                                        <div class="">
+                                        <div class="mb-6">
                                             <label for="countable" class="block text-sm lg:text-md xl:text-lg font-medium text-gray-900 dark:text-white">Niemierzalne</label>
                                             <p class="w-full text-sm lg:text-lg font-medium text-left text-gray-900 dark:text-white p-2">
                                                 <span class="text-green-500 text-xs lg:text-sm"><em>Zaznacz, jeśli nie da się zmierzyć efektów zadania, np sprzątanie hali produkcyjnej itp. Jeśli pole jest zaznaczone, norma produkcji nie zostanie dodana.</em></span>
@@ -274,6 +276,24 @@
                                                 type="checkbox" role="switch" id="countable" name="countable"
                                                 {{ old('countable') == 'on' ? 'checked' : ((!empty($selected_schem) and $selected_schem->non_countable) ? 'checked' : '') }}/>
                                         </div>
+{{--                                        <div class="mb-6">--}}
+{{--                                            <label for="material" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Surowiec</label>--}}
+{{--                                            <select id="material" name="material" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">--}}
+{{--                                                @if(isset($material_list) and count($material_list) > 0)--}}
+{{--                                                    <option value=""></option>--}}
+{{--                                                    @foreach($material_list as $mat)--}}
+{{--                                                        @if($selected_prod instanceof \App\Models\Product and $mat->value == $selected_prod->material)--}}
+{{--                                                            <option value="{{$mat->value}}" selected>{{$mat->value_full}}</option>--}}
+{{--                                                        @else--}}
+{{--                                                            <option value="{{$mat->value}}">{{$mat->value_full}}</option>--}}
+{{--                                                        @endif--}}
+{{--                                                    @endforeach--}}
+{{--                                                @else--}}
+{{--                                                    <option value=""></option>--}}
+{{--                                                @endif--}}
+{{--                                            </select>--}}
+{{--                                            <x-input-error :messages="$errors->get('material')" class="mt-2" />--}}
+{{--                                        </div>--}}
 {{--                                        <div class="">--}}
 {{--                                            <label for="" class="block text-xs lg:text-sm font-medium text-gray-900 dark:text-white">Niemierzalny</label>--}}
 {{--                                            <p class="w-full text-sm lg:text-lg font-medium text-left text-gray-900 dark:text-white p-2">--}}

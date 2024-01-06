@@ -19,9 +19,9 @@ return new class extends Migration
             $table->string('description')->nullable();
             $table->integer('tasks_count');
             $table->boolean('non_countable')->default(0);
-            $table->foreignId('parent_id')
+            $table->foreignId('waste_unit_id')
                 ->nullable()
-                ->constrained('production_schema')
+                ->constrained('unit')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
             $table->string('created_by',30)->nullable();

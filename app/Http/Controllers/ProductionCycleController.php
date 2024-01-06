@@ -97,6 +97,7 @@ class ProductionCycleController extends Controller
         $status_add_work = $this->getWorkStatus($request);
         $view = $is_work_cycle? 'work.work-cycle' : 'production.production';
 
+
         return view($view, [
             'parent_cycles' => $parent_cycles,
             'user' => $user,
@@ -158,8 +159,8 @@ class ProductionCycleController extends Controller
 
             $category_name = 'Materiał';
             if(is_string($request->filter_elem)) {
-                $elements = $elements->where('product.name', 'like', '%'.$request->filter_elem.'%')
-                                    ->orWhere('product.material', 'like', '%'.$request->filter_elem.'%');
+                $elements = $elements->where('component.name', 'like', '%'.$request->filter_elem.'%')
+                                    ->orWhere('component.material', 'like', '%'.$request->filter_elem.'%');
             }
             $elements = $elements->paginate(10);
         } else if($category == 3) {
@@ -543,11 +544,12 @@ class ProductionCycleController extends Controller
                 'updated_at' => date('y-m-d h:i:s'),]);
 
             $comp_prod_schemas = ComponentProductionSchema::where('component_id', $id)->select('production_schema_id','sequence_no')->get();
+
             foreach ($comp_prod_schemas as $prod_schema) {
                 DB::table('production_cycle')->insert([
                     'level' => 2,
                     'category' => 3,
-                    'component_id' => $prod_schema->production_schema_id,
+                    'production_schema_id' => $prod_schema->production_schema_id,
                     'parent_id' => $parent_id,
                     'sequence_no' => $prod_schema->sequence_no,
                     'expected_start_time' => $request->exp_start_2.' 00:00:00',

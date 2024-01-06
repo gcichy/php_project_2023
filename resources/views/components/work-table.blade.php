@@ -82,84 +82,83 @@
         });
     </script>
 
-
     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 whitespace-nowrap">
     <tr>
-        <th scope="col" class="px-6 py-3 rounded-tl-xl">
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white rounded-tl-xl">
             Podgląd
         </th>
-        <th scope="col" class="px-6 py-3">
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Kategoria cyklu
         </th>
-        <th scope="col" class="px-6 py-3">
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Wykonawcy
         </th>
-        <th scope="col" class="px-6 py-3">
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Zadanie
         </th>
-        <th scope="col" class="px-6 py-3">
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Podzadanie
         </th>
-        <th scope="col" class="px-6 py-3">
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Kolejność podzadania
         </th>
-        <th scope="col" class="px-6 py-3">
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Czas pracy (h)
         </th>
-        <th scope="col" class="px-6 py-3">
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Ilość (szt)
         </th>
-        <th scope="col" class="px-6 py-3">
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Oczek. Ilość/Czas pracy
         </th>
-        <th scope="col" class="px-6 py-3">
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Produktywność (%)
         </th>
-        <th scope="col" class="px-6 py-3">
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Początek pracy
         </th>
-        <th scope="col" class="px-6 py-3">
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Koniec pracy
         </th>
-        <th scope="col" class="px-6 py-3">
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Nazwa materiału
         </th>
-        <th scope="col" class="px-6 py-3">
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Zdjęcie materiału
         </th>
-        <th scope="col" class="px-6 py-3">
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Nazwa produktu
         </th>
-        <th scope="col" class="px-6 py-3">
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Zdjęcie produktu
         </th>
-        <th scope="col" class="px-6 py-3">
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Ilość/godzina (szt)
         </th>
-        <th scope="col" class="px-6 py-3">
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Oczek. ilość/godzina (szt)
         </th>
-        <th scope="col" class="px-6 py-3">
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Defekty (szt)
         </th>
-        <th scope="col" class="px-6 py-3">
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Defekty (%)
         </th>
-        <th scope="col" class="px-6 py-3">
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Defekty - Przyczyna
         </th>
-        <th scope="col" class="px-6 py-3">
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Odpady
         </th>
-        <th scope="col" class="px-6 py-3">
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Odpady jednostka
         </th>
-        <th scope="col" class="px-6 py-3 rounded-tr-xl">
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white rounded-tr-xl">
             Odpady - przyczyna
         </th>
     </tr>
     </thead>
-    <tbody class="bg-gray-50">
+    <tbody class="bg-gray-50 divide-y">
     @foreach($work_array as $work)
         <tr id="row-{{$work->work_id}}" class="{{$work->productivity < 80? 'bg-red-100' : ($work->productivity >= 100? 'bg-green-100' : 'bg-white')}} font-medium text-gray-800 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border border-slate-300 ">
             <td class="px-1 py-1 rounded-md">
