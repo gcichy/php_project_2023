@@ -106,19 +106,28 @@
             Czas pracy (h)
         </th>
         <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
+            Początek pracy
+        </th>
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
+            Koniec pracy
+        </th>
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Ilość (szt)
         </th>
         <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
-            Oczek. Ilość/Czas pracy
+            Czas mikrocyklu (h)
         </th>
         <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Produktywność (%)
         </th>
         <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
-            Początek pracy
+            Oczek. Ilość/Czas mikrocyklu
         </th>
         <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
-            Koniec pracy
+            Ilość/godzina (szt)
+        </th>
+        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
+            Oczek. ilość/godzina (szt)
         </th>
         <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Nazwa materiału
@@ -131,12 +140,6 @@
         </th>
         <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Zdjęcie produktu
-        </th>
-        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
-            Ilość/godzina (szt)
-        </th>
-        <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
-            Oczek. ilość/godzina (szt)
         </th>
         <th scope="col" class="sticky top-0 px-6 py-3 bg-white">
             Defekty (szt)
@@ -196,20 +199,29 @@
             <td class="col-value time-spent-in-hours px-6 py-4 whitespace-nowrap rounded-md text-center">
                 {{$work->time_spent_in_hours}}
             </td>
-            <td class="col-value amount px-6 py-4 whitespace-nowrap rounded-md text-center {{$work->productivity < 100? 'text-red-500' : 'text-green-450'}}">
-                {{$work->amount}}
-            </td>
-            <td class="col-value exp-amount-per-time-spent px-6 py-4 whitespace-nowrap rounded-md text-center {{$work->productivity < 100? 'text-red-500' : 'text-green-450'}}">
-                {{$work->exp_amount_per_time_spent}}
-            </td>
-            <td class="col-value productivity px-6 py-4 whitespace-nowrap rounded-md text-center {{$work->productivity < 100? 'text-red-500' : 'text-green-450'}}">
-                {{$work->productivity.'%'}}
-            </td>
             <td class="col-value start-time px-6 py-4 whitespace-nowrap rounded-md">
                 {{$work->start_time}}
             </td>
             <td class="col-value end-time px-6 py-4 whitespace-nowrap rounded-md">
                 {{$work->end_time}}
+            </td>
+            <td class="col-value amount px-6 py-4 whitespace-nowrap rounded-md text-center {{$work->productivity < 100? 'text-red-500' : 'text-green-450'}}">
+                {{$work->amount}}
+            </td>
+            <td class="col-value microcycle-time-spent-in-hours px-6 py-4 whitespace-nowrap rounded-md text-center">
+                {{$work->microcycle_time_spent_in_hours}}
+            </td>
+            <td class="col-value productivity px-6 py-4 whitespace-nowrap rounded-md text-center {{$work->productivity < 100? 'text-red-500' : 'text-green-450'}}">
+                {{$work->productivity.'%'}}
+            </td>
+            <td class="col-value exp-amount-per-time-spent px-6 py-4 whitespace-nowrap rounded-md text-center {{$work->productivity < 100? 'text-red-500' : 'text-green-450'}}">
+                {{$work->microcycle_exp_amount_per_time_spent}}
+            </td>
+            <td class="col-value amount-per-hour px-6 py-4 whitespace-nowrap rounded-md text-center">
+                {{$work->microcycle_amount_per_hour}}
+            </td>
+            <td class="col-value exp-amount-per-hour px-6 py-4 whitespace-nowrap rounded-md text-center">
+                {{$work->microcycle_exp_amount_per_hour}}
             </td>
             <td class="col-value component-name px-6 py-4 whitespace-nowrap rounded-md">
                 {{$work->component_name}}
@@ -236,12 +248,6 @@
                         </div>
                     </div>
                 @endif
-            </td>
-            <td class="col-value amount-per-hour px-6 py-4 whitespace-nowrap rounded-md text-center">
-                {{$work->amount_per_hour}}
-            </td>
-            <td class="col-value exp-amount-per-hour px-6 py-4 whitespace-nowrap rounded-md text-center">
-                {{$work->exp_amount_per_hour}}
             </td>
             <td class="col-value defect-amount px-6 py-4 whitespace-nowrap rounded-md text-center {{$work->defect_percent > 10? 'text-red-500' : ''}}">
                 {{$work->defect_amount}}
@@ -363,6 +369,13 @@
                             </div>
                         </div>
                         <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2">
+                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Czas mikrocycklu (h)</dt>
+                            <div class="w-full h-full flex justify-center items-center">
+                                <dd class="col-value microcycle-time-spent-in-hours w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
+                                </dd>
+                            </div>
+                        </div>
+                        <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2">
                             <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Wyk. ilość (szt)</dt>
                             <div class="w-full h-full flex justify-center items-center">
                                 <dd class="col-value amount w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
@@ -398,6 +411,22 @@
                             </div>
                         </div>
                         <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2">
+                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">
+                                Odpady (<span class="col-value waste-unit"></span>)
+                            </dt>
+                            <div class="w-full h-full flex justify-center items-center">
+                                <dd class="col-value waste-amount w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
+                                </dd>
+                            </div>
+                        </div>
+                        <div class="additional-info col-span-2 xl:col-span-4 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2">
+                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Odpady - przyczyna </dt>
+                            <div class="w-full h-full flex justify-center items-center">
+                                <dd class="col-value waste-rc-description w-full font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
+                                </dd>
+                            </div>
+                        </div>
+                        <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2">
                             <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Defekty (szt)</dt>
                             <div class="w-full h-full flex justify-center items-center">
                                 <dd class="col-value defect-amount w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
@@ -415,27 +444,6 @@
                             <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Defekty - przyczyna </dt>
                             <div class="w-full h-full flex justify-center items-center">
                                 <dd class="col-value defect-rc-description w-full font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                </dd>
-                            </div>
-                        </div>
-                        <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Odpady</dt>
-                            <div class="w-full h-full flex justify-center items-center">
-                                <dd class="col-value waste-amount w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                </dd>
-                            </div>
-                        </div>
-                        <div class="additional-info col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Odpady jednostka</dt>
-                            <div class="w-full h-full flex justify-center items-center">
-                                <dd class="col-value waste-unit w-full text-lg font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
-                                </dd>
-                            </div>
-                        </div>
-                        <div class="additional-info col-span-2 xl:col-span-4 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2">
-                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Odpady - przyczyna </dt>
-                            <div class="w-full h-full flex justify-center items-center">
-                                <dd class="col-value waste-rc-description w-full font-semibold tracking-tight text-gray-900 pl-5 flex flex-row py-1">
                                 </dd>
                             </div>
                         </div>

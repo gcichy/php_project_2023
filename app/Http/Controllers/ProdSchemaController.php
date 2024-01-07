@@ -89,7 +89,7 @@ class ProdSchemaController
     {
 
         if ($id != null) {
-            $schema = ProductionSchema::where('id',$id)->select('id','production_schema', 'description', 'tasks_count', 'non_countable')->first();
+            $schema = ProductionSchema::where('id',$id)->select('id','production_schema', 'description', 'tasks_count', 'non_countable', 'waste_unit_id')->first();
             if ($schema instanceof ProductionSchema) {
                 $data = $this->getAddSchemaData();
                 $selected_schem_tasks = $this->getAddSchemaData($id);
@@ -172,10 +172,11 @@ class ProdSchemaController
         $employee_no = !empty($user->employeeNo) ? $user->employeeNo : 'unknown';
         $saved_files = [];
         $non_countable = !empty($request->countable);
+        $waste_unit_id = $request->waste_unit;
         try {
 
             DB::beginTransaction();
-            $insert_result = $this->insertProdSchema($employee_no, $request->production_schema, $request->description, count($schema_arr), $non_countable);
+            $insert_result = $this->insertProdSchema($employee_no, $request->production_schema, $request->description, count($schema_arr), $non_countable, $waste_unit_id);
             if (array_key_exists('ERROR', $insert_result)) {
                 throw new Exception('Error inserting production_schema: error occurred in ProdSchema->insertProdSchema method.
     Error message: ' . $insert_result['ERROR']);
@@ -244,7 +245,6 @@ class ProdSchemaController
         $this->validateAddSchemaForm($request, 'UPDATE');
 
         $schema_arr = $this->validateTasks($request);
-
         if (array_key_exists('ERROR', $schema_arr)) {
             $schema_arr = $schema_arr['ERROR'];
             return back()->with('task_errors', $schema_arr)->withInput();
@@ -271,12 +271,13 @@ class ProdSchemaController
         $schema_id = $request->schema_id;
         $saved_files = [];
         $non_countable = !empty($request->countable);
+        $waste_unit_id = $request->waste_unit;
 
         try {
             DB::beginTransaction();
 
             $this->updateProdSchema($schema_id, $employee_no, $request->production_schema,
-                $request->description, count($schema_arr), $non_countable);
+                $request->description, count($schema_arr), $non_countable, $waste_unit_id);
 
             $this->updateProdSchemaProdStd($schema_id, $request->amount,$request->duration, $request->unit, $employee_no, $non_countable);
 
@@ -406,6 +407,7 @@ class ProdSchemaController
                                        ps.production_schema as prod_schema,
                                        ps.description as prod_schema_desc,
                                        ps.non_countable,
+                                       wu.unit,
                                        t.id as task_id,
                                        t.sequence_no as sequence_no,
                                        t.amount_required,
@@ -425,6 +427,8 @@ class ProdSchemaController
                                         and pstd.component_id is null
                                 left join unit u
                                     on u.id = pstd.unit_id
+                                left join unit wu
+                                    on ps.waste_unit_id = wu.id
                                 where ps.id = ' . $schema_id .
                 ' order by ps.id, t.sequence_no');
         }
@@ -434,6 +438,7 @@ class ProdSchemaController
                                     ps.production_schema as prod_schema,
                                     ps.description as prod_schema_desc,
                                     ps.non_countable,
+                                    wu.unit,
                                     t.id as task_id,
                                     t.sequence_no as sequence_no,
                                     t.amount_required,
@@ -453,6 +458,8 @@ class ProdSchemaController
                                               and pstd.component_id is null
                                          left join unit u
                                               on u.id = pstd.unit_id
+                                         left join unit wu
+                                              on ps.waste_unit_id = wu.id
                                 order by ps.id, t.sequence_no');
         }
 
@@ -478,7 +485,7 @@ class ProdSchemaController
     private function getAddSchemaData(int $schema_id = 0): array
     {
         $materials = StaticValue::where('type','material')->get();
-        $units = Unit::select('unit','name')->get();
+        $units = Unit::select('unit','name','id')->get();
 
         if($schema_id > 0) {
 //task_distinct.task_id is used, coz in the task section of the prod-schema.prod-schema-add view are diplayed only
@@ -572,7 +579,7 @@ class ProdSchemaController
                     if($is_amount_required) {
                         $error_arr[] = "Pole 'Ilość wymagana' może być zaznaczone tylko dla ostatniego podzadania.";
                     }
-                    else {
+                    else if(!is_null($request->$amount_required)){
                         $is_amount_required = true;
                     }
                 }
@@ -591,6 +598,7 @@ class ProdSchemaController
                 }
             }
         }
+
 
         if(!empty($tasks)) {
             //case when there are existing tasks selected
@@ -619,7 +627,7 @@ class ProdSchemaController
                         if($is_amount_required) {
                             $error_arr[] = "Pole 'Ilość wymagana' może być zaznaczone tylko dla ostatniego podzadania.";
                         }
-                        else {
+                        else if(!is_null($request->$amount_required)){
                             $is_amount_required = true;
                         }
                     }
@@ -644,7 +652,7 @@ class ProdSchemaController
         return array('INSERT' => $insert_arr);
     }
 
-    private function insertProdSchema(string $employee_no, string $prod_schema, string|null $description, int $tasks_count, bool $non_countable): array
+    private function insertProdSchema(string $employee_no, string $prod_schema, string|null $description, int $tasks_count, bool $non_countable, int|null $waste_unit_id): array
     {
 
         $schema_id = DB::table('production_schema')->insertGetId([
@@ -652,6 +660,7 @@ class ProdSchemaController
             'description' => $description,
             'tasks_count' => $tasks_count,
             'non_countable' => $non_countable,
+            'waste_unit_id' => $waste_unit_id,
             'created_by' => $employee_no,
             'updated_by' => $employee_no,
             'created_at' => date('y-m-d h:i:s'),
@@ -662,8 +671,8 @@ class ProdSchemaController
 
     }
 
-    private function updateProdSchema(int $schema_id, string $employee_no, string $prod_schema,
-                                      string|null $description, int $tasks_count, bool $non_countable): void
+    private function updateProdSchema(int $schema_id, string $employee_no, string $prod_schema, string|null $description,
+                                      int $tasks_count, bool $non_countable, int|null $waste_unit_id): void
     {
 
         DB::table('production_schema')
@@ -673,6 +682,7 @@ class ProdSchemaController
                 'description' => $description,
                 'tasks_count' => $tasks_count,
                 'non_countable' => $non_countable,
+                'waste_unit_id' => $waste_unit_id,
                 'updated_by' => $employee_no,
                 'updated_at' => date('y-m-d h:i:s'),
                 ]);
@@ -899,6 +909,7 @@ class ProdSchemaController
             'amount' => ['nullable', 'gt:0'],
             'duration' => ['nullable', 'gt:0'],
             'unit' => ['nullable', $unit_in],
+            'waste_unit' => ['integer', 'nullable', 'exists:App\Models\Unit,id'],
             'instr_pdf' => ['mimes:pdf,docx', 'max:16384'],
             'instr_video' => ['mimes:mp4,mov,mkv,wmv', 'max:51300'],
             'description' => ['max:200'],
@@ -908,6 +919,8 @@ class ProdSchemaController
                 'amount.gt' => 'Ilość musi być większa od 0',
                 'duration.gt' => 'Czas trwania musi być większy od 0',
                 'unit.in' => 'Niepoprawna jednostka. Wybierz jedną z: '.$err_mess,
+                'waste_unit.integer' => 'Niepoprawna jednostka. Wybierz z listy.',
+                'waste_unit.exists' => 'Wybranej jednostki nie odnaleziono w systemie.',
                 'instr_pdf.mimes' => 'Przesłany plik powinien mieć rozszerzenie: pdf. Rozszerzenie pliku: '.$ext_instr_pdf.'.',
                 'instr_video.mimes' => 'Przesłany plik powinien mieć rozszerzenie: mp4,mov,mkv,wmv. Rozszerzenie pliku: '.$ext_instr_video.'.',
                 'instr_pdf.max' => 'Przesłany plik jest za duży. Maksymalny rozmiar pliku: 16 MB.',

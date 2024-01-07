@@ -98,6 +98,12 @@
                                             type="checkbox" role="switch" id="countable" name="countable"
                                             {{ $prod_schema_tasks[0]->non_countable ? 'checked' : '' }} disabled/>
                                     </div>
+                                    <div class="my-4 ">
+                                        <label for="waste_unit" class="block text-sm xl:text-lg font-medium text-gray-900 dark:text-white">Odpady jednostka</label>
+                                        <div class="p-3 shadow-md w-[50px] text-center rounded-lg">
+                                            {{$prod_schema_tasks[0]->unit}}
+                                        </div>
+                                    </div>
                                     <h2 class="text-gray-800 font-medium text-md xl:text-lg my-2">Lista podzadań:</h2>
                                     <div class="flex flex-col items-left justify-center text-gray-700 border-blue-450 border-2 mb-3 md:w-[100%]">
                                         @endif

@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class WorkEffectivity extends Model
+class WorkEffectivityWork extends Model
 {
     /**
      * The attributes that are mass assignable.
@@ -13,12 +13,8 @@ class WorkEffectivity extends Model
      * @var array<int, string, double>
      */
     protected $fillable = [
-        'production_cycle_schema_id',
-        'production_standard_id',
-        'duration_minute',
-        'productivity',                     //ratio amount created/standard amount
-        'amount',                           //produced amount
-        'finished',                         //if not finished work for prod_cycle is reported for this work_effectivity
+        'work_effectivity_id',
+        'work_id',
         //other performance measurements
     ];
 
@@ -36,6 +32,5 @@ class WorkEffectivity extends Model
      *
      * @var string
      */
-    protected $table = 'work_effectivity';
-
+    protected $table = 'work_effectivity_work';
 }

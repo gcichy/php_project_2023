@@ -17,7 +17,7 @@ class ProductionSchema extends Model
         'description',
         'non_countable',                        //determines if prod cycle and prod standard can be created for prod schema
         'tasks_count',                      //number of tasks for production schema
-        'parent_id',                        //id of parent production schema
+        'waste_unit_id',                        //id of waste unit produced during production process for prod schema
     ];
     //independency of production_schema is determined by having row in production_standard table where component_id is null
     /**

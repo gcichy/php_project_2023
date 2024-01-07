@@ -230,7 +230,7 @@ class ProductionCycleController extends Controller
         $this->validateStoreCycle($request);
         try{
             DB::beginTransaction();
-            $employees = $this->validateEmployees($request->employees, $employee_no);
+            $employees = $this->validateEmployees($request->employees_2, $employee_no);
 
             $cycle_id = $this->insertProductionCycle($request, $employee_no);
 
@@ -459,7 +459,7 @@ class ProductionCycleController extends Controller
         }
             //product
         if($category == 1) {
-            if(count(ProductionCycle::where(['product_id' => $id, 'parent_id' => null, 'finished' => 0])->get()) > 0) {
+            if(count(ProductionCycle::where(['product_id' => $id, 'production_schema_id' => null, 'parent_id' => null, 'finished' => 0])->get()) > 0) {
                 throw new Exception('Nie można dodać nowego cyklu - istnieje rozpoczęty cykl dla tego produktu. Aby dodać nowy cykl zakończ poprzedni.',1);
             }
             if(!Product::find($id) instanceof Product) {
@@ -563,7 +563,7 @@ class ProductionCycleController extends Controller
             }
         }
         else if($category == 3) {
-            if(!is_null($request->pack_prod_id_2)) {
+            if(is_null($request->pack_prod_id_2)) {
                 if(count(ProductionCycle::where(['production_schema_id' => $id, 'parent_id' => null, 'finished' => 0])->get()) > 0) {
                     throw new Exception('Nie można dodać nowego cyklu - istnieje rozpoczęty cykl dla tego zadania. Aby dodać nowy cykl zakończ poprzedni.',1);
                 }

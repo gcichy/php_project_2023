@@ -49,11 +49,6 @@ return new class extends Migration
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
             $table->double('waste_amount')->nullable()->default(0);
-            $table->foreignId('waste_unit_id')
-                ->nullable()
-                ->constrained('unit')
-                ->onUpdate('cascade')
-                ->onDelete('restrict');
             $table->foreignId('waste_reason_code')
                 ->nullable()
                 ->constrained('reason_code', 'reason_code')

@@ -13,21 +13,17 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('work_effectivity', function (Blueprint $table) {
+        Schema::create('work_effectivity_work', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('production_cycle_schema_id')
-                ->constrained('production_cycle')
+            $table->foreignId('work_id')
+                ->constrained('work')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
-            $table->foreignId('production_standard_id')
+            $table->foreignId('work_effectivity_id')
                 ->nullable()
-                ->constrained('production_standard')
+                ->constrained('work_effectivity')
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
-            $table->double('productivity')->default(0);
-            $table->integer('duration_minute')->default(0);
-            $table->integer('amount')->default(0);
-            $table->boolean('finished')->default(false);
             $table->string('created_by',30)->nullable();
             $table->string('updated_by',30)->nullable();
             $table->timestamps();
@@ -41,6 +37,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('work_effectivity');
+        Schema::dropIfExists('work_effectivity_work');
     }
 };

@@ -13,12 +13,14 @@ use App\Models\ProductComponent;
 use App\Models\ProductionCycle;
 use App\Models\ProductionCycleUser;
 use App\Models\ProductionSchema;
+use App\Models\ProductionStandard;
 use App\Models\ReasonCode;
 use App\Models\StaticValue;
 use App\Models\Task;
 use App\Models\Unit;
 use App\Models\User;
 use App\Models\Work;
+use App\Models\WorkEffectivity;
 use App\Models\WorkUser;
 use App\Models\WorkView;
 use Carbon\Carbon;
@@ -50,18 +52,20 @@ class WorkController extends Controller
             $filt_end_time = $filt_by_time_table['filt_end_time'];
             $status_err = $filt_by_time_table['status_err'];
             $where_clause = $this->createWhereClause($request);
+            dd($where_clause);
             $works = $this->filterWorks($request, $works, $where_clause);
             $filt_items = array_merge($where_clause['where_in'], $where_clause['where_like']);
             $works = $this->orderWorks($works, $request->order);
-            $works = $works->paginate(3);
+
+            $works = $works->paginate(15);
         } catch(Exception $e) {
             Log::channel('error')->error('Error filtering parent cycles grid: '.$e->getMessage(), [
                 'employeeNo' => $employee_no,
             ]);
             if(isset($works) and $works instanceof Builder) {
-                $works = $works->paginate(10);
+                $works = $works->paginate(15);
             } else {
-                $works = WorkView::paginate(10);
+                $works = WorkView::paginate(15);
             }
             $status_err = 'Nie udało się przefiltrować - błąd systemu.';
             $filt_start_time = isset($filt_start_time)? $filt_start_time : null;
@@ -121,6 +125,7 @@ class WorkController extends Controller
         $modal_data = null;
         $child_components = null;
         $child_prod_schemas = null;
+        $parent_modal = null;
         if($parent_cycle->category == 1) {
             $child_components = ChildCycleView::where(['child_cycle_view.parent_id' => $id,
                 'child_cycle_view.prod_schema_id' => null])->get();
@@ -164,13 +169,24 @@ class WorkController extends Controller
                 ->join('task','task.production_schema_id', '=', 'production_cycle.production_schema_id')
                 ->select('parent_cycle_view.*',DB::raw('task.production_schema_id as prod_schema_id, task.id as task_id, task.name as task_name, task.sequence_no as task_sequence_no, task.amount_required as task_amount_required'))
                 ->orderBy('task.sequence_no','asc')->get();
+
+            $parent_modal = ParentCycleView::where('cycle_id', $id)
+                ->join('work','work.production_cycle_id', '=', 'parent_cycle_view.cycle_id')
+                ->select(DB::raw('cycle_id as child_id'),'status','category','image','name','productivity','time_spent_in_hours',
+                    'current_amount','expected_amount_per_spent_time','total_amount','progress','parent_cycle_view.start_time',
+                    'parent_cycle_view.end_time','expected_amount_per_time_frame','expected_time_to_complete_in_hours',
+                    'parent_cycle_view.defect_amount','defect_percent',DB::raw('sum(waste_amount) as waste_amount'),'waste_unit');
+
         }
 
-        $parent_modal = ParentCycleView::where('cycle_id', $id)
-            ->select(DB::raw('cycle_id as child_id'),'status','category','image','name','productivity','time_spent_in_hours',
-                'current_amount','expected_amount_per_spent_time','total_amount','progress','start_time',
-                'end_time','expected_amount_per_time_frame','expected_time_to_complete_in_hours',
-                'defect_amount','defect_percent',DB::raw('null as waste_amount,null as waste_unit'));
+        if($parent_cycle->category != 3) {
+            $parent_modal = ParentCycleView::where('cycle_id', $id)
+                ->select(DB::raw('cycle_id as child_id'),'status','category','image','name','productivity','time_spent_in_hours',
+                    'current_amount','expected_amount_per_spent_time','total_amount','progress','start_time',
+                    'end_time','expected_amount_per_time_frame','expected_time_to_complete_in_hours',
+                    'defect_amount','defect_percent',DB::raw('null as waste_amount'),'waste_unit');
+        }
+
 
         if(isset($modal_data)) {
             $modal_data = $modal_data->union($parent_modal)->get();
@@ -193,7 +209,6 @@ class WorkController extends Controller
 //        $max_time = $max_time->format('Y-m-d\TH:i');
         $max_time = date("Y-m-d");
 
-        dd($child_prod_schemas);
         return view('work.work-add', [
             'p_cycle' => $parent_cycle,
             'child_cycles' => $child_cycles,
@@ -255,20 +270,32 @@ class WorkController extends Controller
                 $other_child_schema_cycles = ProductionCycle::where('parent_id', $component_cycle_id)
                     ->where('id', '!=', $prod_schema_cycle_id);
 
+                $cycle_prod_std_id = $this->getProdStandardId($child_schema_cycle->production_schema_id,
+                    $child_component_cycle->component_id, null);
+                $work_effectivity_id = $this->getWorkEffectivity($child_schema_cycle->id, $cycle_prod_std_id, $employee_no);
+
                 $work_id_array = $this->insertWorkWrapper($request, $employee_id_array, $suffix_array,
                     $id, $employee_no, $child_component_cycle->component_id, $parent_cycle->product_id);
 
-                $work_stats = $this->updateProdSchemaCycle($id, $prod_schema_cycle_id, $child_schema_cycle, $work_id_array, $employee_no);
+                $update_stats = Work::whereIn('id', $work_id_array)
+                    ->select(DB::raw('min(start_time) as work_start, max(end_time) as work_end,
+                            sum(duration_minute) as sum_duration, max(amount) as amount,
+                            max(defect_amount) as defect_amount'))->first();
+
+                $this->updateWorkEffectivity($work_effectivity_id, $work_id_array, $update_stats, $employee_no);
+
+
+                $this->updateProdSchemaCycle($id, $prod_schema_cycle_id, $child_schema_cycle, $update_stats, $employee_no);
 
                 $updated_child_schema_cycle  = ProductionCycle::where('id', $prod_schema_cycle_id)->first();
 
                 $this->updateComponentCycle($child_component_cycle, $updated_child_schema_cycle,
-                    $other_child_schema_cycles, $work_stats, $employee_no);
+                    $other_child_schema_cycles, $update_stats, $employee_no);
 
                 $updated_child_component_cycle  = ProductionCycle::where('id', $component_cycle_id)->first();
 
                 $this->updateProductCycle($parent_cycle, $updated_child_component_cycle,
-                    $other_child_component_cycles, $work_stats, $employee_no);
+                    $other_child_component_cycles, $update_stats, $employee_no);
             }
             else if($category == 2) {
                 $parent_cycle = ProductionCycle::where('id', $id)->first();
@@ -277,25 +304,50 @@ class WorkController extends Controller
                 $other_child_schema_cycles = ProductionCycle::where('parent_id', $id)
                     ->where('id', '!=', $prod_schema_cycle_id);
 
-                $work_id_array = $this->insertWorkWrapper($request, $employee_id_array, $suffix_array,
-                                                           $id, $employee_no, $parent_cycle->component_id, null);
+                $cycle_prod_std_id = $this->getProdStandardId($child_schema_cycle->production_schema_id,
+                    $parent_cycle->component_id, null);
+                $work_effectivity_id = $this->getWorkEffectivity($child_schema_cycle->id, $cycle_prod_std_id, $employee_no);
 
-                $work_stats = $this->updateProdSchemaCycle($id, $prod_schema_cycle_id, $child_schema_cycle, $work_id_array, $employee_no);
+                $work_id_array = $this->insertWorkWrapper($request, $employee_id_array, $suffix_array,
+                    $id, $employee_no, $parent_cycle->component_id, null);
+
+
+                $update_stats = Work::whereIn('id', $work_id_array)
+                    ->select(DB::raw('min(start_time) as work_start, max(end_time) as work_end,
+                            sum(duration_minute) as sum_duration, max(amount) as amount,
+                            max(defect_amount) as defect_amount'))->first();
+
+                $this->updateWorkEffectivity($work_effectivity_id, $work_id_array, $update_stats, $employee_no);
+
+
+                $this->updateProdSchemaCycle($id, $prod_schema_cycle_id, $child_schema_cycle, $update_stats, $employee_no);
 
                 $updated_child_schema_cycle  = ProductionCycle::where('id', $prod_schema_cycle_id)->first();
 
                 $this->updateComponentCycle($parent_cycle, $updated_child_schema_cycle,$other_child_schema_cycles,
-                                            $work_stats, $employee_no);
+                                            $update_stats, $employee_no);
 
 
             }
             else if($category == 3) {
                 $parent_cycle = ProductionCycle::where('id', $id)->first();
 
+                $cycle_prod_std_id = $this->getProdStandardId($parent_cycle->production_schema_id, null,
+                    $parent_cycle->product_id);
+
+                $work_effectivity_id = $this->getWorkEffectivity($id, $cycle_prod_std_id, $employee_no);
+
+
                 $work_id_array = $this->insertWorkWrapper($request, $employee_id_array, $suffix_array,
                     $id, $employee_no, null, null);
 
-                $this->updateProdSchemaCycle($id, $id, $parent_cycle, $work_id_array, $employee_no);
+                $update_stats = Work::whereIn('id', $work_id_array)
+                    ->select(DB::raw('min(start_time) as work_start, max(end_time) as work_end,
+                            sum(duration_minute) as sum_duration, max(amount) as amount,
+                            max(defect_amount) as defect_amount'))->first();
+
+                $this->updateWorkEffectivity($work_effectivity_id, $work_id_array, $update_stats, $employee_no);
+                $this->updateProdSchemaCycle($id, $id, $parent_cycle, $update_stats, $employee_no);
             }
             DB::commit();
         }
@@ -355,14 +407,7 @@ class WorkController extends Controller
         $defect_reason_code = 'defect_rc'.$suffix;
         $waste_amount = 'waste'.$suffix;
         $waste_reason_code = 'waste_rc'.$suffix;
-        $waste_unit = 'waste_unit'.$suffix;
-        $waste_unit_id = Unit::where('unit', $request->$waste_unit)->select('id')->first();
-        if($waste_unit_id instanceof  Unit) {
-            $waste_unit_id = $waste_unit_id->id;
-        }
-        else {
-            $waste_unit_id = null;
-        }
+
 
 
         $work_id = DB::table('work')->insertGetId([
@@ -379,7 +424,6 @@ class WorkController extends Controller
             'defect_reason_code' => $request->$defect_reason_code,
             'waste_amount' => $request->$waste_amount,
             'waste_reason_code' => $request->$waste_reason_code,
-            'waste_unit_id' => $waste_unit_id,
             'additional_comment' => $request->$additional_comment,
             'created_by' => $employee_no,
             'updated_by' => $employee_no,
@@ -402,6 +446,45 @@ class WorkController extends Controller
         return $work_id;
     }
 
+    private function getProdStandardId(int $production_schema_id, int|null $component_id, int|null $product_id):int|null
+    {
+        $cycle_prod_std = ProductionStandard::where([
+            'production_schema_id' => $production_schema_id,
+            'component_id'=> $component_id,
+            'product_id' => $product_id])->first();
+
+        if($cycle_prod_std instanceof ProductionStandard) {
+            return $cycle_prod_std->id;
+        }
+        return null;
+    }
+    private function getWorkEffectivity(int $production_cycle_schema_id,
+                                        int|null $prod_std_id, string $employee_no) : int|null
+    {
+        if(is_null($prod_std_id)) {
+            return null;
+        }
+
+        $current_work_eff = WorkEffectivity::where(['production_cycle_schema_id' => $production_cycle_schema_id,
+                                                    'finished' => 0]);
+        if(count($current_work_eff->get()) == 0) {
+
+            $work_eff_id = DB::table('work_effectivity')->insertGetId([
+                'production_cycle_schema_id' => $production_cycle_schema_id,
+                'production_standard_id' => $prod_std_id,
+                'created_by' => $employee_no,
+                'updated_by' => $employee_no,
+                'created_at' => date('y-m-d h:i:s'),
+                'updated_at' => date('y-m-d h:i:s'),
+            ]);
+        }
+        else {
+            $current_work_eff = $current_work_eff->first();
+            $work_eff_id = $current_work_eff->id;
+        }
+
+        return $work_eff_id;
+    }
     private function updateProductCycle(ProductionCycle $product_cycle, ProductionCycle $updated_child_component_cycle,
                                           Builder $other_child_component_cycles, Work $work_stats, string $employee_no): void
     {
@@ -517,14 +600,10 @@ class WorkController extends Controller
             'updated_at' => date('y-m-d h:i:s'),
         ]);
     }
-    private function updateProdSchemaCycle(int $parent_cycle_id, int $schema_cycle_id, ProductionCycle $prod_schema_cycle,
-                                           array $work_id_array, string $employee_no): Work
-    {
-        $update_stats = Work::whereIn('id', $work_id_array)
-            ->select(DB::raw('min(start_time) as work_start, max(end_time) as work_end,
-                            sum(duration_minute) as sum_duration, max(amount) as amount,
-                            max(defect_amount) as defect_amount'))->first();
 
+    private function updateProdSchemaCycle(int $parent_cycle_id, int $schema_cycle_id, ProductionCycle $prod_schema_cycle,
+                                           Work $update_stats, string $employee_no): Work
+    {
 
         $update_start_time = (is_null($prod_schema_cycle->start_time) or $update_stats->work_start < $prod_schema_cycle->start_time)? $update_stats->work_start : $prod_schema_cycle->start_time;
         $update_duration_minute_sum = $prod_schema_cycle->duration_minute_sum + $update_stats->sum_duration;
@@ -552,6 +631,51 @@ class WorkController extends Controller
         ]);
 
         return $update_stats;
+    }
+
+    private function updateWorkEffectivity(int|null $work_eff_id, array $work_id_array, Work $work_stats,string $employee_no): void
+    {
+
+         if(!is_null($work_eff_id)) {
+             $work_eff = WorkEffectivity::where('id', $work_eff_id)->first();
+             if($work_eff instanceof  WorkEffectivity) {
+                 $productivity = $work_eff->productivity;
+                 $finished = $work_eff->finished;
+                 $duration_minute = $work_eff->duration_minute + $work_stats->sum_duration;
+                 $amount = is_null($work_stats->amount)? 0 : $work_stats->amount;
+
+
+                 $prod_std = ProductionStandard::where('id', $work_eff->production_standard_id)->first();
+                 if($prod_std instanceof ProductionStandard and $amount > 0 and $duration_minute != 0) {
+                     $exp_amount_per_minute = $prod_std->amount / $prod_std->duration_hours / 60;
+                     $amount_per_minute = $amount / $duration_minute;
+                     $productivity = $amount_per_minute / $exp_amount_per_minute * 100;
+                     $finished = 1;
+                 }
+
+
+                 DB::table('work_effectivity')
+                     ->where('id',$work_eff_id)->update([
+                     'productivity' => $productivity,
+                     'finished' => $finished,
+                     'duration_minute' => $duration_minute,
+                     'amount' => $amount,
+                     'updated_by' => $employee_no,
+                     'updated_at' => date('y-m-d h:i:s'),
+                 ]);
+
+                 foreach ($work_id_array as $work_id) {
+                    DB::table('work_effectivity_work')->insert([
+                        'work_effectivity_id' => $work_eff_id,
+                        'work_id' => $work_id,
+                        'created_by' => $employee_no,
+                        'updated_by' => $employee_no,
+                        'created_at' => date('y-m-d h:i:s'),
+                        'updated_at' => date('y-m-d h:i:s'),
+                    ]);
+                 }
+             }
+         }
     }
     /**
      * @throws Exception
@@ -699,9 +823,9 @@ class WorkController extends Controller
                 $rule_array['waste_rc'.$suffix] = ['required','exists:App\Models\ReasonCode,reason_code'];
                 $reason_codes_array['waste_rc'.$suffix.'.required'] = '- Jeśli wyprodukowano odpad podaj kod błędu.';
                 $reason_codes_array['waste_rc'.$suffix.'.exists'] = '- Podanego kodu błedu nie znaleziono w systemie.';
-                $rule_array['waste_unit'.$suffix] = ['required','exists:App\Models\Unit,unit'];
-                $reason_codes_array['waste_unit'.$suffix.'.required'] = '- Jeśli wyprodukowano odpad podaj jednostkę.';
-                $reason_codes_array['waste_unit'.$suffix.'.exists'] = '- Podanej jednostki nie znaleziono w systemie.';
+//                $rule_array['waste_unit'.$suffix] = ['required','exists:App\Models\Unit,unit'];
+//                $reason_codes_array['waste_unit'.$suffix.'.required'] = '- Jeśli wyprodukowano odpad podaj jednostkę.';
+//                $reason_codes_array['waste_unit'.$suffix.'.exists'] = '- Podanej jednostki nie znaleziono w systemie.';
             }
             $employee_count_name = 'employee_count'.$suffix;
             $employee_count = $request->$employee_count_name;

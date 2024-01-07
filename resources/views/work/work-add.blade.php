@@ -15,10 +15,8 @@
             }
             else if(category == 2) {
                 let selectedSchemaCycleId = $('#selected-prod-schema-cycle-id').val();
-                console.log($(selectedSchemaCycleId));
                 if(Number.isInteger(parseInt(selectedSchemaCycleId, 10)) && parseInt(selectedSchemaCycleId, 10) > 0) {
                     let elementSchemaCycleId = '#schemacycle-' + selectedSchemaCycleId;
-                    console.log($(elementSchemaCycleId));
                     $(elementSchemaCycleId).trigger("click");
                 }
             }
@@ -156,7 +154,6 @@
                             toggleInputsDisability($(this));
                         });
                     }
-                    console.log(inputTableCloned.find('option'));
                     $('#input-container').append(inputTableCloned);
                     $('.selected-input-time').on('change', function () {
                         calculateWorkDuration($(this));
@@ -266,7 +263,6 @@
             }
         }
         function modalStatusStyles(colName, elem, sourceText) {
-            console.log(colName, elem, sourceText);
             if(colName === 'status') {
                 if(sourceText === 'Po terminie') {
                     elem.addClass('bg-red-500');
@@ -281,6 +277,7 @@
         }
 
         function addCycleStyles() {
+            console.log('halo');
             let cycles = $('.cycle');
             cycles.each(function() {
                 let styles = $(this).find('.cycle_styles').text();
@@ -559,6 +556,7 @@
             });
 
             $(".open-modal").on('click', function () {
+                addCycleStyles();
                 $("#modal-details-background").removeClass("hidden");
                 let idArr = $(this).attr('id').split('-');
                 getRowData(idArr[idArr.length-1]);
@@ -771,15 +769,17 @@
                                                         <th scope="col" class="px-2 py-3 text-center">
                                                             Defekty - przyczyna
                                                         </th>
-                                                        <th scope="col" class="px-9 py-3 text-center">
-                                                            Odpady
-                                                        </th>
-                                                        <th scope="col" class="px-2 py-3 text-center">
-                                                            Odpady - jednostka
-                                                        </th>
-                                                        <th scope="col" class="px-2 py-3 text-center">
-                                                            Odpady - przyczyna
-                                                        </th>
+                                                        @if(!is_null($p_cycle->waste_unit))
+                                                            <th scope="col" class="px-9 py-3 text-center">
+                                                                Odpady ({{$p_cycle->waste_unit}})
+                                                            </th>
+{{--                                                            <th scope="col" class="px-2 py-3 text-center">--}}
+{{--                                                                Odpady - jednostka--}}
+{{--                                                            </th>--}}
+                                                            <th scope="col" class="px-2 py-3 text-center">
+                                                                Odpady - przyczyna
+                                                            </th>
+                                                        @endif
                                                     </tr>
                                                     </thead>
                                                     <tbody>
@@ -956,57 +956,59 @@
                                                                     @endif
                                                                 </div>
                                                             </td>
-                                                            <td class="waste px-2 w-[70px]">
-                                                                <div class="p-1 flex justify-center flex-row items-center h-full">
-                                                                    <div class="w-full p-1 flex justify-center items-center h-full">
-                                                                        <input id="waste-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
-                                                                               type="number" min="0" step="any" value="{{old('waste_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
-                                                                               class="disabled-input waste-input nullable-input bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center"
-                                                                               name="waste_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}" placeholder="-"
-                                                                               disabled>
+                                                            @if(!is_null($p_cycle->waste_unit))
+                                                                <td class="waste px-2 w-[70px]">
+                                                                    <div class="p-1 flex justify-center flex-row items-center h-full">
+                                                                        <div class="w-full p-1 flex justify-center items-center h-full">
+                                                                            <input id="waste-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                   type="number" min="0" step="any" value="{{old('waste_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
+                                                                                   class="disabled-input waste-input nullable-input bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center"
+                                                                                   name="waste_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}" placeholder="-"
+                                                                                   disabled>
+                                                                        </div>
                                                                     </div>
-                                                                </div>
-                                                            </td>
-                                                            <td class="waste-unit px-2 py-3 text-center">
-                                                                <div class="p-1 flex justify-center items-center h-full">
-                                                                    <select id="{{'waste-unit-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
-                                                                            name="{{'waste_unit_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
-                                                                            disabled class="disabled-input waste-unit-input nullable-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
-                                                                        <option value="" class="bg-white">
-                                                                        </option>
-                                                                        @if(isset($units))
-                                                                            @foreach($units as $u)
-                                                                                <option value="{{$u->unit}}" class="bg-white"
-                                                                                        @if(old('waste_unit_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id) == $u->unit)
-                                                                                            selected
+                                                                </td>
+{{--                                                                <td class="waste-unit px-2 py-3 text-center">--}}
+{{--                                                                    <div class="p-1 flex justify-center items-center h-full">--}}
+{{--                                                                        <select id="{{'waste-unit-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"--}}
+{{--                                                                                name="{{'waste_unit_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"--}}
+{{--                                                                                disabled class="disabled-input waste-unit-input nullable-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">--}}
+{{--                                                                            <option value="" class="bg-white">--}}
+{{--                                                                            </option>--}}
+{{--                                                                            @if(isset($units))--}}
+{{--                                                                                @foreach($units as $u)--}}
+{{--                                                                                    <option value="{{$u->unit}}" class="bg-white"--}}
+{{--                                                                                            @if(old('waste_unit_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id) == $u->unit)--}}
+{{--                                                                                                selected--}}
+{{--                                                                                        @endif>--}}
+{{--                                                                                        {{$u->unit}}--}}
+{{--                                                                                    </option>--}}
+{{--                                                                                @endforeach--}}
+{{--                                                                            @endif--}}
+{{--                                                                        </select>--}}
+{{--                                                                    </div>--}}
+{{--                                                                </td>--}}
+                                                                <td class="waste-rc px-2 py-3 text-center">
+                                                                    <div class="p-1 flex justify-center items-center h-full">
+                                                                        <select id="{{'waste-rc-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                name="{{'waste_rc_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                                disabled class="disabled-input waste-rc-input nullable-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                            <option value="" class="bg-white">
+                                                                            </option>
+                                                                            @if(isset($reason_codes))
+                                                                                @foreach($reason_codes as $code)
+                                                                                    <option value="{{$code->reason_code}}" class="bg-white"
+                                                                                            @if(old('waste_rc_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id) == $code->reason_code)
+                                                                                                selected
                                                                                         @endif>
-                                                                                    {{$u->unit}}
-                                                                                </option>
-                                                                            @endforeach
-                                                                        @endif
-                                                                    </select>
-                                                                </div>
-                                                            </td>
-                                                            <td class="waste-rc px-2 py-3 text-center">
-                                                                <div class="p-1 flex justify-center items-center h-full">
-                                                                    <select id="{{'waste-rc-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
-                                                                            name="{{'waste_rc_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
-                                                                            disabled class="disabled-input waste-rc-input nullable-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
-                                                                        <option value="" class="bg-white">
-                                                                        </option>
-                                                                        @if(isset($reason_codes))
-                                                                            @foreach($reason_codes as $code)
-                                                                                <option value="{{$code->reason_code}}" class="bg-white"
-                                                                                        @if(old('waste_rc_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id) == $code->reason_code)
-                                                                                            selected
-                                                                                    @endif>
-                                                                                    {{$code->reason_code_desc}}
-                                                                                </option>
-                                                                            @endforeach
-                                                                        @endif
-                                                                    </select>
-                                                                </div>
-                                                            </td>
+                                                                                        {{$code->reason_code_desc}}
+                                                                                    </option>
+                                                                                @endforeach
+                                                                            @endif
+                                                                        </select>
+                                                                    </div>
+                                                                </td>
+                                                            @endif
                                                         </tr>
                                                     @endforeach
                                                     </tbody>
@@ -1269,15 +1271,17 @@
                                                                                 <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
                                                                                     Defekty - przyczyna
                                                                                 </th>
-                                                                                <th scope="col" class="px-9 py-3 hidden-input hidden text-center">
-                                                                                    Odpady
-                                                                                </th>
-                                                                                <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
-                                                                                    Odpady - jednostka
-                                                                                </th>
-                                                                                <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
-                                                                                    Odpady - przyczyna
-                                                                                </th>
+                                                                                @if(!is_null($prod_schema->waste_unit))
+                                                                                    <th scope="col" class="px-9 py-3 hidden-input hidden text-center">
+                                                                                        Odpady ({{$prod_schema->waste_unit}})
+                                                                                    </th>
+                                                                                    {{--                                                                            <th scope="col" class="px-2 py-3 hidden-input hidden text-center">--}}
+                                                                                    {{--                                                                                Odpady - jednostka--}}
+                                                                                    {{--                                                                            </th>--}}
+                                                                                    <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
+                                                                                        Odpady - przyczyna
+                                                                                    </th>
+                                                                                @endif
                                                                             </tr>
                                                                             </thead>
                                                                             <tbody>
@@ -1439,57 +1443,59 @@
                                                                                                 @endif
                                                                                             </div>
                                                                                         </td>
-                                                                                        <td class="hidden-input hidden waste px-2 w-[70px]">
-                                                                                            <div class="p-1 flex justify-center flex-row items-center h-full">
-                                                                                                <div class="w-full p-1 flex justify-center items-center h-full">
-                                                                                                    <input id="waste-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
-                                                                                                           type="number" min="0" step="any" value="{{old('waste_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
-                                                                                                           class="disabled-input waste-input nullable-input bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center"
-                                                                                                           name="waste_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}" placeholder="-"
-                                                                                                           disabled>
+                                                                                        @if(!is_null($prod_schema->waste_unit))
+                                                                                            <td class="hidden-input hidden waste px-2 w-[70px]">
+                                                                                                <div class="p-1 flex justify-center flex-row items-center h-full">
+                                                                                                    <div class="w-full p-1 flex justify-center items-center h-full">
+                                                                                                        <input id="waste-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                                               type="number" min="0" step="any" value="{{old('waste_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
+                                                                                                               class="disabled-input waste-input nullable-input bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center"
+                                                                                                               name="waste_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}" placeholder="-"
+                                                                                                               disabled>
+                                                                                                    </div>
                                                                                                 </div>
-                                                                                            </div>
-                                                                                        </td>
-                                                                                        <td class="hidden-input hidden waste-unit px-2 py-3 text-center">
-                                                                                            <div class="p-1 flex justify-center items-center h-full">
-                                                                                                <select id="{{'waste-unit-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
-                                                                                                        name="{{'waste_unit_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
-                                                                                                        disabled class="disabled-input waste-unit-input nullable-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
-                                                                                                    <option value="" class="bg-white">
-                                                                                                    </option>
-                                                                                                    @if(isset($units))
-                                                                                                        @foreach($units as $u)
-                                                                                                            <option value="{{$u->unit}}" class="bg-white"
-                                                                                                                    @if(old('waste_unit_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id) == $u->unit)
-                                                                                                                        selected
-                                                                                                                @endif>
-                                                                                                                {{$u->unit}}
-                                                                                                            </option>
-                                                                                                        @endforeach
-                                                                                                    @endif
-                                                                                                </select>
-                                                                                            </div>
-                                                                                        </td>
-                                                                                        <td class="hidden-input hidden waste-rc px-2 py-3 text-center">
-                                                                                            <div class="p-1 flex justify-center items-center h-full">
-                                                                                                <select id="{{'waste-rc-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
-                                                                                                        name="{{'waste_rc_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
-                                                                                                        disabled class="disabled-input waste-rc-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
-                                                                                                    <option value="" class="bg-white">
-                                                                                                    </option>
-                                                                                                    @if(isset($reason_codes))
-                                                                                                        @foreach($reason_codes as $code)
-                                                                                                            <option value="{{$code->reason_code}}" class="bg-white"
-                                                                                                                    @if(old('waste_rc_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id) == $code->reason_code)
-                                                                                                                        selected
-                                                                                                                @endif>
-                                                                                                                {{$code->reason_code_desc}}
-                                                                                                            </option>
-                                                                                                        @endforeach
-                                                                                                    @endif
-                                                                                                </select>
-                                                                                            </div>
-                                                                                        </td>
+                                                                                            </td>
+{{--                                                                                            <td class="hidden-input hidden waste-unit px-2 py-3 text-center">--}}
+{{--                                                                                                <div class="p-1 flex justify-center items-center h-full">--}}
+{{--                                                                                                    <select id="{{'waste-unit-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"--}}
+{{--                                                                                                            name="{{'waste_unit_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"--}}
+{{--                                                                                                            disabled class="disabled-input waste-unit-input nullable-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">--}}
+{{--                                                                                                        <option value="" class="bg-white">--}}
+{{--                                                                                                        </option>--}}
+{{--                                                                                                        @if(isset($units))--}}
+{{--                                                                                                            @foreach($units as $u)--}}
+{{--                                                                                                                <option value="{{$u->unit}}" class="bg-white"--}}
+{{--                                                                                                                        @if(old('waste_unit_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id) == $u->unit)--}}
+{{--                                                                                                                            selected--}}
+{{--                                                                                                                    @endif>--}}
+{{--                                                                                                                    {{$u->unit}}--}}
+{{--                                                                                                                </option>--}}
+{{--                                                                                                            @endforeach--}}
+{{--                                                                                                        @endif--}}
+{{--                                                                                                    </select>--}}
+{{--                                                                                                </div>--}}
+{{--                                                                                            </td>--}}
+                                                                                            <td class="hidden-input hidden waste-rc px-2 py-3 text-center">
+                                                                                                <div class="p-1 flex justify-center items-center h-full">
+                                                                                                    <select id="{{'waste-rc-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                                            name="{{'waste_rc_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                                                            disabled class="disabled-input waste-rc-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                                        <option value="" class="bg-white">
+                                                                                                        </option>
+                                                                                                        @if(isset($reason_codes))
+                                                                                                            @foreach($reason_codes as $code)
+                                                                                                                <option value="{{$code->reason_code}}" class="bg-white"
+                                                                                                                        @if(old('waste_rc_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id) == $code->reason_code)
+                                                                                                                            selected
+                                                                                                                    @endif>
+                                                                                                                    {{$code->reason_code_desc}}
+                                                                                                                </option>
+                                                                                                            @endforeach
+                                                                                                        @endif
+                                                                                                    </select>
+                                                                                                </div>
+                                                                                            </td>
+                                                                                        @endif
                                                                                     </tr>
                                                                                 @endif
                                                                             @endforeach
@@ -1584,15 +1590,17 @@
                                                                             <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
                                                                                 Defekty - przyczyna
                                                                             </th>
-                                                                            <th scope="col" class="px-9 py-3 hidden-input hidden text-center">
-                                                                                Odpady
-                                                                            </th>
-                                                                            <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
-                                                                                Odpady - jednostka
-                                                                            </th>
-                                                                            <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
-                                                                                Odpady - przyczyna
-                                                                            </th>
+                                                                            @if(!is_null($prod_schema->waste_unit))
+                                                                                <th scope="col" class="px-9 py-3 hidden-input hidden text-center">
+                                                                                    Odpady ({{$prod_schema->waste_unit}})
+                                                                                </th>
+                                                                                {{--                                                                            <th scope="col" class="px-2 py-3 hidden-input hidden text-center">--}}
+                                                                                {{--                                                                                Odpady - jednostka--}}
+                                                                                {{--                                                                            </th>--}}
+                                                                                <th scope="col" class="px-2 py-3 hidden-input hidden text-center">
+                                                                                    Odpady - przyczyna
+                                                                                </th>
+                                                                            @endif
                                                                         </tr>
                                                                         </thead>
                                                                         <tbody>
@@ -1754,57 +1762,59 @@
                                                                                             @endif
                                                                                         </div>
                                                                                     </td>
-                                                                                    <td class="hidden-input hidden waste px-2 max-w-[50px]">
-                                                                                        <div class="p-1 flex justify-center flex-row items-center h-full">
-                                                                                            <div class="w-full p-1 flex justify-center items-center h-full">
-                                                                                                <input id="waste-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
-                                                                                                       type="number" min="0" step="any" value="{{old('waste_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
-                                                                                                       class="disabled-input waste-input nullable-input bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center"
-                                                                                                       name="waste_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}" placeholder="-"
-                                                                                                       disabled>
+                                                                                    @if(!is_null($prod_schema->waste_unit))
+                                                                                        <td class="hidden-input hidden waste px-2 max-w-[50px]">
+                                                                                            <div class="p-1 flex justify-center flex-row items-center h-full">
+                                                                                                <div class="w-full p-1 flex justify-center items-center h-full">
+                                                                                                    <input id="waste-{{$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                                           type="number" min="0" step="any" value="{{old('waste_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id)}}"
+                                                                                                           class="disabled-input waste-input nullable-input bg-gray-200 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded text-center"
+                                                                                                           name="waste_{{$schema_task->prod_schema_id.'_'.$schema_task->task_id}}" placeholder="-"
+                                                                                                           disabled>
+                                                                                                </div>
                                                                                             </div>
-                                                                                        </div>
-                                                                                    </td>
-                                                                                    <td class="hidden-input hidden waste-unit px-2 py-3 text-center">
-                                                                                        <div class="p-1 flex justify-center items-center h-full">
-                                                                                            <select id="{{'waste-unit-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
-                                                                                                    name="{{'waste_unit_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
-                                                                                                    disabled class="disabled-input waste-unit-input nullable-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
-                                                                                                <option value="" class="bg-white">
-                                                                                                </option>
-                                                                                                @if(isset($units))
-                                                                                                    @foreach($units as $u)
-                                                                                                        <option value="{{$u->unit}}" class="bg-white"
-                                                                                                                @if(old('waste_unit_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id) == $u->unit)
-                                                                                                                    selected
-                                                                                                            @endif>
-                                                                                                            {{$u->unit}}
-                                                                                                        </option>
-                                                                                                    @endforeach
-                                                                                                @endif
-                                                                                            </select>
-                                                                                        </div>
-                                                                                    </td>
-                                                                                    <td class="hidden-input hidden waste-rc px-2 py-3 text-center">
-                                                                                        <div class="p-1 flex justify-center items-center h-full">
-                                                                                            <select id="{{'waste-rc-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
-                                                                                                    name="{{'waste_rc_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
-                                                                                                    disabled class="disabled-input waste-rc-input nullable-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
-                                                                                                <option value="" class="bg-white">
-                                                                                                </option>
-                                                                                                @if(isset($reason_codes))
-                                                                                                    @foreach($reason_codes as $code)
-                                                                                                        <option value="{{$code->reason_code}}" class="bg-white"
-                                                                                                                @if(old('waste_rc_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id) == $code->reason_code)
-                                                                                                                    selected
-                                                                                                            @endif>
-                                                                                                            {{$code->reason_code_desc}}
-                                                                                                        </option>
-                                                                                                    @endforeach
-                                                                                                @endif
-                                                                                            </select>
-                                                                                        </div>
-                                                                                    </td>
+                                                                                        </td>
+{{--                                                                                        <td class="hidden-input hidden waste-unit px-2 py-3 text-center">--}}
+{{--                                                                                            <div class="p-1 flex justify-center items-center h-full">--}}
+{{--                                                                                                <select id="{{'waste-unit-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"--}}
+{{--                                                                                                        name="{{'waste_unit_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"--}}
+{{--                                                                                                        disabled class="disabled-input waste-unit-input nullable-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">--}}
+{{--                                                                                                    <option value="" class="bg-white">--}}
+{{--                                                                                                    </option>--}}
+{{--                                                                                                    @if(isset($units))--}}
+{{--                                                                                                        @foreach($units as $u)--}}
+{{--                                                                                                            <option value="{{$u->unit}}" class="bg-white"--}}
+{{--                                                                                                                    @if(old('waste_unit_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id) == $u->unit)--}}
+{{--                                                                                                                        selected--}}
+{{--                                                                                                                @endif>--}}
+{{--                                                                                                                {{$u->unit}}--}}
+{{--                                                                                                            </option>--}}
+{{--                                                                                                        @endforeach--}}
+{{--                                                                                                    @endif--}}
+{{--                                                                                                </select>--}}
+{{--                                                                                            </div>--}}
+{{--                                                                                        </td>--}}
+                                                                                        <td class="hidden-input hidden waste-rc px-2 py-3 text-center">
+                                                                                            <div class="p-1 flex justify-center items-center h-full">
+                                                                                                <select id="{{'waste-rc-'.$schema_task->prod_schema_id.'-'.$schema_task->task_id}}"
+                                                                                                        name="{{'waste_rc_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id}}"
+                                                                                                        disabled class="disabled-input waste-rc-input nullable-input bg-gray-200 min-w-[100px] block w-full py-2 border text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded">
+                                                                                                    <option value="" class="bg-white">
+                                                                                                    </option>
+                                                                                                    @if(isset($reason_codes))
+                                                                                                        @foreach($reason_codes as $code)
+                                                                                                            <option value="{{$code->reason_code}}" class="bg-white"
+                                                                                                                    @if(old('waste_rc_'.$schema_task->prod_schema_id.'_'.$schema_task->task_id) == $code->reason_code)
+                                                                                                                        selected
+                                                                                                                @endif>
+                                                                                                                {{$code->reason_code_desc}}
+                                                                                                            </option>
+                                                                                                        @endforeach
+                                                                                                    @endif
+                                                                                                </select>
+                                                                                            </div>
+                                                                                        </td>
+                                                                                    @endif
                                                                                 </tr>
                                                                             @endif
                                                                         @endforeach

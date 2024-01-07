@@ -56,5 +56,13 @@ class UnitSeeder extends Seeder
             'created_at' => date('y-m-d h:i:s'),
             'updated_at' => date('y-m-d h:i:s'),
         ]);
+        DB::table('unit')->insert([
+            'unit' => 'm',
+            'name' => 'metr',
+            'created_by' => 'system',
+            'updated_by' => 'system',
+            'created_at' => date('y-m-d h:i:s'),
+            'updated_at' => date('y-m-d h:i:s'),
+        ]);
     }
 }

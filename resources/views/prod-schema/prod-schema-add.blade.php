@@ -276,6 +276,26 @@
                                                 type="checkbox" role="switch" id="countable" name="countable"
                                                 {{ old('countable') == 'on' ? 'checked' : ((!empty($selected_schem) and $selected_schem->non_countable) ? 'checked' : '') }}/>
                                         </div>
+                                        <div class="mb-6">
+                                            <label for="countable" class="block text-sm lg:text-md xl:text-lg font-medium text-gray-900 dark:text-white">Odpady - jednostka</label>
+                                            <p class="w-full text-sm lg:text-lg font-medium text-left text-gray-900 dark:text-white p-2">
+                                                <span class="text-green-500 text-xs lg:text-sm"><em>Jeśli w trkacie wykonywania zadania może powstać odpad, wybierz jednostkę odpadu.</em></span>
+                                            </p>
+                                            <select id="waste-unit" name="waste_unit" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                                <option value="" selected></option>
+                                                @if(isset($units) and count($units) > 0)
+                                                    @foreach($units as $u)
+                                                        @if(old('waste_unit') == $u->id)
+                                                            <option value="{{$u->id}}" selected>{{$u->unit}}</option>
+                                                        @elseif(!empty($selected_schem) and $selected_schem->waste_unit_id == $u->id)
+                                                            <option value="{{$u->id}}" selected>{{$u->unit}}</option>
+                                                        @else
+                                                            <option value="{{$u->id}}">{{$u->unit}}</option>
+                                                        @endif
+                                                    @endforeach
+                                                @endif
+                                            </select>
+                                        </div>
 {{--                                        <div class="mb-6">--}}
 {{--                                            <label for="material" class="block mb-2 text-sm lg:text-lg font-medium text-gray-900 dark:text-white">Surowiec</label>--}}
 {{--                                            <select id="material" name="material" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">--}}
