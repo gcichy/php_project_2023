@@ -339,7 +339,7 @@ class WorkController extends Controller
 
 
                 $work_id_array = $this->insertWorkWrapper($request, $employee_id_array, $suffix_array,
-                    $id, $employee_no, null, null);
+                    $id, $employee_no, null, $parent_cycle->product_id);
 
                 $update_stats = Work::whereIn('id', $work_id_array)
                     ->select(DB::raw('min(start_time) as work_start, max(end_time) as work_end,

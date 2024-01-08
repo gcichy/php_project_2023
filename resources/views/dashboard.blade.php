@@ -1,6 +1,24 @@
 <x-app-layout>
     <script>
+        google.charts.load('current', {'packages':['corechart']});
+        google.charts.setOnLoadCallback(drawChart);
+        function drawChart() {
+            var data = google.visualization.arrayToDataTable([
+                ['Task', 'Hours per Day'],
+                ['Work', 11],
+                ['Eat', 2],
+                ['Commute', 2],
+                ['Watch TV', 2],
+                ['Sleep', 7]
+            ]);
 
+            var options = {
+                title: 'My Daily Activities'
+            };
+
+            var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
+            chart.draw(data, options);
+        }
     </script>
     <div class="py-4 flex justify-center items-center">
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -39,7 +57,7 @@
     </div>
 @endif
 
-
+<div id="chart_div" style="width: 100%; height: 500px;"></div>
 
 {{--    <!-- Table responsive wrapper -->--}}
 {{--    <div class="overflow-x-auto h-[380px] overflow-y-scroll w-[80%]">--}}
