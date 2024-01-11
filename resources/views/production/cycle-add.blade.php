@@ -176,26 +176,20 @@
                             <div class="col-span-2 flex flex-col bg-gray-200/50 border-r">
                                 <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Planowany start</dt>
                                 <div class="p-1 flex justify-center items-center h-full">
-                                    <div id="exp-start-time-cycle-add" class="relative w-full xl:mt-4"
-                                         data-te-datepicker-init
-                                         data-te-format="yyyy-mm-dd"
-                                         data-te-input-wrapper-init>
-                                        <input name="exp_start_2" value="{{old('exp_start')}}"
-                                               class="exp-start-time p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
-                                               placeholder="Start"/>
+                                    <div id="exp-start-time-cycle-add" class="exp-start-time relative w-full">
+                                        <input type="date" name="exp_start_2" value="{{old('exp_start_2')}}"
+                                               class=" p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                               placeholder="Start" min="2023-01-01"/>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-span-2 flex flex-col bg-gray-200/50 xl:rounded-tr-xl">
                                 <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2 xl:rounded-tr-xl">Zakładany termin</dt>
                                 <div class="p-1 flex justify-center items-center h-full">
-                                    <div id="exp-end-time-cycle-add" class="exp-end-time relative w-full xl:mt-4"
-                                        data-te-datepicker-init
-                                         data-te-format="yyyy-mm-dd"
-                                        data-te-input-wrapper-init>
-                                        <input name="exp_end_2" value="{{old('exp_end')}}"
-                                               class="p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
-                                               placeholder="Termin"/>
+                                    <div id="exp-end-time-cycle-add" class="exp-end-time relative w-full">
+                                        <input type="date" name="exp_end_2" value="{{old('exp_end_2')}}"
+                                               class=" p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
+                                               placeholder="Termin" min="2023-01-01"/>
                                     </div>
                                 </div>
                             </div>
@@ -285,12 +279,14 @@
                                 <x-filter-input :placeholder="$input_placeholder" :value="$input_value" :element_id="$elem" :route="$route"></x-filter-input>
                             </div>
                             @foreach($elements as $el)
-                                <x-list-element id="elem-{{$el->id}}" class="my-3 list-element flex-col w-full p-3">
+                                <x-list-element id="elem-{{$el->id}}" class="my-3 list-element flex-col w-full lg:py-0 py-0">
                                     <input type="number" class="list-element-id hidden" value="{{$el->id}}">
                                     <input type="number" class="list-element-minute-per-pcs hidden" value="{{$el->minutes_per_pcs}}">
-                                    <div class="w-full flex justify-between items-center">
+                                    <div class="w-full flex flex-col justify-between items-center">
                                         <div class="w-full flex justify-left items-center">
-                                            <p class="inline-block list-element-name ml-[3%] py-3  xl:text-lg text-md">{{$category != 3? $el->name.' - '.$el->material : $el->production_schema}}</p>
+                                            <p class="my-2 mr-2 rounded-lg inline-block text-white bg-blue-450 shadow-lg list-element-name py-2 px-3 xl:text-lg text-md whitespace-nowrap overflow-clip">
+                                                {{$category != 3? $el->name.' - '.$el->material : $el->production_schema}}
+                                            </p>
                                         </div>
                                     </div>
                                     @if(isset($products) and isset($pack_product_id ) and $category == 3 and $el->id == $pack_product_id->value )

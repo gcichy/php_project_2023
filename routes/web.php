@@ -9,7 +9,6 @@ use App\Http\Controllers\ProdSchemaController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductionCycleController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\WorkController;
 use App\Http\Controllers\WorkCycleController;

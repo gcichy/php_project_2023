@@ -52,7 +52,6 @@ class WorkController extends Controller
             $filt_end_time = $filt_by_time_table['filt_end_time'];
             $status_err = $filt_by_time_table['status_err'];
             $where_clause = $this->createWhereClause($request);
-            dd($where_clause);
             $works = $this->filterWorks($request, $works, $where_clause);
             $filt_items = array_merge($where_clause['where_in'], $where_clause['where_like']);
             $works = $this->orderWorks($works, $request->order);

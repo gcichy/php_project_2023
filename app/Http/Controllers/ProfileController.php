@@ -84,11 +84,11 @@ class ProfileController extends Controller
         $user = Auth::user();
         try {
             $request->validate([
-                'password' => ['required', 'current_password'],
-            ], [
-                    'password.required' => 'Aby usunąć użytkownika musisz podać hasło.',
-                    'password.current_password' => 'Nie udało się usunąć użytkownika: błędne hasło.'
-            ]);
+                'confirmation' => ['regex:(usuń|usun)'],
+            ],
+                [
+                    'confirmation.regex' => 'Nie można usunąć użytkownika: niepoprawna wartość. Wpisz "usuń".',
+                ]);
         }
         catch (Exception $e) {
             return redirect()->back()->with('status_err', $e->getMessage());
@@ -110,8 +110,6 @@ class ProfileController extends Controller
             ]);
             return redirect()->back()->with('status_err', 'Nie udało się usunąć użytkownika: problem przy usuwaniu z systemu.');
         }
-
-
         return redirect()->route('employee.index')->with('status', 'Usunięto użytkownika');
     }
 

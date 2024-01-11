@@ -78,7 +78,7 @@
                     let progress = $(this).find('.progress');
                     if(progress.length === 1) {
                         let width = parseInt(styles[1]);
-                        if(width === '100') {
+                        if(width >= 100) {
                             $(progress).addClass('rounded-lg');
                         } else {
                             $(progress).addClass('rounded-l-lg');
@@ -207,22 +207,22 @@
                             </div>
                         </div>
                         {{--                            ROW 1--}}
-                        @if(!is_null($p_cycle->image))
-                            @php $path = ''; @endphp
-                            @if($p_cycle->category == 1)
-                                @php $path = isset($storage_path_products) ? $storage_path_products.'/' : ''; @endphp
-                            @elseif($p_cycle->category == 2)
-                                @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
-                            @endif
-                            <div class="col-span-2 flex justify-center flex-col bg-gray-200/50 border-r-2">
-                                <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Zdjęcie</dt>
-                                <div class="flex justify-center items-center p-1">
-                                    <div class="max-w-[150px]">
+                        @php $path = ''; @endphp
+                        @if($p_cycle->category == 1)
+                            @php $path = isset($storage_path_products) ? $storage_path_products.'/' : ''; @endphp
+                        @elseif($p_cycle->category == 2)
+                            @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
+                        @endif
+                        <div class="col-span-2 flex justify-start flex-col bg-gray-200/50 border-r-2">
+                            <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Zdjęcie</dt>
+                            <div class="flex justify-center items-center p-1">
+                                <div class="max-w-[150px]">
+                                    @if(!is_null($p_cycle->image))
                                         <img src="{{asset('storage/'.$path.$p_cycle->image)}}">
-                                    </div>
+                                    @endif
                                 </div>
                             </div>
-                        @endif
+                        </div>
                         <div class="col-span-2 flex flex-col bg-gray-200/50 border-r-2 xl:border-r-2">
                             <dt class="order-first text-xs lg:text-sm font-semibold leading-6 bg-gray-800 text-white w-full pl-5 py-2">Przypisani pracownicy</dt>
                             <div class="w-full h-full flex justify-center items-center">

@@ -90,7 +90,7 @@
     @endphp
     <x-information-panel :viewName="$viewName">
         @if(isset($prod) and isset($user) and in_array($user->role,array('admin','manager')))
-            <x-nav-button href="{{route('product.add-similar', ['id' => $prod->id])}}" class="similar hover:bg-gray-700 ml-1 lg:ml-3">
+            <x-nav-button href="{{route('product.add-similar', ['id' => $prod->id])}}" class="similar bg-green-450 hover:bg-green-700 ml-1 lg:ml-3">
                 {{ __('Dodaj Podobny') }}
             </x-nav-button>
             <x-nav-button href="{{route('product.add-similar', ['id' => $prod->id])}}" class="edit bg-orange-500 hover:bg-orange-800 ml-1 lg:ml-3 mr-3 lg:mr-5">
@@ -293,22 +293,25 @@
                             </div>
                             <div class="w-full xl:w-4/5 ">
                                 @foreach($data as $comp)
-                                    <x-list-element class="list-element-{{$xElemComp}} list-element flex-col" id="component-{{$comp->id}}">
-                                        <div class="w-[100%] flex justify-between items-center">
-                                            <div class="w-[80%] flex justify-left items-center">
-                                                <div class="border-2 inline-block w-[50px] h-[50px] md:w-[100px] md:h-[100px]">
-                                                    @if(!empty($comp->image))
-                                                        @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
-                                                        <img src="{{asset('storage/'.$path.$comp->image)}}">
-                                                    @endif
+                                    <x-list-element class="list-element-{{$xElemComp}} list-element flex-col lg:py-0 py-0" id="component-{{$comp->id}}">
+                                        <div class="w-full flex flex-row justify-center">
+                                            <div class="w-[85%] flex flex-col justify-between items-center">
+                                                <div class="w-full flex justify-left items-center">
+                                                    <p class="my-2 mr-2 rounded-lg inline-block text-white bg-blue-450 shadow-lg list-element-name py-2 px-3 xl:text-lg text-md whitespace-nowrap overflow-clip">
+                                                        {{$comp->name}} - {{$comp->material}}
+                                                    </p>
                                                 </div>
-                                                <p class="inline-block list-element-name ml-[3%] text-left xl:text-lg text-md">{{$comp->name}} - {{$comp->material}}</p>
                                             </div>
-                                            <div id="expbtn-{{$comp->id}}-comp" class="expand-btn inline-block bg-gray-800 w-4 h-4 lg:w-6 lg:h-6 mr-8 md:rounded-md rounded-sm rotate-0 transition-all">
-                                                <img src="{{asset('storage/expand-down.png') }}" >
+                                            <div class="w-[15%] flex justify-end items-center">
+                                                <div id="expbtn-{{$comp->id}}-comp" class="expand-btn inline-block  p-0.5 bg-gray-800 rounded-md rotate-0 transition-all mr-1">
+                                                    <svg width="30px" height="30px" viewBox="0 0 1024 1024" class="w-5 h-5 lg:w-6 lg:h-6"  xmlns="http://www.w3.org/2000/svg">
+                                                        <title>szczegóły produktu</title>
+                                                        <path d="M903.232 256l56.768 50.432L512 768 64 306.432 120.768 256 512 659.072z" fill="#ffffff" />
+                                                    </svg>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="comp-list-{{$comp->id}} hidden mt-6 w-full xl:w-[80%]">
+                                        <div class="comp-list-{{$comp->id}} hidden my-6 w-full xl:w-[80%]">
                                             <div class="relative overflow-x-auto shadow-md">
                                                 <table class="w-full text-sm xl:text-lg lg:text-md text-left text-gray-500 dark:text-gray-400">
                                                     <thead class="text-sm md:text-lg text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -320,6 +323,21 @@
                                                     </tr>
                                                     </thead>
                                                     <tbody>
+                                                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                            Zdjęcie
+                                                        </th>
+                                                        <td class="p-1">
+                                                            @if(!empty($comp->image))
+                                                                @php $path = isset($storage_path_components) ? $storage_path_components.'/' : ''; @endphp
+                                                                <div class="flex justify-center">
+                                                                    <div class="max-w-[350px]">
+                                                                        <img src="{{asset('storage/'.$path.$comp->image)}}">
+                                                                    </div>
+                                                                </div>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
                                                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                                         <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                                             Surowiec

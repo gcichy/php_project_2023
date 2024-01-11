@@ -112,10 +112,10 @@
                     {{ __('Szczegóły') }}
                 </x-nav-button>
                 @if(in_array($user->role,array('admin','manager')))
-                    <x-nav-button :href="route('schema.add')" class="bg-green-450 hover:bg-gray-700 ml-1 lg:ml-3 ">
+                    <x-nav-button :href="route('schema.add')" class="bg-green-450 hover:bg-green-700 ml-1 lg:ml-3 ">
                         {{ __('Dodaj') }}
                     </x-nav-button>
-                    <x-nav-button class="on-select similar hover:bg-gray-700 ml-1 lg:ml-3">
+                    <x-nav-button class="on-select similar hover:bg-green-700 ml-1 lg:ml-3">
                         {{ __('Dodaj Podobne') }}
                     </x-nav-button>
                     <x-nav-button class="on-select edit bg-orange-500 hover:bg-orange-800 ml-1 lg:ml-3">

@@ -7,8 +7,8 @@
         function checkActive() {
             //check if any element is active, if not details button's href is set to current url
             if($('.list-element.active-list-elem').length === 0) {
-                $('.remove').css('background-color','gray');
-                $('.details').css('background-color','gray').attr('href', $(location).attr('href'));
+                $('.remove').removeClass('bg-red-600').addClass('bg-gray-400');
+                $('.details').removeClass('bg-blue-450').addClass('bg-gray-400').attr('href', $(location).attr('href'));
             }
             //else if id is set properly, url is set to be classified as product.details route
             else {
@@ -19,15 +19,12 @@
                     $('#{{$remove_id}}').val(emp_no)
                     var newUrl = $(location).attr('href') + '/' + emp_no;
 
-
-                    $('.remove').css('background-color','rgb(224 36 36)');
-                    $('.details').css('background-color','#1ca2e6').attr('href', newUrl);
+                    $('.remove').removeClass('bg-gray-400').addClass('bg-red-600').prop('disabled', false);
+                    $('.details').removeClass('bg-gray-400').addClass('bg-blue-450').attr('href', newUrl);
                 }
                 else {
-                    $('.details').css('background-color','gray').attr('href', $(location).attr('href'));
-                    $('.remove').css('background-color','gray');
-
-
+                    $('.details').removeClass('bg-blue-450').addClass('bg-gray-400').attr('href', $(location).attr('href'));
+                    $('.remove').removeClass('bg-red-600').addClass('bg-gray-400');
                 }
             }
         }
@@ -39,7 +36,6 @@
                 var is_active = ($(this).hasClass('active-list-elem') ? true : false);
                 $('.list-element').removeClass('active-list-elem');
                 $(this).addClass('active-list-elem');
-                console.log($(this).attr('id'))
                 if (is_active) {
                     $('.list-element').removeClass('active-list-elem');
                 }
@@ -75,10 +71,36 @@
                 {{ __('Szczegóły') }}
             </x-nav-button>
             @if(in_array($user->role,array('admin','manager')))
-                <x-nav-button :href="route('register')" class="ml-1 lg:ml-3">
+                <x-nav-button :href="route('register')" class="bg-green-450 ml-1 lg:ml-3">
                     {{ __('Dodaj') }}
                 </x-nav-button>
-                <x-remove-user-modal :text_lg="__('text-lg')" :header_id="$remove_header_id" :remove_id="$remove_id"></x-remove-user-modal>
+                @php
+                    $name = 'użytkownika';
+                    $route = route('profile.destroy');
+                    $button_id = 'remove-user-modal';
+                    $id = '2';
+                    $remove_elem_class = 'element-remove';
+                    $remove_elem_id = 'user-remove-';
+                    $disabled = 'disabled';
+                @endphp
+                <x-remove-modal :name="$name" :button_id="$button_id" :route="$route" :id="$id" :remove_elem_class="$remove_elem_class" :remove_elem_id="$remove_elem_id" :disabled="$disabled">
+                    @foreach($employees as $emp)
+                        <div class="{{$remove_elem_class}} hidden" id="{{$remove_elem_id}}{{$emp->employeeNo}}">
+                            <x-list-element class="ml-8 flex-col lg:py-0 py-0 w-[80%]">
+                                <div class="w-full flex flex-row justify-start">
+                                    <div class="w-[85%] flex flex-col justify-between items-center">
+                                        <div class="w-full flex justify-left items-center">
+                                            <p class="my-2 mr-2 rounded-lg inline-block text-white bg-blue-450 shadow-lg list-element-name py-2 px-3 xl:text-lg text-md whitespace-nowrap overflow-clip">
+                                                {{$emp->firstName}} {{$emp->lastName}}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </x-list-element>
+                        </div>
+                    @endforeach
+                </x-remove-modal>
+{{--                <x-remove-user-modal :text_lg="__('text-lg')" :header_id="$remove_header_id" :remove_id="$remove_id"></x-remove-user-modal>--}}
             @endif
         </x-information-panel>
         @if (session('status') === 'user-deleted')
@@ -97,10 +119,14 @@
 
                     <div class="w-full">
                         @foreach($employees as $emp)
-                            <x-list-element class="list-element-{{$xListElem}} list-element flex-col lg:py-8" id="employee-{{$emp->employeeNo}}">
-                                <div class="w-[100%] flex justify-between items-center">
-                                    <div class="w-[80%] md:w-[60%] flex justify-left items-center">
-                                        <p class="inline-block list-element-name ml-[3%]  xl:text-lg text-md">{{$emp->firstName}} {{$emp->lastName}}</p>
+                            <x-list-element class="list-element-{{$xListElem}} list-element flex-col lg:py-0 py-0" id="employee-{{$emp->employeeNo}}">
+                                <div class="w-full flex flex-row justify-center">
+                                    <div class="w-full flex flex-col justify-between items-center">
+                                        <div class="w-full flex justify-left items-center">
+                                            <p class="my-2 mr-2 rounded-lg inline-block text-white bg-blue-450 shadow-lg list-element-name py-2 px-3 xl:text-lg text-md whitespace-nowrap overflow-clip">
+                                                {{$emp->firstName}} {{$emp->lastName}}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </x-list-element>

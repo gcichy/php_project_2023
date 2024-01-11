@@ -54,22 +54,22 @@ class ProductionCycleController extends Controller
                 $filtered_cycles_work = $this->filterParentCyclesByWork($parent_cycles);
                 $parent_cycles = $filtered_cycles_work[0];
                 $work_array = $filtered_cycles_work[1];
-                $parent_cycles = $parent_cycles->paginate(2);
+                $parent_cycles = $parent_cycles->paginate(10);
             }
             else {
                 if(session('add_work')) {
                     $parent_cycles->where('finished',0);
                 }
-                $parent_cycles = $parent_cycles->paginate(2);
+                $parent_cycles = $parent_cycles->paginate(10);
             }
         } catch(Exception $e) {
             Log::channel('error')->error('Error filtering parent cycles grid: '.$e->getMessage(), [
                 'employeeNo' => $employee_no,
             ]);
             if(isset($parent_cycles) and $parent_cycles instanceof Builder) {
-                $parent_cycles = $is_work_cycle? $parent_cycles->paginate(2) : $parent_cycles->paginate(2);
+                $parent_cycles = $is_work_cycle? $parent_cycles->paginate(10) : $parent_cycles->paginate(10);
             } else {
-                $parent_cycles = $is_work_cycle? ParentCycleView::paginate(2) : ParentCycleView::paginate(2);
+                $parent_cycles = $is_work_cycle? ParentCycleView::paginate(10) : ParentCycleView::paginate(10);
             }
             $status_err = 'Nie udało się przefiltrować - błąd systemu.';
             $filt_items = isset($filt_items)? $filt_items : null;
@@ -169,7 +169,7 @@ class ProductionCycleController extends Controller
             //get pack products with minutes per one pcs calculated
             $products = Product::select('product.id', 'product.name', 'product.image', 'product.material', DB::raw('truncate(60/(amount/duration_hours),2) as minutes_per_pcs'))
                 ->join('production_standard', 'product.id', '=','production_standard.product_id' )
-                ->orderBy('name')->paginate(1,['*'],'pak-prod');
+                ->orderBy('name')->paginate(5,['*'],'pak-prod');
             $category_name = 'Zadanie';
 
             $union = ProductionSchema::select('id','production_schema', 'description', DB::raw('null as minutes_per_pcs'))
@@ -184,7 +184,7 @@ class ProductionCycleController extends Controller
             if(is_string($request->filter_elem)) {
                 $elements = $elements->where('production_schema', 'like', '%' . $request->filter_elem . '%');
             }
-            $elements = $elements->orderBy('id','asc')->paginate(2,['*'],'dodaj-cykl');
+            $elements = $elements->orderBy('id','asc')->paginate(5,['*'],'dodaj-cykl');
         } else {
             //get products with minutes per one pcs calculated
             $elements = Product::join('product_component', 'product.id', '=', 'product_component.product_id')

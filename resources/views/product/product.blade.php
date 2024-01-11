@@ -10,7 +10,7 @@
             if($('.list-element.active-list-elem').length === 0) {
                 remove.removeClass('bg-red-600').addClass('bg-gray-400')
                 details.removeClass('bg-blue-450').addClass('bg-gray-400').attr('href', $(location).attr('href'));
-                similar.removeClass('bg-gray-800').addClass('bg-gray-400').attr('href', $(location).attr('href'));
+                similar.removeClass('bg-green-450').addClass('bg-gray-400').attr('href', $(location).attr('href'));
                 edit.removeClass('bg-orange-500').addClass('bg-gray-400').attr('href', $(location).attr('href'));
             }
             //else if id is set properly, url is set to be classified as product.details route
@@ -29,13 +29,13 @@
 
                     remove.removeClass('bg-gray-400').addClass('bg-red-600').prop('disabled', false)
                     details.removeClass('bg-gray-400').addClass('bg-blue-450').attr('href', newUrl);
-                    similar.removeClass('bg-gray-400').addClass('bg-gray-800').attr('href', similarUrl);
+                    similar.removeClass('bg-gray-400').addClass('bg-green-450').attr('href', similarUrl);
                     edit.removeClass('bg-gray-400').addClass('bg-orange-500').attr('href', editUrl);
                 }
                 else {
                     remove.removeClass('bg-red-600').addClass('bg-gray-400')
                     details.removeClass('bg-blue-450').addClass('bg-gray-400').attr('href', $(location).attr('href'));
-                    similar.removeClass('bg-gray-800').addClass('bg-gray-400').attr('href', $(location).attr('href'));
+                    similar.removeClass('bg-green-450').addClass('bg-gray-400').attr('href', $(location).attr('href'));
                     edit.removeClass('bg-orange-500').addClass('bg-gray-400').attr('href', $(location).attr('href'));
                 }
             }
@@ -110,10 +110,10 @@
                         {{ __('Szczegóły') }}
                     </x-nav-button>
                     @if(in_array($user->role,array('admin','manager')))
-                        <x-nav-button :href="route('product.add')" class="ml-1 lg:ml-3">
+                        <x-nav-button :href="route('product.add')" class="bg-green-450 ml-1 lg:ml-3">
                             {{ __('Dodaj') }}
                         </x-nav-button>
-                        <x-nav-button class="on-select similar hover:bg-gray-700 ml-1 lg:ml-3">
+                        <x-nav-button class="on-select similar bg-green-450 hover:bg-green-700 ml-1 lg:ml-3">
                             {{ __('Dodaj Podobny') }}
                         </x-nav-button>
                         <x-nav-button class="on-select edit bg-orange-500 hover:bg-orange-800 ml-1 lg:ml-3">
@@ -131,16 +131,14 @@
                         <x-remove-modal :name="$name" :button_id="$button_id" :route="$route" :id="$id" :remove_elem_class="$remove_elem_class" :remove_elem_id="$remove_elem_id" :disabled="$disabled">
                             @foreach($products as $prod)
                                 <div class="{{$remove_elem_class}} hidden" id="{{$remove_elem_id}}{{$prod->id}}">
-                                    <x-list-element class="flex-col">
-                                        <div class="w-full flex justify-between items-center">
-                                            <div class="w-full flex justify-left items-center">
-                                                <div class="border-2 inline-block w-[50px] h-[50px] md:w-[70px] md:h-[70px] lg:w-[100px] lg:h-[100px]">
-                                                    @if(!empty($prod->image))
-                                                        @php $path = isset($storage_path_products) ? $storage_path_products.'/' : ''; @endphp
-                                                        <img src="{{asset('storage/'.$path.$prod->image)}}">
-                                                    @endif
+                                    <x-list-element class="ml-8 flex-col lg:py-0 py-0 w-[80%]">
+                                        <div class="w-full flex flex-row justify-start">
+                                            <div class="w-[85%] flex flex-col justify-between items-center">
+                                                <div class="w-full flex justify-left items-center">
+                                                    <p class="my-2 mr-2 rounded-lg inline-block text-white bg-blue-450 shadow-lg list-element-name py-2 px-3 xl:text-lg text-md whitespace-nowrap overflow-clip">
+                                                        {{$prod->name}} - {{$prod->material}}
+                                                    </p>
                                                 </div>
-                                                <p class="inline-block list-element-name ml-[3%]  xl:text-lg text-md">{{$prod->name}} - {{$prod->material}}</p>
                                             </div>
                                         </div>
                                     </x-list-element>
@@ -157,30 +155,32 @@
                                 $xListElemProd = "product";
                             @endphp
                             <x-search-input :inputPlaceholder="$inputPlaceholder" :xListElementUniqueId="$xListElemProd"></x-search-input>
-
                             <div class="w-full">
                                 @foreach($products as $prod)
-                                    <x-list-element class="list-element-{{$xListElemProd}} list-element flex-col" id="product-{{$prod->id}}">
-                                        <div class="w-full flex justify-between items-center">
-                                            <div class="w-full flex justify-left items-center">
-                                                <div class="border-2 inline-block w-[50px] h-[50px] md:w-[70px] md:h-[70px] lg:w-[100px] lg:h-[100px]">
-                                                    @if(!empty($prod->image))
-                                                        @php $path = isset($storage_path_products) ? $storage_path_products.'/' : ''; @endphp
-                                                        <img src="{{asset('storage/'.$path.$prod->image)}}">
-                                                    @endif
+                                    <x-list-element class="list-element-{{$xListElemProd}} list-element flex-col lg:py-0 py-0" id="product-{{$prod->id}}">
+                                        <div class="w-full flex flex-row justify-center">
+                                            <div class="w-[85%] flex flex-col justify-between items-center">
+                                                <div class="w-full flex justify-left items-center">
+                                                    @php
+                                                        $name = $prod->name;
+                                                        if($prod->material) $name .= ' - '.$prod->material;
+                                                        if($prod->color) $name .= ' - '.$prod->color;
+                                                    @endphp
+                                                    <p class="my-2 mr-2 rounded-lg inline-block text-white bg-blue-450 shadow-lg list-element-name py-2 px-3 xl:text-lg text-md whitespace-nowrap overflow-clip">
+                                                        {{$name}}
+                                                    </p>
                                                 </div>
-                                                @php
-                                                    $name = $prod->name;
-                                                    if($prod->material) $name .= ' - '.$prod->material;
-                                                    if($prod->color) $name .= ' - '.$prod->color;
-                                                @endphp
-                                                <p class="inline-block list-element-name ml-[3%] xl:text-lg text-md">{{$name}}</p>
                                             </div>
-                                            <div id="expbtn-{{$prod->id}}-prod" class="expand-btn inline-block bg-gray-800 w-4 h-4 lg:w-6 lg:h-6 md:w-5 md:h-5 sm:w-4 sm:h-4 mr-2 lg:mr-6 md:rounded-md rounded-sm rotate-0 transition-all">
-                                                <img src="{{asset('storage/expand-down.png') }}" >
+                                            <div class="w-[15%] flex justify-end items-center">
+                                                <div id="expbtn-{{$prod->id}}-prod" class="expand-btn inline-block  p-0.5 bg-gray-800 rounded-md rotate-0 transition-all mr-1">
+                                                    <svg width="30px" height="30px" viewBox="0 0 1024 1024" class="w-5 h-5 lg:w-6 lg:h-6"  xmlns="http://www.w3.org/2000/svg">
+                                                        <title>szczegóły produktu</title>
+                                                        <path d="M903.232 256l56.768 50.432L512 768 64 306.432 120.768 256 512 659.072z" fill="#ffffff" />
+                                                    </svg>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="prod-list-{{$prod->id}} hidden mt-6 w-full md:w-[60%]">
+                                        <div class="prod-list-{{$prod->id}} hidden my-6 w-full md:w-[60%]">
                                             <div class="relative overflow-x-auto shadow-md">
                                                 <table class="w-full text-sm md:text-lg text-left text-gray-500 dark:text-gray-400">
                                                     <thead class="text-sm md:text-lg text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -198,6 +198,21 @@
                                                         </th>
                                                         <td class="px-6 py-4">
                                                             {{$prod->name}}
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                                        <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                                            Zdjęcie
+                                                        </th>
+                                                        <td class="p-1">
+                                                            @if(!empty($prod->image))
+                                                                @php $path = isset($storage_path_products) ? $storage_path_products.'/' : ''; @endphp
+                                                                <div class="flex justify-center">
+                                                                    <div class="max-w-[350px]">
+                                                                        <img src="{{asset('storage/'.$path.$prod->image)}}">
+                                                                    </div>
+                                                                </div>
+                                                            @endif
                                                         </td>
                                                     </tr>
                                                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">

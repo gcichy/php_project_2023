@@ -542,7 +542,7 @@
                                             <div class="bg-white flex justify-start items-center flex-col">
                                                 <div id="new-dropdown" class="w-full">
                                                     <input type="number" id="new-counter" name="new_counter" value="0" class="hidden">
-                                                    <x-list-element class="new-list-elem w-full hidden flex-col text-md lg:text-lg lg:py-4 my-3" id="new-task-ghost">
+                                                    <x-list-element class="new-list-elem w-full hidden flex-col text-md lg:text-lg lg:py-4 my-6" id="new-task-ghost">
                                                         <div class="w-full">
                                                             <input type="text" id="schema-id" name="schema_id" value="{{old('schema_id') ? old('schema_id') : (empty($selected_schem) ? '' : $selected_schem->id )}}" class="hidden">
                                                             <div class="">

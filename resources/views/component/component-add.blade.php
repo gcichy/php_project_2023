@@ -295,15 +295,22 @@
                                                         @php $j = 0; @endphp
                                                         @foreach($schema_data as $prod_schema_tasks)
                                                             @if(count($prod_schema_tasks) > 0)
-                                                                <x-list-element class="list-element-{{$xListElem}} list-element w-full hidden flex-col text-md lg:text-lg lg:py-4 my-3" id="prodschema-{{$prod_schema_tasks[0]->prod_schema_id}}">
-                                                                    <div class="w-[100%] flex justify-between items-center">
-                                                                        <div class="w-full flex justify-between items-center">
+                                                                <x-list-element class="list-element-{{$xListElem}} list-element w-full hidden flex-col text-md lg:text-lg lg:py-4 my-6" id="prodschema-{{$prod_schema_tasks[0]->prod_schema_id}}">
+                                                                    <div class="w-full flex flex-row justify-center">
+                                                                        <div class="w-[85%] flex flex-col justify-between items-center">
                                                                             <div class="w-full flex justify-left items-center">
-                                                                                <p class="inline-block list-element-name ">{{$prod_schema_tasks[0]->prod_schema}}</p>
+                                                                                <p class="my-2 mr-2 rounded-lg inline-block text-white bg-blue-450 shadow-lg list-element-name py-2 px-3 xl:text-lg text-md whitespace-nowrap overflow-clip">
+                                                                                    {{$prod_schema_tasks[0]->prod_schema}}
+                                                                                </p>
                                                                             </div>
                                                                         </div>
-                                                                        <div id="expbtn-{{$prod_schema_tasks[0]->prod_schema_id}}" class="expand-btn inline-block bg-gray-800 w-4 h-4 lg:w-6 lg:h-6 md:rounded-md rounded-sm rotate-0 transition-all mr-0">
-                                                                            <img src="{{asset('storage/expand-down.png') }}">
+                                                                        <div class="w-[15%] flex justify-end items-center">
+                                                                            <div id="expbtn-{{$prod_schema_tasks[0]->prod_schema_id}}" class="expand-btn inline-block  p-0.5 bg-gray-800 rounded-md rotate-0 transition-all mr-1">
+                                                                                <svg width="30px" height="30px" viewBox="0 0 1024 1024" class="w-5 h-5 lg:w-6 lg:h-6"  xmlns="http://www.w3.org/2000/svg">
+                                                                                    <title>szczegóły podzadania</title>
+                                                                                    <path d="M903.232 256l56.768 50.432L512 768 64 306.432 120.768 256 512 659.072z" fill="#ffffff" />
+                                                                                </svg>
+                                                                            </div>
                                                                         </div>
                                                                     </div>
                                                                     <div class="production-standard mt-4 w-full ml-[3%] hidden">

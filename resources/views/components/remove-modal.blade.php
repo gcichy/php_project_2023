@@ -5,23 +5,24 @@
 
             // Open modal
             $("#{{$button_id}}").on('click', function () {
-                $('.{{$remove_elem_class}}').addClass('hidden');
-                $("#modal-background-{{$id}}, #modal-{{$id}}").removeClass("hidden");
-                let activeElem = $('.list-element.active-list-elem');
-                if(typeof activeElem.attr('id') === "string") {
-                    let id = activeElem.attr('id').split('-');
-
-                    if(id.length > 1) {
-                        $('#remove-id-{{$id}}').val(id[1]);
-                        $('#{{$remove_elem_id}}' + id[1]).removeClass('hidden')
+                console.log('halo');
+                if(!$(this).hasClass('bg-gray-400')) {
+                    $('.{{$remove_elem_class}}').addClass('hidden');
+                    $("#modal-background-{{$id}}, #modal-{{$id}}").removeClass("hidden");
+                    let activeElem = $('.list-element.active-list-elem');
+                    if(typeof activeElem.attr('id') === "string") {
+                        let id = activeElem.attr('id').split('-');
+                        console.log($('#remove-id-{{$id}}'));
+                        if(id.length > 1) {
+                            $('#remove-id-{{$id}}').val(id[1]);
+                            $('#{{$remove_elem_id}}' + id[1]).removeClass('hidden')
+                        }
                     }
-
                 }
             });
 
             // Close modal
             $("#close-modal-button-{{$id}}").on('click', function () {
-                console.log($("#modal-background-{{$id}}, #modal-{{$id}}"));
                 $("#modal-background-{{$id}}, #modal-{{$id}}").addClass("hidden");
             });
         });
@@ -30,7 +31,7 @@
     <button type="button" id="{{$button_id}}" {{$disabled}}
         class="btn btn-primary on-select remove inline-flex items-center bg-red-600 hover:bg-red-800 shadow-md
                {{isset($button_classes)? $button_classes : 'rounded-md ml-1 lg:ml-3 lg:mr-5 my-1 px-2 py-1 lg:px-4 lg:py-2 text-xs md:text-sm xl:text-lg' }}
-               border border-transparent font-semibold text-white uppercase tracking-widest [:where(&)]:focus:bg-red-800  focus:ring-4 focus:outline-none [:where(&)]:focus:ring-red-300  focus:ring-offset-2 transition ease-in-out duration-150">
+               border border-transparent font-semibold text-white uppercase tracking-widest [:where(&)]:focus:bg-red-800 focus:outline-none transition ease-in-out duration-150">
         {{__('Usuń')}}
     </button>
     <!-- Modal Background -->

@@ -4,7 +4,7 @@
     @endphp
     <x-information-panel :viewName="$viewName">
         @if(isset($comp) and isset($user) and in_array($user->role,array('admin','manager')))
-            <x-nav-button href="{{route('component.add-similar', ['id' => $comp->id])}}" class="similar hover:bg-gray-700 ml-1 lg:ml-3">
+            <x-nav-button href="{{route('component.add-similar', ['id' => $comp->id])}}" class="similar bg-green-450 hover:bg-green-700 ml-1 lg:ml-3">
                 {{ __('Dodaj Podobny') }}
             </x-nav-button>
             <x-nav-button href="{{route('component.add-similar', ['id' => $comp->id])}}" class="edit bg-orange-500 hover:bg-orange-800 ml-1 lg:ml-3 mr-3 lg:mr-5">

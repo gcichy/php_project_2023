@@ -2,7 +2,9 @@
 <script type="module">
     $(document).ready(function() {
         $('#remove-btn').on('click', function(){
-            $('#modal, #modal-background').removeClass('hidden');
+            if(!$(this).hasClass('hidden')) {
+                $('#modal, #modal-background').removeClass('hidden');
+            }
         });
     });
 
@@ -12,7 +14,7 @@
     });
 </script>
 @if(isset($text_lg))
-    <button type="button" id="remove-btn" class="btn btn-primary on-select remove inline-flex items-center ml-1 lg:ml-3 mr-3 lg:mr-5 px-2 py-1 lg:px-4 lg:py-2 bg-red-600 hover:bg-red-800 border border-transparent rounded-md font-semibold text-sm md:text-md lg:{{$text_lg}} text-white uppercase tracking-widest focus:bg-gray-700  focus:ring-4 focus:outline-none focus:ring-blue-300  focus:ring-offset-2 transition ease-in-out duration-150">
+    <button type="button" id="remove-btn" class="btn btn-primary on-select remove inline-flex items-center ml-1 lg:ml-3 mr-3 lg:mr-5 px-2 py-1 lg:px-4 bg-red-600 hover:bg-red-800 border border-transparent rounded-md font-semibold text-sm md:text-md lg:{{$text_lg}} text-white uppercase tracking-widest focus:bg-gray-700  focus:ring-4 focus:outline-none focus:ring-blue-300  focus:ring-offset-2 transition ease-in-out duration-150">
         {{__('Usuń')}}
     </button>
     <div id="modal-background" class="z-[100] fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 hidden"></div>

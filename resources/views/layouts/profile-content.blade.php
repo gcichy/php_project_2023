@@ -20,15 +20,23 @@
     </x-nav-button>
 </x-information-panel>
 
-<div class="grid mt-6 justify-evenly bg-[#00B4D8] dark:bg-gray-300 grid-cols-3">
+<dl class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 rounded-l-lg w-full mt-6">
     @foreach($userData as $span => $data)
-        <div class="col-span-1  p-7 m-8 hover:border-b">
-            <div class="flex flex-col items-center ">
-                    <p class="text-md font-medium lg:text-3xl text-white">{{ $data }}</p>
-                    <span class="text-sm font-medium lg:text-xl text-white"> {{ $span }}</span>
-            </div>
+        <div class="w-full flex justify-center">
+            <x-list-element class="col-span-1 bg-blue-450 flex-col lg:py-0 py-3 w-[40%] lg:w-[60%]">
+                <div class="w-full flex flex-row justify-start">
+                    <div class="w-full flex flex-col justify-between items-center">
+                        <div class="w-full rounded-lg flex justify-center items-center flex-col">
+                            <p class="my-2 mr-2 text-center rounded-lg inline-block text-white list-element-name py-2 px-3 xl:text-lg whitespace-nowrap overflow-clip">
+                                {{$data }}
+                                <span class="block text-sm font-medium lg:text-xl text-white"> {{ $span }}</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </x-list-element>
         </div>
     @endforeach
-</div>
+</dl>
 
 

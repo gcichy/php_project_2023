@@ -321,18 +321,25 @@
                                                         @php $j = 0; @endphp
                                                         @foreach($comp_data as $comp_prod_schemas)
                                                             @if(count($comp_prod_schemas) > 0)
-                                                                <x-list-element class="list-element-{{$xListElem}} list-element w-full hidden flex-col text-md lg:text-lg lg:py-4 my-3" id="{{$class_prefix}}-{{$comp_prod_schemas[0]->comp_id}}">
-                                                                    <div class="w-[100%] flex justify-between items-center">
-                                                                        <div class="w-full flex justify-between items-center">
+                                                                <x-list-element class="list-element-{{$xListElem}} list-element w-full hidden flex-col text-md lg:text-lg lg:py-0 py-0 my-6" id="{{$class_prefix}}-{{$comp_prod_schemas[0]->comp_id}}">
+                                                                    <div class="w-full flex flex-row justify-center">
+                                                                        <div class="w-[85%] flex flex-col justify-between items-center">
                                                                             <div class="w-full flex justify-left items-center">
-                                                                                <p class="inline-block list-element-name ">{{$comp_prod_schemas[0]->name}}</p>
+                                                                                <p class="my-2 mr-2 rounded-lg inline-block text-white bg-blue-450 shadow-lg list-element-name py-2 px-3 xl:text-lg text-md whitespace-nowrap overflow-clip">
+                                                                                    {{$comp_prod_schemas[0]->name}}
+                                                                                </p>
                                                                             </div>
                                                                         </div>
-                                                                        <div id="expbtn-{{$comp_prod_schemas[0]->comp_id}}" class="expand-btn inline-block bg-gray-800 w-4 h-4 lg:w-6 lg:h-6 md:rounded-md rounded-sm rotate-0 transition-all mr-0">
-                                                                            <img src="{{asset('storage/expand-down.png') }}">
+                                                                        <div class="w-[15%] flex justify-end items-center">
+                                                                            <div id="expbtn-{{$comp_prod_schemas[0]->comp_id}}" class="expand-btn inline-block  p-0.5 bg-gray-800 rounded-md rotate-0 transition-all mr-1">
+                                                                                <svg width="30px" height="30px" viewBox="0 0 1024 1024" class="w-5 h-5 lg:w-6 lg:h-6"  xmlns="http://www.w3.org/2000/svg">
+                                                                                    <title>szczegóły produktu</title>
+                                                                                    <path d="M903.232 256l56.768 50.432L512 768 64 306.432 120.768 256 512 659.072z" fill="#ffffff" />
+                                                                                </svg>
+                                                                            </div>
                                                                         </div>
                                                                     </div>
-                                                                    <div class="amount-per-prod mt-4 w-full ml-[3%] hidden">
+                                                                    <div class="amount-per-prod my-2 w-full ml-[3%] hidden">
                                                                         <label for="amount-per-prod-{{$comp_prod_schemas[0]->comp_id}}" class="block mb-2 text-sm lg:text-md font-medium text-gray-900 dark:text-white">
                                                                             Ilość sztuk do wykonania produktu<span class="text-red-700">*</span>
                                                                         </label>
@@ -351,7 +358,7 @@
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                    <div class="comp-list-{{$comp_prod_schemas[0]->comp_id}} hidden mt-6 w-full">
+                                                                    <div class="comp-list-{{$comp_prod_schemas[0]->comp_id}} hidden my-4 w-full">
                                                                         <div class="relative overflow-x-auto shadow-md">
                                                                             <table class="w-full text-sm md:text-md text-left text-gray-500 dark:text-gray-400">
                                                                                 <thead class="text-sm md:text-ms text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -430,7 +437,7 @@
                                                                             </table>
                                                                         </div>
                                                                     </div>
-                                                                    <ul class="{{$class_prefix}}-list-{{$comp_prod_schemas[0]->comp_id}} mt-[3%] ml-[3%] relative m-0 w-full hidden list-none overflow-hidden p-0 transition-[height] duration-200 ease-in-out text-xs md:text-sm lg:text-md">
+                                                                    <ul class="{{$class_prefix}}-list-{{$comp_prod_schemas[0]->comp_id}} mt-[3%] ml-[3%] relative m-0 mb-4 w-full hidden list-none overflow-hidden p-0 transition-[height] duration-200 ease-in-out text-xs md:text-sm lg:text-md">
                                                                         <h2 class="text-gray-800">Lista schematów produkcji:</h2>
                                                                         @foreach($comp_prod_schemas as $prod_schema)
                                                                             <li class="relative h-fit after:absolute after:left-[2.45rem] after:top-[3.6rem] after:mt-px after:h-[calc(100%-2.45rem)] after:w-px after:bg-[#e0e0e0] after:content-[''] dark:after:bg-neutral-600">
