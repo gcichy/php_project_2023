@@ -77,7 +77,7 @@ class StatisticsController extends Controller
         }
 
 //        dd($filt_element_2, $filt_category_2);
-        return view('statistics.stat_dashboard', [
+        return view('statistics.stat-dashboard', [
             'user' => $request->user(),
             'users' => $users,
             'products' => $products,
@@ -106,10 +106,6 @@ class StatisticsController extends Controller
             'validation_err_3' => isset($validation_err_3)? $validation_err_3 : null,
         ]);
     }
-
-    /**
-     * @throws Exception
-     */
     private function getBarChart($request, Collection $products, Collection $components, array $prod_schemas): array
     {
         $category = is_null($request->category_2)? 1 : $request->category_2;
@@ -204,8 +200,6 @@ class StatisticsController extends Controller
             'element_id' => $elem_id,
         ];
     }
-
-
     private function getlineBarChart($request, Collection $users): array
     {
 
@@ -272,10 +266,6 @@ class StatisticsController extends Controller
             'user_id_array' => isset($user_id_array)? $user_id_array : null,
         ];
     }
-
-    /**
-     * @throws Exception
-     */
     private function getEmployeeBarChart($request, Collection $users): array
     {
         $chart_title = 'Produktywność pracowników';

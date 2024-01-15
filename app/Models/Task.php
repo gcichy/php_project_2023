@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Task extends Model
 {
-
     /**
      * The attributes that are mass assignable.
      *
@@ -21,8 +20,6 @@ class Task extends Model
         'amount_required',                      //determines is amount must be supplied when reporting task
         'description',
    ];
-
-
     /**
      * The table associated with the model.
      *

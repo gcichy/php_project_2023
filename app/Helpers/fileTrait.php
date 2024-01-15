@@ -35,8 +35,6 @@ trait fileTrait
             ]);
             return '';
         }
-
-
     }
 
     public static function deleteFile(string $path,string $file_name): bool
@@ -80,7 +78,7 @@ trait fileTrait
             if (File::isDirectory('storage/' . $old_path) and File::isDirectory('storage/' . $new_path)) {
                 if (File::exists('storage/' . $old_path . '/' . $old_file_name)) {
                     if (!File::copy('storage/' . $old_path . '/' . $old_file_name, 'storage/' . $new_path . '/' . $new_file_name)) {
-                        Log::channel('error')->error('Error deleting file: file "storage/' . $new_path . '/' . $new_file_name . '" has not been deleted for unspecified reason.', [
+                        Log::channel('error')->error('Error copying file: file "storage/' . $new_path . '/' . $new_file_name . '" has not been deleted for unspecified reason.', [
                             'employeeNo' => $user instanceof User ? $user->employeeNo : '',
                         ]);
                         return false;

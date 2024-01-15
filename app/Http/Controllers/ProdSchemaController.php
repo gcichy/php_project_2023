@@ -334,7 +334,7 @@ class ProdSchemaController
                 'confirmation' => ['regex:/^(usuń|usun)$/i'],
             ],
                 [
-                    'confirmation.regex' => 'Nie można usunąć komponentu: niepoprawna wartość. Wpisz "usuń".',
+                    'confirmation.regex' => 'Nie można usunąć materiału: niepoprawna wartość. Wpisz "usuń".',
                 ]);
         }
         catch (Exception $e) {
