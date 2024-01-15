@@ -440,7 +440,24 @@
             </div>
             <div class="w-full my-4 flex justify-center">
                 <div id="filters-3" class="flex flex-row justify-start w-[80%] border-2 rounded-lg">
-                    <dl class="grid grid-cols-2 bg-white text-left rounded-l-lg w-4/5">
+                    <dl class="grid grid-cols-3 bg-white text-left rounded-l-lg w-4/5">
+                        <div class="col-span-1 flex flex-col justify-center h-full">
+                            <a class ='block px-2 text-xs md:text-sm font-medium bg-gray-800 text-center text-white rounded-tl-lg'>
+                                Pracownicy
+                            </a>
+                            <div class="p-1">
+                                @php $unique_id = 'employees_3' @endphp
+                                <x-select-multiple :uniqueId="$unique_id" :placeholder="__('Pracownicy')">
+                                    <x-slot name="options">
+                                        @foreach($users as $u)
+                                            <option value="{{$u->id}}" {{(isset($filt_users_3) and is_array($filt_users_3) and in_array($u->id, $filt_users_3))? 'selected' : ''}}>
+                                                {{$u->employeeNo}}
+                                            </option>
+                                        @endforeach
+                                    </x-slot>
+                                </x-select-multiple>
+                            </div>
+                        </div>
                         <div class="col-span-1 flex flex-col justify-start">
                             <a class ='block px-2 text-xs md:text-sm font-medium bg-gray-800 text-center text-white'>
                                 Praca od
@@ -463,23 +480,6 @@
                                            class="p-2 xl:p-2.5 block w-full text-xs xl:text-sm text-gray-900 border-gray-300 focus:bg-blue-150 focus:ring-blue-450 rounded"
                                            placeholder="Koniec" min="2023-01-01"/>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="col-span-2 flex flex-col justify-center h-full">
-                            <a class ='block px-2 text-xs md:text-sm font-medium bg-gray-800 text-center text-white rounded-tl-lg'>
-                                Pracownicy
-                            </a>
-                            <div class="p-1">
-                                @php $unique_id = 'employees_3' @endphp
-                                <x-select-multiple :uniqueId="$unique_id" :placeholder="__('Pracownicy')">
-                                    <x-slot name="options">
-                                        @foreach($users as $u)
-                                            <option value="{{$u->id}}" {{(isset($filt_users_3) and is_array($filt_users_3) and in_array($u->id, $filt_users_3))? 'selected' : ''}}>
-                                                {{$u->employeeNo}}
-                                            </option>
-                                        @endforeach
-                                    </x-slot>
-                                </x-select-multiple>
                             </div>
                         </div>
                     </dl>
